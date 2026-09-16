@@ -1,0 +1,43 @@
+/*
+  디자인 토큰 (색상, 스페이싱, 타이포)
+  :root에 선언하면 프로젝트 어디서든 var(--변수명) 으로 사용할 수 있습니다.
+*/
+:root {
+  /* Colors */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-text: #1f2024;
+  --color-text-muted: #6b7280;
+  --color-background: #ffffff;
+  --color-surface: #f5f6f8;
+  --color-border: #e2e4e8;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+
+  /* Spacing (4px 기준) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 24px;
+  --spacing-6: 32px;
+  --spacing-7: 48px;
+  --spacing-8: 64px;
+
+  /* Typography */
+  --font-family-base:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+
+  /* Layout */
+  --max-width-content: 1200px;
+
+  /* Radius / Shadow */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
