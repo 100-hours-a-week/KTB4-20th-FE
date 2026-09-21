@@ -1,0 +1,62 @@
+name: FE PR CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fe-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and Image Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check main PR source
+        if: >-
+          github.base_ref == 'main' &&
+          (github.head_ref != 'dev' ||
+           github.event.pull_request.head.repo.full_name != github.repository)
+        run: |
+          echo "::error::main에는 같은 저장소의 dev 브랜치에서 PR을 보내야 합니다."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: /api
+        run: npm run build
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg VITE_API_BASE_URL=/api \
+            -t planit-frontend:ci .
+
