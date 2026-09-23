@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+"""PlanIt FE deployment transaction. Run as root; no application secrets are read."""
+import contextlib
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import tarfile
+import tempfile
+import time
+from html.parser import HTMLParser
+
+ROOT = Path('/opt/planit')
+STATE = ROOT / 'state'
+ASSETS = ROOT / 'assets'
+CONF = Path('/home/ubuntu/planit/nginx/default.conf')
+PROXY = 'planit-nginx-1'
+REGISTRY = '577483323183.dkr.ecr.ap-northeast-2.amazonaws.com'
+REPO = REGISTRY + '/planit/frontend'
+NETWORK = 'planit_default'
+URL = 'https://planit-ai.site'
+ROUTE = re.compile(r'set \$frontend_upstream ([a-z0-9_-]+):80;')
+
+
+def run(*args, timeout=30, data=None):
+    p = subprocess.run(args, input=data, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, timeout=timeout)
+    if p.returncode:
+        # Do not echo arbitrary command output, which may contain credentials.
+        raise RuntimeError(f'{args[0]} failed (exit {p.returncode})')
+    return p.stdout
+
+
+def write_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix('.tmp')
+    with tmp.open('w') as f:
+        json.dump(value, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def inspect(name):
+    return json.loads(run('docker', 'inspect', name))[0]
+
+
+def route():
+    matches = ROUTE.findall(CONF.read_text())
+    if len(matches) != 1:
+        raise RuntimeError('Expected exactly one frontend upstream')
+    return matches[0]
+
+
+def switch(expected, target):
+    # Preserve the inode: the current proxy bind-mounts this single file.
+    with CONF.open('r+') as f:
+        text = f.read()
+        if ROUTE.findall(text) != [expected]:
+            raise RuntimeError('Proxy route changed outside deployment')
+        f.seek(0)
+        f.write(ROUTE.sub(lambda _: f'set $frontend_upstream {target}:80;', text))
+        f.truncate()
+        f.flush()
+        os.fsync(f.fileno())
+    run('docker', 'exec', PROXY, 'nginx', '-t')
+    run('docker', 'exec', PROXY, 'nginx', '-s', 'reload')
+
+
+class References(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.paths = set()
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        path = a.get('src') if tag == 'script' else a.get('href') if tag == 'link' else None
+        if path and path.startswith('/assets/'):
+            if not re.fullmatch(r'/assets/[A-Za-z0-9_./-]+', path) or '..' in path.split('/'):
+                raise RuntimeError('Unsupported asset path')
+            self.paths.add(path)
+
+
+def get(host, path, external=False):
+    if external:
+        return run('curl', '--fail', '--silent', '--show-error', '--max-time', '8',
+                   URL + path, timeout=12)
+    return run('docker', 'exec', PROXY, 'wget', '-T', '5', '-qO-',
+               f'http://{host}:80{path}', timeout=10)
+
+
+def verify(host, external=False, seconds=90):
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            if get(host, '/healthz').strip() != b'ok':
+                raise RuntimeError('Readiness response mismatch')
+            html = get(host, '/')
+            parser = References()
+            parser.feed(html.decode())
+            if not parser.paths:
+                raise RuntimeError('No frontend assets in HTML')
+            if external and get(host, '/', True) != html:
+                raise RuntimeError('Public HTML does not match candidate')
+            if len(parser.paths) > 32:
+                raise RuntimeError('Too many entrypoint assets')
+            for path in parser.paths:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('Verification deadline exceeded')
+                body = get(host, path)
+                if not body:
+                    raise RuntimeError('Empty asset')
+                if external and get(host, path, True) != body:
+                    raise RuntimeError('Public asset does not match candidate')
+            return
+        except (RuntimeError, subprocess.TimeoutExpired):
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(3)
+
+
+def archive(container):
+    # Parse docker cp tar without extractall: reject links/traversal/devices.
+    with tempfile.TemporaryFile() as stream:
+        p = subprocess.run(['docker', 'cp', container + ':/usr/share/nginx/html/assets/.', '-'],
+                           stdout=stream, stderr=subprocess.PIPE, timeout=60)
+        if p.returncode:
+            raise RuntimeError('Unable to archive frontend assets')
+        stream.seek(0)
+        with tarfile.open(fileobj=stream) as tar:
+            members = tar.getmembers()
+            if sum(m.size for m in members) > 256 * 1024 * 1024:
+                raise RuntimeError('Assets exceed 256 MiB per release')
+            for m in members:
+                parts = Path(m.name).parts
+                if m.name.startswith('/') or '..' in parts or not (m.isdir() or m.isfile()):
+                    raise RuntimeError('Unsafe asset archive entry')
+                if m.isdir():
+                    continue
+                dest = ASSETS.joinpath(*parts)
+                body = tar.extractfile(m).read()
+                if dest.exists():
+                    if dest.read_bytes() != body:
+                        raise RuntimeError('Asset filename collision with different content')
+                else:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    for parent in [dest.parent, *dest.parent.parents]:
+                        if parent == ASSETS.parent:
+                            break
+                        parent.chmod(0o755)
+                    tmp = dest.with_name(dest.name + '.upload')
+                    tmp.write_bytes(body)
+                    tmp.chmod(0o644)
+                    os.replace(tmp, dest)
+
+
+def preflight():
+    if os.geteuid() != 0:
+        raise RuntimeError('Run as root')
+    proxy = inspect(PROXY)
+    mounted = any(m['Source'] == str(ASSETS) and
+                  m['Destination'] == '/srv/planit-assets' and not m['RW']
+                  for m in proxy['Mounts'])
+    if not mounted:
+        raise RuntimeError('Install read-only shared asset mount on proxy first')
+    text = run('docker', 'exec', PROXY, 'nginx', '-T').decode()
+    if 'alias /srv/planit-assets/;' not in text:
+        raise RuntimeError('Install shared /assets/ route on proxy first')
+    if shutil.disk_usage(ROOT).free < 2 * 1024 ** 3:
+        raise RuntimeError('Require at least 2 GiB free disk')
+
+
+def validate(args):
+    if len(args) != 7:
+        raise RuntimeError('Expected SERVICE DIGEST TAG SHA RUN_ID ATTEMPT SEQUENCE')
+    service, digest, tag, sha, rid, attempt, seq = args
+    if service != 'frontend':
+        raise RuntimeError('Only frontend is implemented')
+    if not re.fullmatch(r'sha256:[0-9a-f]{64}', digest) or not re.fullmatch(r'[0-9a-f]{40}', sha):
+        raise RuntimeError('Invalid digest or commit')
+    if any(not re.fullmatch(r'[1-9][0-9]{0,19}', x) for x in [rid, attempt, seq]):
+        raise RuntimeError('Invalid run metadata')
+    if tag != f'sha-{sha}-{rid}-{attempt}':
+        raise RuntimeError('Tag does not match publish metadata')
+    return digest, tag, sha, rid, attempt, int(seq)
+
+
+def check_current(state):
+    c = inspect(state['container'])
+    if route() != state['upstream'] or c['State']['Status'] != 'running' or c['Image'] != state['image_id']:
+        raise RuntimeError('State differs from actual deployment; reconcile manually')
+    verify(state['upstream'], external=True)
+
+
+def initialize(sequence):
+    if (STATE / 'frontend.json').exists():
+        raise RuntimeError('Already initialized; will not overwrite state')
+    if route() != 'frontend_green':
+        raise RuntimeError('Expected the verified Compose Green as initial active release')
+    c = inspect('planit-frontend_green-1')
+    expected = REPO + '@sha256:990cca9ef53699987340a34093fc341e944b1b28153e733bb494d5076914fa0c'
+    if c['Config']['Image'] != expected or c['State']['Status'] != 'running':
+        raise RuntimeError('Bootstrap image/state mismatch')
+    archive('planit-frontend-1')
+    archive('planit-frontend_green-1')
+    verify('frontend_green', external=True)
+    write_json(STATE / 'frontend.json', dict(upstream='frontend_green',
+               container='planit-frontend_green-1', image_id=c['Image'], image=expected,
+               sequence=sequence, request='bootstrap'))
+    print('Initialized current FE. No traffic switch performed.')
+
+
+def deploy(args):
+    digest, tag, sha, rid, attempt, seq = validate(args)
+    current_path = STATE / 'frontend.json'
+    old = json.loads(current_path.read_text())
+    check_current(old)
+    key = rid + '-' + attempt
+    if old['request'] == key:
+        if old['image'] != REPO + '@' + digest or old['sequence'] != seq:
+            raise RuntimeError('Same request has different metadata')
+        print('Already deployed and verified')
+        return
+    if seq <= old['sequence']:
+        raise RuntimeError('Outdated deployment sequence')
+    journal = STATE / 'requests' / (key + '.json')
+    if journal.exists():
+        raise RuntimeError('Request already attempted; inspect journal before retry')
+    response = json.loads(run('aws', 'ecr', 'batch-get-image', '--region', 'ap-northeast-2',
+        '--repository-name', 'planit/frontend', '--image-ids', 'imageTag=' + tag, '--output', 'json'))
+    if not response.get('images') or response['images'][0]['imageId']['imageDigest'] != digest:
+        raise RuntimeError('ECR tag/digest mismatch')
+    upstream = 'fe_' + rid + '_' + attempt
+    container = 'planit-' + upstream
+    release = ROOT / 'releases' / upstream
+    release.mkdir(parents=True, exist_ok=False)
+    compose = release / 'compose.json'
+    write_json(compose, {'name': 'planit', 'services': {upstream: {
+        'image': REPO + '@' + digest, 'container_name': container,
+        'restart': 'unless-stopped', 'networks': ['production'],
+        'logging': {'driver': 'json-file', 'options': {'max-size': '10m', 'max-file': '3'}}}},
+        'networks': {'production': {'external': True, 'name': NETWORK}}})
+    record = dict(status='preparing', old=old, candidate=upstream, compose=str(compose),
+                  digest=digest, tag=tag, commit=sha, request=key, sequence=seq)
+    write_json(journal, record)
+    write_json(STATE / 'pending.json', record)
+    switching = False
+    try:
+        password = run('aws', 'ecr', 'get-login-password', '--region', 'ap-northeast-2')
+        run('docker', 'login', '--username', 'AWS', '--password-stdin', REGISTRY, data=password)
+        run('docker', 'compose', '-f', str(compose), 'pull', upstream, timeout=240)
+        run('docker', 'compose', '-f', str(compose), 'up', '-d', '--no-deps', upstream, timeout=90)
+        verify(upstream)
+        archive(container)
+        record['status'] = 'switching'
+        write_json(journal, record)
+        switching = True
+        switch(old['upstream'], upstream)
+        verify(upstream, external=True)
+        c = inspect(container)
+        new = dict(upstream=upstream, container=container, image_id=c['Image'],
+                   image=REPO + '@' + digest, sequence=seq, request=key,
+                   compose=str(compose), previous=old)
+        write_json(current_path, new)
+        record['status'] = 'success'
+        write_json(journal, record)
+        (STATE / 'pending.json').unlink()
+        print('FE deployment and HTTPS verification succeeded; old container retained')
+    except BaseException:
+        # Never delete candidates automatically: interrupted requests may still be draining.
+        try:
+            if switching:
+                actual = route()
+                if actual == upstream:
+                    switch(upstream, old['upstream'])
+                elif actual != old['upstream']:
+                    raise RuntimeError('Unexpected route during rollback')
+                else:
+                    run('docker', 'exec', PROXY, 'nginx', '-t')
+                    run('docker', 'exec', PROXY, 'nginx', '-s', 'reload')
+            check_current(old)
+            write_json(current_path, old)
+            record['status'] = 'failed_rolled_back' if switching else 'failed_before_switch'
+            write_json(journal, record)
+            (STATE / 'pending.json').unlink()
+        except BaseException:
+            record['status'] = 'recovery_required'
+            write_json(journal, record)
+        raise
+
+
+@contextlib.contextmanager
+def lock():
+    STATE.mkdir(parents=True, exist_ok=True)
+    with (STATE / 'deploy.lock').open('a') as f:
+        deadline = time.monotonic() + 120
+        while True:
+            try:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('Another deployment holds the common lock')
+                time.sleep(2)
+        yield
+
+
+def main():
+    os.umask(0o077)
+    if os.geteuid() != 0:
+        raise RuntimeError('Run as root')
+    with lock():
+        if (STATE / 'pending.json').exists():
+            raise RuntimeError('Unfinished transaction exists; reconcile before deploying')
+        if sys.argv[1:] == ['--seed-frontend-assets']:
+            ASSETS.mkdir(parents=True, exist_ok=True)
+            ASSETS.chmod(0o755)
+            archive('planit-frontend-1')
+            archive('planit-frontend_green-1')
+            print('Seeded immutable assets; no proxy change')
+            return
+        preflight()
+        if len(sys.argv) == 3 and sys.argv[1] == '--initialize-frontend':
+            if not re.fullmatch(r'[1-9][0-9]*', sys.argv[2]):
+                raise RuntimeError('Supply the current image Main CI run_number')
+            initialize(int(sys.argv[2]))
+        else:
+            deploy(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    def interrupted(signum, frame):
+        raise RuntimeError(f'Interrupted by signal {signum}')
+    signal.signal(signal.SIGTERM, interrupted)
+    try:
+        main()
+    except Exception as exc:
+        print(f'Deployment failed: {exc}', file=sys.stderr)
+        sys.exit(1)
