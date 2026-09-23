@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Run the installed PlanIt frontend deployment transaction",
+  "parameters": {
+    "imageDigest": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "imageTag": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^sha-[0-9a-f]{40}-[0-9]+-[0-9]+$"
+    },
+    "commitSha": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^[0-9a-f]{40}$"
+    },
+    "runId": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^[0-9]+$"
+    },
+    "runAttempt": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^[1-9][0-9]*$"
+    },
+    "releaseSequence": {
+      "type": "String",
+      "interpolationType": "ENV_VAR",
+      "allowedPattern": "^[1-9][0-9]*$"
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "deploy",
+      "inputs": {
+        "timeoutSeconds": "1800",
+        "runCommand": [
+          "set -eu",
+          "test -x /opt/planit/bin/deploy-service",
+          "exec /opt/planit/bin/deploy-service frontend \"$SSM_imageDigest\" \"$SSM_imageTag\" \"$SSM_commitSha\" \"$SSM_runId\" \"$SSM_runAttempt\" \"$SSM_releaseSequence\""
+        ]
+      }
+    }
+  ]
+}
