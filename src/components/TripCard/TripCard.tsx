@@ -1,9 +1,19 @@
 import { Link } from 'react-router-dom';
-import type { TripSummary } from '../../api/trips';
+import type { TripStatus, TripSummary } from '../../api/trips';
 import { AvatarGroup } from '../Avatar/Avatar';
-import { CloseIcon } from '../Icon/icons';
+import { XIcon as CloseIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatTripMeta, TRIP_STATUS_LABEL, truncateTripName } from './tripFormat';
 import styles from './TripCard.module.css';
+
+/** 설문 중·여행 완료는 흐리게, 생성 완료·여행 중은 진하게 보여줍니다. */
+const TRIP_STATUS_TONE: Record<TripStatus, string> = {
+  SURVEY_IN_PROGRESS: 'text-muted-foreground',
+  TRIP_COMPLETED: 'text-muted-foreground',
+  SCHEDULE_COMPLETED: 'text-foreground font-semibold',
+  TRIP_IN_PROGRESS: 'text-foreground font-semibold',
+};
 
 interface TripCardProps {
   trip: TripSummary;
@@ -26,9 +36,9 @@ export default function TripCard({ trip, onLeave }: TripCardProps) {
             {displayName}
           </Link>
         </h3>
-        <span className={`${styles.badge} ${styles[trip.status]}`}>
+        <Badge variant="secondary" className={`bg-accent ${TRIP_STATUS_TONE[trip.status]}`}>
           {TRIP_STATUS_LABEL[trip.status]}
-        </span>
+        </Badge>
       </div>
       <p className={styles.meta}>{formatTripMeta(trip.startDate, trip.memberCount)}</p>
       <div className={styles.footer}>
@@ -55,9 +65,9 @@ export default function TripCard({ trip, onLeave }: TripCardProps) {
 export function TripCardSkeleton() {
   return (
     <div className={`${styles.card} ${styles.skeleton}`} aria-hidden="true">
-      <span className={`${styles.skeletonLine} ${styles.skeletonTitle}`} />
-      <span className={`${styles.skeletonLine} ${styles.skeletonMeta}`} />
-      <span className={styles.skeletonCircle} />
+      <Skeleton className="h-3.5 w-[45%] bg-accent" />
+      <Skeleton className="h-3.5 w-[30%] bg-accent" />
+      <Skeleton className="mt-1 size-5 rounded-full bg-accent" />
     </div>
   );
 }

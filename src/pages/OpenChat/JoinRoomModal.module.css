@@ -1,0 +1,93 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+  background: color-mix(in srgb, var(--color-scrim) 50%, transparent);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--spacing-5);
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.policyStatus {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.agreeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.agreeRow input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primary);
+}
+
+.errorText {
+  margin: 0 0 var(--spacing-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.cancelButton,
+.joinButton {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.cancelButton {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.joinButton {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.joinButton:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.joinButton:disabled {
+  background: var(--color-primary-disabled);
+  cursor: not-allowed;
+}

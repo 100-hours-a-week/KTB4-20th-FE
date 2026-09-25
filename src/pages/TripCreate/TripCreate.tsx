@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
 import { createTrip, TRIP_DATE_CONFLICT } from '../../api/trips';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
-import Button from '../../components/Button/Button';
+import { Button } from '@/components/ui/button';
 import CalendarMonth from '../../components/Calendar/CalendarMonth';
 import {
   CalendarIcon,
@@ -12,9 +12,9 @@ import {
   MapPinIcon,
   MinusIcon,
   PlusIcon,
-} from '../../components/Icon/icons';
+} from 'lucide-react';
 import PageHeader from '../../components/PageHeader/PageHeader';
-import useModalDialog from '../../hooks/useModalDialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { formatDotDate, formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
 import { DEADLINE_OPTIONS, isValidDeadline, resolveDeadline } from './deadline';
 import {
@@ -276,7 +276,12 @@ export default function TripCreate() {
       </div>
 
       <div className={styles.footer}>
-        <Button shape="pill" size="lg" fullWidth onClick={handleSubmit} disabled={isSubmitting}>
+        <Button
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
           {isSubmitting ? '만드는 중...' : '여행방 만들기'}
         </Button>
       </div>
@@ -324,7 +329,6 @@ function DeadlineCalendarDialog({
   onSelect,
   onClose,
 }: DeadlineCalendarDialogProps) {
-  const dialogProps = useModalDialog(open, onClose);
   const initial = parseIsoDate(selected ?? today);
   const [view, setView] = useState({ year: initial.year, monthIndex: initial.monthIndex });
   const todayParts = parseIsoDate(today);
@@ -344,42 +348,44 @@ function DeadlineCalendarDialog({
   };
 
   return (
-    <dialog {...dialogProps} className={styles.calendarDialog} aria-label="설문 마감일 선택">
-      <div className={styles.calendarHeader}>
-        <p className={styles.calendarTitle}>
-          {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
-            new Date(Date.UTC(view.year, view.monthIndex, 1)),
-          )}
-        </p>
-        <div className={styles.calendarNav}>
-          <button
-            type="button"
-            className={styles.navButton}
-            onClick={() => moveMonth(-1)}
-            disabled={!canGoPrev}
-            aria-label="이전 달"
-          >
-            <ChevronLeftIcon size={18} />
-          </button>
-          <button
-            type="button"
-            className={styles.navButton}
-            onClick={() => moveMonth(1)}
-            disabled={!canGoNext}
-            aria-label="다음 달"
-          >
-            <ChevronRightIcon size={18} />
-          </button>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="gap-0 rounded-[var(--radius-lg)] p-5">
+        <div className={styles.calendarHeader}>
+          <DialogTitle className={styles.calendarTitle}>
+            {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
+              new Date(Date.UTC(view.year, view.monthIndex, 1)),
+            )}
+          </DialogTitle>
+          <div className={styles.calendarNav}>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => moveMonth(-1)}
+              disabled={!canGoPrev}
+              aria-label="이전 달"
+            >
+              <ChevronLeftIcon size={18} />
+            </button>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => moveMonth(1)}
+              disabled={!canGoNext}
+              aria-label="다음 달"
+            >
+              <ChevronRightIcon size={18} />
+            </button>
+          </div>
         </div>
-      </div>
-      <CalendarMonth
-        year={view.year}
-        monthIndex={view.monthIndex}
-        selected={selected}
-        showMonthName={false}
-        isDisabled={(iso) => !isValidDeadline(iso, today, startDate)}
-        onSelect={onSelect}
-      />
-    </dialog>
+        <CalendarMonth
+          year={view.year}
+          monthIndex={view.monthIndex}
+          selected={selected}
+          showMonthName={false}
+          isDisabled={(iso) => !isValidDeadline(iso, today, startDate)}
+          onSelect={onSelect}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

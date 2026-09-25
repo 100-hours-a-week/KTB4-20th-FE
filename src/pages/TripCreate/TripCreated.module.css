@@ -42,7 +42,7 @@
 .summary {
   margin-top: var(--spacing-7);
   padding: var(--spacing-4);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
 
@@ -55,7 +55,7 @@
 
 .summaryCard {
   padding: var(--spacing-4);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-background);
 }
 
@@ -75,7 +75,7 @@
   justify-content: space-between;
   padding-top: var(--spacing-3);
   color: var(--color-text-muted);
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-badge);
 }
 
 .actions {

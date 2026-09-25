@@ -38,8 +38,8 @@
   min-height: var(--height-button-md);
   padding: 0 var(--spacing-4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted-soft);
   background: var(--color-background);
   font-size: var(--font-size-sm);
   text-align: left;
@@ -48,7 +48,7 @@
 .selectButton:focus-visible,
 .input:focus {
   outline: none;
-  border-color: var(--color-button-dark);
+  border-color: var(--color-primary);
 }
 
 .selectButton[aria-invalid='true'],
@@ -63,7 +63,7 @@
 
 .input::placeholder,
 .placeholder {
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted-soft);
 }
 
 .value {
@@ -88,20 +88,20 @@
   height: 32px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--color-text);
   background: var(--color-surface-strong);
 }
 
 .stepperButton:disabled {
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted-soft);
   cursor: not-allowed;
 }
 
 .stepperButton:focus-visible,
 .chip:focus-visible,
 .navButton:focus-visible {
-  outline: 2px solid var(--color-button-dark);
+  outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
 
@@ -127,14 +127,14 @@
 
 .counter {
   flex-shrink: 0;
-  color: var(--color-text-subtle);
-  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-badge);
 }
 
 .fixedDeadline {
   margin: 0;
   padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-surface);
   font-size: var(--font-size-xs);
@@ -142,14 +142,14 @@
 
 .helper {
   margin: 0;
-  color: var(--color-text-subtle);
-  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-badge);
 }
 
 .error {
   margin: 0;
   color: var(--color-danger);
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-badge);
 }
 
 .chips {
@@ -168,7 +168,7 @@
 }
 
 .chip:disabled {
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted-soft);
   background: var(--color-surface);
   cursor: not-allowed;
 }
@@ -181,21 +181,6 @@
 
 .footer {
   margin-top: var(--spacing-6);
-}
-
-.calendarDialog {
-  width: min(100% - (var(--spacing-5) * 2), 342px);
-  max-width: none;
-  padding: var(--spacing-5) var(--spacing-4);
-  border: 0;
-  border-radius: var(--radius-xl);
-  color: var(--color-text);
-  background: var(--color-background);
-  box-shadow: var(--shadow-dialog);
-}
-
-.calendarDialog::backdrop {
-  background: var(--color-scrim-strong);
 }
 
 .calendarHeader {

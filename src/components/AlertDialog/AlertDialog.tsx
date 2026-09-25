@@ -1,7 +1,12 @@
-import { useId } from 'react';
-import useModalDialog from '../../hooks/useModalDialog';
-import Button from '../Button/Button';
-import styles from './AlertDialog.module.css';
+import { CircleAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export interface DialogAction {
   label: string;
@@ -19,7 +24,7 @@ interface AlertDialogProps {
   onClose: () => void;
 }
 
-/** 경고 아이콘, 제목, 설명과 세로로 쌓인 액션 버튼을 가진 모달 다이얼로그입니다. */
+/** 경고 아이콘, 제목, 설명과 세로로 쌓인 버튼을 가진 안내 팝업입니다. (shadcn Dialog 기반) */
 export default function AlertDialog({
   open,
   title,
@@ -28,33 +33,22 @@ export default function AlertDialog({
   secondaryAction,
   onClose,
 }: AlertDialogProps) {
-  const dialogProps = useModalDialog(open, onClose);
-  const titleId = useId();
-  const descriptionId = useId();
-
   return (
-    <dialog
-      {...dialogProps}
-      className={styles.dialog}
-      aria-labelledby={titleId}
-      aria-describedby={description ? descriptionId : undefined}
-    >
-      <div className={styles.content}>
-        <span className={styles.icon} aria-hidden="true">
-          !
-        </span>
-        <h2 id={titleId} className={styles.title}>
-          {title}
-        </h2>
-        {description && (
-          <p id={descriptionId} className={styles.description}>
-            {description}
-          </p>
-        )}
-        <div className={styles.actions}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="gap-5 rounded-[var(--radius-lg)] p-5 pt-6">
+        <DialogHeader className="items-start gap-3">
+          <span className="flex size-9 items-center justify-center rounded-full bg-accent">
+            <CircleAlert className="size-5" aria-hidden="true" />
+          </span>
+          <DialogTitle className="leading-snug">{title}</DialogTitle>
+          {description && (
+            <DialogDescription className="break-keep">{description}</DialogDescription>
+          )}
+        </DialogHeader>
+        <div className="flex flex-col gap-2">
           <Button
-            shape="pill"
-            fullWidth
+            size="lg"
+            className="h-12 w-full rounded-full"
             onClick={primaryAction.onClick}
             disabled={primaryAction.disabled}
           >
@@ -62,9 +56,9 @@ export default function AlertDialog({
           </Button>
           {secondaryAction && (
             <Button
+              size="lg"
               variant="secondary"
-              shape="pill"
-              fullWidth
+              className="h-12 w-full rounded-full"
               onClick={secondaryAction.onClick}
               disabled={secondaryAction.disabled}
             >
@@ -72,7 +66,7 @@ export default function AlertDialog({
             </Button>
           )}
         </div>
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -5,14 +5,14 @@ import { HOST_CANNOT_LEAVE_ALONE, leaveTrip, type TripSummary } from '../../api/
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import Avatar from '../../components/Avatar/Avatar';
 import BottomSheet from '../../components/BottomSheet/BottomSheet';
-import BottomTabBar from '../../components/BottomTabBar/BottomTabBar';
-import Button from '../../components/Button/Button';
+import BottomNav from '../../components/BottomNav/BottomNav';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
-import { PencilIcon, PlusIcon, UsersIcon } from '../../components/Icon/icons';
+import { PencilIcon, PlusIcon, UsersIcon } from 'lucide-react';
 import TripCard, { TripCardSkeleton } from '../../components/TripCard/TripCard';
-import useAuth from '../../hooks/useAuth';
-import useCurrentUser from '../../hooks/useCurrentUser';
+import { useAuth } from '../../auth/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import useTripList from '../../hooks/useTripList';
 import styles from './Home.module.css';
 
@@ -23,8 +23,8 @@ interface Notice {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { logout, withdraw } = useAuth();
-  const { user, status: userStatus } = useCurrentUser();
+  // 사용자 정보는 로그인 확인 때 AuthProvider가 함께 불러옵니다.
+  const { user, logout, withdraw } = useAuth();
   const tripList = useTripList();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -89,11 +89,7 @@ export default function Home() {
         <header className={styles.header}>
           <div className={styles.greeting}>
             <p className={styles.hello}>안녕하세요</p>
-            {userStatus === 'loading' ? (
-              <span className={styles.nameSkeleton} aria-label="사용자 정보를 불러오는 중" />
-            ) : (
-              <h1 className={styles.userName}>{user ? `${user.userName}님` : '여행자님'}</h1>
-            )}
+            <h1 className={styles.userName}>{user ? `${user.userName}님` : '여행자님'}</h1>
           </div>
           <button
             type="button"
@@ -106,7 +102,11 @@ export default function Home() {
           </button>
         </header>
 
-        <Button fullWidth className={styles.startButton} onClick={() => navigate('/trips/new')}>
+        <Button
+          size="lg"
+          className="mb-6 h-11 w-full rounded-[var(--radius-sm)] font-semibold"
+          onClick={() => navigate('/trips/new')}
+        >
           <PlusIcon size={18} />
           여행 시작하기
         </Button>
@@ -114,7 +114,7 @@ export default function Home() {
         <TripListSection {...tripList} onLeave={setLeavingTrip} />
       </main>
 
-      <BottomTabBar />
+      <BottomNav />
 
       <BottomSheet open={isProfileOpen} label="프로필 관리" onClose={() => setIsProfileOpen(false)}>
         <p className={styles.sheetSection}>정보</p>
@@ -196,7 +196,7 @@ function TripListSection({
   if (status === 'loading') {
     return (
       <section className={styles.section} aria-busy="true" aria-label="여행방 목록을 불러오는 중">
-        <span className={styles.sectionTitleSkeleton} />
+        <Skeleton className="h-[18px] w-[88px] bg-accent" />
         <div className={styles.list}>
           <TripCardSkeleton />
           <TripCardSkeleton />

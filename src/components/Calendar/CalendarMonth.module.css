@@ -53,7 +53,7 @@
 }
 
 .day:focus-visible {
-  outline: 2px solid var(--color-button-dark);
+  outline: 2px solid var(--color-primary);
 }
 
 .today {
@@ -63,5 +63,5 @@
 .selected,
 .selected:not(:disabled):hover {
   color: var(--color-background);
-  background: var(--color-button-dark);
+  background: var(--color-primary);
 }

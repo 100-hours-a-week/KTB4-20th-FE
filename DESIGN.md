@@ -542,25 +542,19 @@ There are no progressive elevation tiers — the system either has the one shado
 - **Loading states / skeleton screens:** not visible on the extracted surfaces.
 - **Map view styling:** the search-results map uses Mapbox-tinted tiles with custom Indigo markers; not captured here.
 - **Form input error states:** error text color (`{colors.primary-error-text}`) is documented, but the full input outline + helper-text combination on validation failure was not visible in the captured surfaces.
-## 플랜잇 화면설계서 v1 적용 규칙
+## 플랜잇 화면 구현 규칙
 
-화면설계서 v1은 위 Indigo 기준 대신 무채색 기반으로 그려져 있어, 설계서가 우선하는 화면에는 아래 토큰을 사용한다. (`src/styles/variables.css`)
+공통 UI는 shadcn/ui(`src/components/ui/*`)를, 색상·간격·모서리는 `src/styles/variables.css`의 토큰을 쓴다. 아래는 화면을 만들면서 정한 추가 규칙이다.
 
-- **주요 버튼:** `--color-button-dark` (#222222) 배경 + 흰 글자. 페이지 CTA는 `--radius-lg` (12px) / `--height-button-lg` (52px), 다이얼로그 버튼은 `--radius-full` 알약형 / `--height-button-md` (48px).
-- **보조 버튼:** `--color-surface-strong` (#f2f2f2) 배경 + 본문 글자색.
-- **자리표시자:** 확정 전 로고·이미지는 `--color-placeholder` (#d9d9d9)로 채운다.
-- **다이얼로그:** 흰 배경, `--radius-xl` (20px), `--shadow-dialog`, 배경은 `--color-scrim` (검정 20%). 공통 컴포넌트 `src/components/AlertDialog`를 사용한다.
-- **레이아웃:** 모바일 웹앱 기준으로 콘텐츠 폭을 `--max-width-mobile` (480px)로 제한하고 좌우 32px 여백을 둔다.
-- **확인 다이얼로그:** 가운데 정렬 제목·설명 + 가로 버튼(취소 `secondary` / 확인 `primary`, `--radius-md`). `src/components/ConfirmDialog`를 사용한다. 필요하면 제목 위에 `--color-surface-strong` 원 안의 아이콘(`icon`)을 둔다. 경고·안내는 세로 버튼의 `AlertDialog`를 쓴다.
-- **바텀시트:** 위쪽 모서리 `--radius-xl`, 손잡이 막대, 배경 `--color-scrim-strong`. 바깥 영역을 누르면 닫힌다. `src/components/BottomSheet`를 사용한다.
-- **여행방 카드:** 흰 배경 + 1px `--color-border`, `--radius-lg`, 안쪽 여백 16px. 상태 배지는 `--color-surface-strong` 알약형이며 `--font-size-2xs`를 쓴다.
-- **로딩:** 목록은 스켈레톤(`--color-skeleton`)으로 보여준다.
-- **하단 탭:** 높이 `--height-tab-bar` (56px), 선택된 탭은 본문색·굵게, 나머지는 `--color-text-subtle`.
-- **입력 칸:** 흰 배경 + 1px `--color-border`, `--radius-lg`, 높이 `--height-button-md`. 이름표는 `--font-size-xs` 보조색, 안내 문구는 `--font-size-2xs`, 오류는 `--color-danger`.
-- **선택 칩:** 알약형 테두리 칩. 선택하면 `--color-surface-strong` 배경 + 굵게. 고를 수 없으면 `--color-surface` 배경 + `--color-text-subtle`.
-- **지역 선택:** 대분류는 가로 스크롤 탭(선택 시 `--color-placeholder`), 소분류는 3열 격자 버튼(선택 시 `--color-button-dark` 배경 + 흰 글자).
-- **달력:** `src/components/Calendar/CalendarMonth`를 사용한다. 선택한 날은 `--color-button-dark` 원, 오늘은 `--color-placeholder` 원, 고를 수 없는 날은 `--color-border` 글자.
-- **비활성 버튼:** 투명도를 낮추지 않고 `--color-surface-strong-hover` 배경 + `--color-text-subtle` 글자로 표시한다.
-- **토스트:** `src/components/Toast`. `--color-button-dark` 알약형, 2초 뒤 사라진다.
-- **상태 안내(빈 상태·오류 화면):** `src/components/StatusMessage`. 점선 상자 아이콘 + 굵은 제목 + 보조색 설명, 필요하면 아래에 버튼을 둔다. 전체 화면 오류는 `--color-surface` 배경을 쓴다.
-- **전체 화면 로딩:** `src/components/LoadingScreen`. 스피너만 두거나, `title`/`description`을 주면 스피너 아래에 안내 문구를 보여준다.
+- **버튼:** shadcn `Button`을 쓴다. 화면 하단 주요 버튼은 `h-13 w-full rounded-full`(알약형), 보조 버튼은 `variant="secondary"`.
+- **안내 팝업 / 확인 팝업:** `src/components/AlertDialog`(경고 아이콘 + 세로 버튼), `src/components/ConfirmDialog`(가운데 정렬 + 가로 취소/확인 버튼, 선택 아이콘). 둘 다 shadcn `Dialog` 위에 만들었다.
+- **바텀시트:** `src/components/BottomSheet`. shadcn `Dialog`와 같은 base-ui Dialog로 만들었고, 위쪽 모서리 `--radius-lg`, 손잡이 막대, 바깥 영역을 누르면 닫힌다.
+- **토스트:** sonner의 `toast()`를 쓴다(`App.tsx`의 `Toaster`). 초대 링크 복사 알림은 2초 뒤 사라진다.
+- **로딩:** 목록은 shadcn `Skeleton`, 전체 화면은 `src/components/LoadingScreen`(스피너 + 선택 안내 문구).
+- **상태 안내(빈 상태·오류 화면):** `src/components/StatusMessage`. 점선 상자 아이콘 + 굵은 제목 + 보조색 설명, 필요하면 아래에 버튼.
+- **여행방 카드:** 흰 배경 + 1px `--color-border`, `--radius-md`, 안쪽 여백 16px. 상태 배지는 shadcn `Badge`(설문 중·여행 완료는 흐리게, 생성 완료·여행 중은 진하게).
+- **입력 칸:** 흰 배경 + 1px `--color-border`, `--radius-md`, 높이 `--height-button-md`. 이름표는 `--font-size-xs` 보조색, 안내 문구는 `--font-size-badge`, 오류는 `--color-danger`.
+- **선택 칩:** 알약형 테두리 칩. 선택하면 `--color-surface-strong` 배경 + 굵게. 고를 수 없으면 `--color-surface` 배경 + `--color-text-muted-soft`.
+- **지역 선택:** 대분류는 가로 스크롤 탭(선택 시 `--color-placeholder`), 소분류는 3열 격자 버튼(선택 시 `--color-primary` 배경 + 흰 글자).
+- **달력:** `src/components/Calendar/CalendarMonth`. 선택한 날은 `--color-primary` 원, 오늘은 `--color-placeholder` 원, 고를 수 없는 날은 `--color-border` 글자.
+- **아이콘:** lucide-react를 쓴다.

@@ -47,30 +47,30 @@
   min-height: 44px;
   padding: 0 var(--spacing-2);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-background);
   font-size: var(--font-size-xs);
 }
 
 .optionSelected {
-  border-color: var(--color-button-dark);
+  border-color: var(--color-primary);
   color: var(--color-background);
-  background: var(--color-button-dark);
+  background: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 }
 
 .tab:focus-visible,
 .option:focus-visible,
 .navButton:focus-visible {
-  outline: 2px solid var(--color-button-dark);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .calendarCard {
   padding: var(--spacing-5) var(--spacing-4);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-dialog);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .calendarHeader {

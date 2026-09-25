@@ -1,45 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { getInvitationUrl } from '../../api/trips';
-import Button from '../../components/Button/Button';
-import { CheckIcon, MapPinIcon } from '../../components/Icon/icons';
-import Toast from '../../components/Toast/Toast';
+import { Button } from '@/components/ui/button';
+import { CheckIcon, MapPinIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatDotDate } from '../../utils/date';
 import { useTripCreate } from './tripCreateContext';
 import styles from './TripCreated.module.css';
 
 const TOAST_DURATION_MS = 2000;
 
-interface ToastState {
-  message: string;
-  success: boolean;
-}
-
 /** 여행방 생성 완료 화면입니다. 초대 링크를 복사하거나 메인으로 돌아갈 수 있어요. */
 export default function TripCreated() {
   const navigate = useNavigate();
   const { createdTrip } = useTripCreate();
-  const [toast, setToast] = useState<ToastState | null>(null);
-  const timerRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
   if (!createdTrip) {
     return <Navigate to="/trips/new" replace />;
   }
 
-  const showToast = (next: ToastState) => {
-    window.clearTimeout(timerRef.current);
-    setToast(next);
-    timerRef.current = window.setTimeout(() => setToast(null), TOAST_DURATION_MS);
-  };
-
   const copyInvitationLink = async () => {
     try {
       await navigator.clipboard.writeText(getInvitationUrl(createdTrip.invitationToken));
-      showToast({ message: '초대 링크를 복사했어요.', success: true });
+      toast.success('초대 링크를 복사했어요.', { duration: TOAST_DURATION_MS });
     } catch {
-      showToast({ message: '링크를 복사하지 못했어요. 다시 시도해 주세요.', success: false });
+      toast.error('링크를 복사하지 못했어요. 다시 시도해 주세요.', { duration: TOAST_DURATION_MS });
     }
   };
 
@@ -71,15 +55,22 @@ export default function TripCreated() {
       </section>
 
       <div className={styles.actions}>
-        <Button shape="pill" size="lg" fullWidth onClick={copyInvitationLink}>
+        <Button
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          onClick={copyInvitationLink}
+        >
           초대 링크 복사하기
         </Button>
-        <Button variant="secondary" shape="pill" size="lg" fullWidth onClick={goHome}>
+        <Button
+          variant="secondary"
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          onClick={goHome}
+        >
           처음 화면으로 돌아가기
         </Button>
       </div>
-
-      <Toast message={toast?.message ?? null} showCheck={toast?.success} />
     </main>
   );
 }

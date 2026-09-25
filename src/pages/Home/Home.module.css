@@ -33,14 +33,6 @@
   line-height: 1.3;
 }
 
-.nameSkeleton {
-  display: block;
-  width: 96px;
-  height: 26px;
-  border-radius: var(--radius-sm);
-  background: var(--color-skeleton);
-}
-
 .profileButton {
   display: inline-flex;
   padding: 0;
@@ -50,15 +42,8 @@
 }
 
 .profileButton:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-button-dark) 35%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   outline-offset: 2px;
-}
-
-.startButton {
-  margin-bottom: var(--spacing-6);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
 }
 
 .section {
@@ -72,14 +57,6 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-}
-
-.sectionTitleSkeleton {
-  display: block;
-  width: 88px;
-  height: 18px;
-  border-radius: var(--radius-sm);
-  background: var(--color-skeleton);
 }
 
 .list {
@@ -125,7 +102,7 @@
   min-height: var(--height-button-lg);
   padding: 0 var(--spacing-1);
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--color-text);
   background: transparent;
   font-size: var(--font-size-base);
@@ -138,6 +115,6 @@
 }
 
 .sheetItem:focus-visible {
-  outline: 2px solid var(--color-button-dark);
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }

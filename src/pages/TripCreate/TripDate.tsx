@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../../components/Button/Button';
+import { Button } from '@/components/ui/button';
 import CalendarMonth from '../../components/Calendar/CalendarMonth';
-import { ChevronLeftIcon, ChevronRightIcon } from '../../components/Icon/icons';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { getToday, parseIsoDate } from '../../utils/date';
 import { isValidDeadline, resolveDeadline } from './deadline';
@@ -93,7 +93,12 @@ export default function TripDate() {
       </div>
 
       <div className={styles.footer}>
-        <Button shape="pill" size="lg" fullWidth disabled={!selected} onClick={complete}>
+        <Button
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          disabled={!selected}
+          onClick={complete}
+        >
           선택 완료
         </Button>
       </div>

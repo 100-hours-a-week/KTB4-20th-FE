@@ -1,65 +1,69 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios';
-import { getAccessToken } from './tokenStore';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { refreshAccessTokenOnce } from '../auth/authSession';
+import { getAccessToken } from '../auth/tokenStore';
 
 declare module 'axios' {
   interface AxiosRequestConfig {
     /**
-     * true면 로그인 토큰(Authorization 헤더)을 붙이지 않고, 401이 와도 토큰 재발급을 시도하지 않습니다.
-     * 로그인 없이도 부를 수 있는 API에 만료된 토큰을 보내 401이 섞이는 일을 막을 때 씁니다.
+     * true면 Access Token(Authorization 헤더)을 붙이지 않고, 401이 와도 재발급·재요청하지 않는다.
+     * 로그인 없이도 부를 수 있는 API(초대 링크 첫 검증)에 만료된 토큰이 섞여
+     * "링크는 유효함(AUTHENTICATION_REQUIRED)"과 "토큰 만료"가 구분되지 않는 일을 막는다.
      */
     skipAuth?: boolean;
   }
 }
 
+// Refresh Token은 HttpOnly Secure Cookie로 전달되므로 자격 증명 포함 요청이 필요하다.
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10_000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (config.skipAuth) return config;
+  if (config.skipAuth) {
+    return config;
+  }
   const token = getAccessToken();
-  if (token && !config.headers.Authorization) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-type RefreshHandler = () => Promise<string | null>;
-
-let refreshHandler: RefreshHandler | null = null;
-
-/** Access Token이 만료되어 401이 왔을 때 사용할 재발급 함수를 등록합니다. */
-export function setRefreshHandler(handler: RefreshHandler | null): void {
-  refreshHandler = handler;
-}
-
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
-  _retried?: boolean;
+  _retriedAfterRefresh?: boolean;
 }
 
-apiClient.interceptors.response.use(undefined, async (error: unknown) => {
-  if (!axios.isAxiosError(error) || error.response?.status !== 401 || !refreshHandler) {
-    throw error;
-  }
+const AUTH_REFRESH_EXEMPT_PATHS = ['/auth/refresh', '/auth/logout'];
 
-  const config = error.config as RetryableRequestConfig | undefined;
-  // 인증 요청(재발급, 로그아웃) 자체의 401은 다시 재발급하지 않습니다.
-  if (!config || config.skipAuth || config._retried || config.url?.startsWith('/auth/')) {
-    throw error;
-  }
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError<{ code?: string }>) => {
+    const config = error.config as RetryableRequestConfig | undefined;
+    const isExempt = AUTH_REFRESH_EXEMPT_PATHS.some((path) => config?.url?.includes(path));
 
-  const newToken = await refreshHandler();
-  if (!newToken) {
-    throw error;
-  }
+    if (
+      error.response?.status === 401 &&
+      error.response.data?.code === 'AUTHENTICATION_REQUIRED' &&
+      config &&
+      !config.skipAuth &&
+      !config._retriedAfterRefresh &&
+      !isExempt
+    ) {
+      config._retriedAfterRefresh = true;
+      const token = await refreshAccessTokenOnce();
+      if (token) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+        return apiClient(config);
+      }
+    }
 
-  config._retried = true;
-  config.headers.Authorization = `Bearer ${newToken}`;
-  return apiClient(config);
-});
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;

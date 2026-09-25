@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../../components/Button/Button';
+import { Button } from '@/components/ui/button';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { REGION_GROUPS, toSelectedRegion } from '../../constants/regions';
 import { useTripCreate } from './tripCreateContext';
@@ -72,7 +72,12 @@ export default function TripPlace() {
       </div>
 
       <div className={styles.footer}>
-        <Button shape="pill" size="lg" fullWidth disabled={!subRegion} onClick={complete}>
+        <Button
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          disabled={!subRegion}
+          onClick={complete}
+        >
           선택 완료
         </Button>
       </div>

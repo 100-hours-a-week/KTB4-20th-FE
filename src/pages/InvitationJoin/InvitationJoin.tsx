@@ -16,20 +16,20 @@ import {
 } from '../../api/trips';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import Avatar, { AvatarGroup } from '../../components/Avatar/Avatar';
-import Button from '../../components/Button/Button';
+import { Button } from '@/components/ui/button';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import {
-  AlertIcon,
+  CircleAlertIcon as AlertIcon,
   CalendarIcon,
-  CloseIcon,
+  XIcon as CloseIcon,
   LockIcon,
   MapPinIcon,
   UsersIcon,
-} from '../../components/Icon/icons';
+} from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { truncateTripName } from '../../components/TripCard/tripFormat';
-import useAuth from '../../hooks/useAuth';
+import { useAuth } from '../../auth/AuthContext';
 import { formatDotDate } from '../../utils/date';
 import { withSubjectParticle } from '../../utils/korean';
 import { clearPendingInvitation, savePendingInvitation } from '../../utils/pendingInvitation';
@@ -324,7 +324,11 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
       </div>
 
       <div className={styles.actions}>
-        <Button shape="pill" size="lg" fullWidth onClick={() => join()}>
+        <Button
+          size="lg"
+          className="h-13 w-full rounded-full text-base font-semibold"
+          onClick={() => join()}
+        >
           여행에 참여하기
         </Button>
         <button type="button" className={styles.backButton} onClick={goHome}>
@@ -371,7 +375,7 @@ function ErrorScreen({ kind, capacity }: { kind: ErrorKind; capacity?: number })
   return (
     <main className={styles.errorContainer}>
       <StatusMessage icon={icon} title={title} description={description}>
-        <Button fullWidth onClick={() => navigate('/', { replace: true })}>
+        <Button size="lg" className="h-12 w-full" onClick={() => navigate('/', { replace: true })}>
           홈으로 가기
         </Button>
       </StatusMessage>

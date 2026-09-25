@@ -1,4 +1,4 @@
-import { ChevronLeftIcon } from '../Icon/icons';
+import { ChevronLeftIcon } from 'lucide-react';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
