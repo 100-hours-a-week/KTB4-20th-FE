@@ -12,16 +12,11 @@ import {
 } from '../../api/survey';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
 import LikertScale from './LikertScale';
 import styles from './Survey.module.css';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  HISTORY_CULTURE: '역사·문화',
-  NATURE: '자연·힐링',
-  FOOD: '미식',
-  ACTIVITY_ENTERTAINMENT: '액티비티',
-  CONVENIENCE_RELAXATION: '편의·쇼핑',
-};
+const CATEGORY_LABELS = SURVEY_CATEGORY_LABELS;
 
 const DEFAULT_SCORE = 3;
 
@@ -197,7 +192,10 @@ export default function Survey() {
           <br />
           모두 제출하면 동선이 만들어져요
         </p>
-        <Button className="mt-2 w-full max-w-xs" onClick={() => navigate('/')}>
+        <Button
+          className="mt-2 w-full max-w-xs"
+          onClick={() => navigate(`/trips/${encodeURIComponent(tripId)}`, { replace: true })}
+        >
           방으로 돌아가기
         </Button>
       </div>

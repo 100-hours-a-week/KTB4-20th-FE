@@ -1,7 +1,10 @@
 .page {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
   min-height: 100vh;
+  margin: 0 auto;
   background: var(--color-background);
 }
 
@@ -138,7 +141,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-3);
+  max-width: var(--max-width-mobile);
   min-height: 100vh;
+  margin: 0 auto;
   padding: var(--spacing-4);
   text-align: center;
   color: var(--color-text-muted);

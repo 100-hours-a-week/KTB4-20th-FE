@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CircleAlert, MessageCircle } from 'lucide-react';
 import { buildKakaoLoginUrl } from '../../auth/authSession';
+import { isValidReturnTo } from '../../auth/returnTo';
+import { getPendingInvitation } from '../../utils/pendingInvitation';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,8 +32,25 @@ export default function Login() {
     ? (LOGIN_ERROR_MESSAGES[errorCode] ?? DEFAULT_LOGIN_ERROR_MESSAGE)
     : null;
 
+  // 초대 링크로 들어온 경우 로그인 후 초대 화면으로 돌아간다.
+  // 로그인에 실패하면 백엔드가 `/login?error=`로만 돌려보내므로, 보관해 둔 초대 경로를 이어서 쓴다.
+  const requestedReturnTo = searchParams.get('returnTo') ?? getPendingInvitation();
+  const returnTo =
+    requestedReturnTo && isValidReturnTo(requestedReturnTo) ? requestedReturnTo : '/';
+  const isInvitation = returnTo !== '/';
+  const alertedRef = useRef(false);
+
+  useEffect(() => {
+    // 초대 링크로 처음 들어왔다면 왜 로그인해야 하는지 알려준다. (화면설계서 초대 1-b)
+    if (!isInvitation || errorCode !== null || alertedRef.current) {
+      return;
+    }
+    alertedRef.current = true;
+    window.alert('여행에 참여하려면 먼저 로그인 해주세요.');
+  }, [isInvitation, errorCode]);
+
   function handleKakaoLogin() {
-    window.location.href = buildKakaoLoginUrl('/');
+    window.location.href = buildKakaoLoginUrl(returnTo);
   }
 
   return (
@@ -46,7 +65,10 @@ export default function Login() {
         </Button>
       </div>
 
-      <Dialog open={Boolean(errorMessage) && !dismissed} onOpenChange={(open) => !open && setDismissed(true)}>
+      <Dialog
+        open={Boolean(errorMessage) && !dismissed}
+        onOpenChange={(open) => !open && setDismissed(true)}
+      >
         <DialogContent showCloseButton={false} className="text-center">
           <DialogHeader className="items-center">
             <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-muted">

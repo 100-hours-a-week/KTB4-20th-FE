@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { fetchCurrentUser, type CurrentUser } from '../api/user';
+import { fetchCurrentUser, withdrawUser, type CurrentUser } from '../api/user';
+import { clearPendingInvitation } from '../utils/pendingInvitation';
 import { logoutSession, refreshAccessTokenOnce } from './authSession';
+import { setAccessToken } from './tokenStore';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -8,6 +10,8 @@ interface AuthContextValue {
   status: AuthStatus;
   user: CurrentUser | null;
   logout: () => Promise<void>;
+  /** 회원 탈퇴. 실패하면 오류를 그대로 던져 화면이 안내할 수 있게 한다. */
+  withdraw: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -53,7 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
       async logout() {
-        await logoutSession();
+        try {
+          await logoutSession();
+        } finally {
+          // 로그인 세션이 끝나면 보관해 둔 초대 경로도 폐기한다.
+          clearPendingInvitation();
+          setUser(null);
+          setStatus('unauthenticated');
+        }
+      },
+      async withdraw() {
+        await withdrawUser();
+        setAccessToken(null);
+        clearPendingInvitation();
         setUser(null);
         setStatus('unauthenticated');
       },
