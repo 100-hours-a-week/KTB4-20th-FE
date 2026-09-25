@@ -49,6 +49,65 @@ export async function joinRegionalChatRoom(
   return response.data.data;
 }
 
+// DELETE /api/regional-chat-rooms/{roomId}/members/me — CHAT_API_SPEC.md 7장
+export interface RegionalChatRoomLeaveData {
+  roomId: string;
+  leftAt: string;
+}
+
+export async function leaveRegionalChatRoom(roomId: string): Promise<RegionalChatRoomLeaveData> {
+  const response = await apiClient.delete<ApiResponse<RegionalChatRoomLeaveData>>(
+    `/regional-chat-rooms/${roomId}/members/me`,
+  );
+  return response.data.data;
+}
+
+// GET /api/regional-chat-rooms/{roomId}/messages — CHAT_API_SPEC.md 8장
+export interface ChatMessageSender {
+  publicId?: string;
+  userName: string;
+  profileImageUrl?: string;
+}
+
+export interface ChatMessageImage {
+  imageFileId: string;
+  url: string;
+  thumbnailUrl: string | null;
+  mimeType: string;
+}
+
+export interface ChatMessageItem {
+  messageId: string;
+  clientMessageId: string;
+  messageType: 'TEXT' | 'IMAGE';
+  text: string | null;
+  image: ChatMessageImage | null;
+  sender: ChatMessageSender;
+  createdAt: string;
+}
+
+export interface ChatMessagePage {
+  nextCursor: string | null;
+  nextAfterMessageId: string | null;
+  hasNext: boolean;
+}
+
+export interface ChatMessageHistoryData {
+  items: ChatMessageItem[];
+  page: ChatMessagePage;
+}
+
+export async function fetchChatMessages(
+  roomId: string,
+  params: { cursor?: string; afterMessageId?: string } = {},
+): Promise<ChatMessageHistoryData> {
+  const response = await apiClient.get<ApiResponse<ChatMessageHistoryData>>(
+    `/regional-chat-rooms/${roomId}/messages`,
+    { params },
+  );
+  return response.data.data;
+}
+
 // GET /api/chat-policy — CHAT_API_SPEC.md 4장
 export interface ChatPolicy {
   policyVersionId: string;

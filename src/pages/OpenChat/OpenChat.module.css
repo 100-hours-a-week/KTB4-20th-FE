@@ -1,41 +1,42 @@
 .page {
   min-height: 100vh;
-  padding-bottom: 64px;
+  padding-bottom: 84px;
+  background: var(--color-background);
 }
 
 .container {
   max-width: var(--max-width-mobile);
   margin: 0 auto;
-  padding: var(--spacing-5) var(--spacing-4);
+  padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
+}
+
+.header {
+  margin-bottom: var(--spacing-5);
 }
 
 .title {
-  margin: 0 0 var(--spacing-4);
+  margin: 0 0 var(--spacing-1);
   font-size: var(--font-size-xl);
   font-weight: 700;
+  letter-spacing: -0.2px;
   color: var(--color-text);
 }
 
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .status {
-  padding: var(--spacing-6) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-8) 0;
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-}
-
-.retryButton {
-  margin-top: var(--spacing-3);
-  padding: var(--spacing-2) var(--spacing-4);
-  color: var(--color-on-primary);
-  background: var(--color-primary);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-}
-
-.retryButton:hover {
-  background: var(--color-primary-dark);
 }
 
 .list {
@@ -47,19 +48,28 @@
 .roomButton {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-3);
   width: 100%;
   min-height: 44px;
   padding: var(--spacing-4);
   background: var(--color-background);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   text-align: left;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .roomButton:hover {
   border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.roomButton:active {
+  transform: translateY(0);
 }
 
 .roomButton:focus-visible {
@@ -67,15 +77,30 @@
   outline-offset: 2px;
 }
 
-.roomButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.roomIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
+  color: var(--color-primary);
 }
 
 .roomInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.roomNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
   min-width: 0;
 }
 
@@ -91,33 +116,4 @@
 .roomMeta {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-}
-
-.joinedBadge {
-  flex-shrink: 0;
-  padding: var(--spacing-1) var(--spacing-3);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text);
-  white-space: nowrap;
-}
-
-.loadMoreButton {
-  display: block;
-  width: 100%;
-  margin-top: var(--spacing-4);
-  padding: var(--spacing-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-}
-
-.loadMoreButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

@@ -7,12 +7,21 @@ import {
   type ChatPolicy,
   type RegionalChatRoomItem,
 } from '../../api/chat';
-import styles from './JoinRoomModal.module.css';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface JoinRoomModalProps {
   room: RegionalChatRoomItem;
   onClose: () => void;
-  onJoined: (roomId: string) => void;
+  onJoined: (room: RegionalChatRoomItem) => void;
 }
 
 const SUBMIT_ERROR_MESSAGES: Record<string, string> = {
@@ -72,7 +81,7 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
         await consentToChatPolicy(policy.policyVersionId);
       }
       await joinRegionalChatRoom(room.roomId);
-      onJoined(room.roomId);
+      onJoined(room);
     } catch (error) {
       const code = getApiErrorCode(error);
       setSubmitError((code && SUBMIT_ERROR_MESSAGES[code]) ?? DEFAULT_SUBMIT_ERROR_MESSAGE);
@@ -84,52 +93,37 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
   const canSubmit = !loadingPolicy && !policyError && agreed && !submitting;
 
   return (
-    <div className={styles.overlay} role="presentation" onClick={onClose}>
-      <div
-        className={styles.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="join-room-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 id="join-room-title" className={styles.title}>
-          {room.name} 여행자방에 참여할까요?
-        </h2>
-        <p className={styles.subtitle}>정확한 위치는 공개하지 않습니다.</p>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{room.name} 여행자방에 참여할까요?</DialogTitle>
+          <DialogDescription>정확한 위치는 공개하지 않습니다.</DialogDescription>
+        </DialogHeader>
 
-        {loadingPolicy && <p className={styles.policyStatus}>운영 원칙을 불러오는 중이에요.</p>}
+        {loadingPolicy && <p className="text-sm text-muted-foreground">운영 원칙을 불러오는 중이에요.</p>}
 
         {!loadingPolicy && policyError && (
-          <p className={styles.policyStatus}>운영 원칙을 불러오지 못했어요.</p>
+          <p className="text-sm text-muted-foreground">운영 원칙을 불러오지 못했어요.</p>
         )}
 
         {!loadingPolicy && !policyError && (
-          <label className={styles.agreeRow}>
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(event) => setAgreed(event.target.checked)}
-            />
-            <span>오픈 채팅 운영 원칙에 동의합니다</span>
+          <label className="flex items-center gap-3 rounded-lg bg-muted p-3 text-sm font-medium">
+            <Checkbox checked={agreed} onCheckedChange={(checked) => setAgreed(checked === true)} />
+            오픈 채팅 운영 원칙에 동의합니다
           </label>
         )}
 
-        {submitError && <p className={styles.errorText}>{submitError}</p>}
+        {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
-        <div className={styles.actions}>
-          <button type="button" className={styles.cancelButton} onClick={onClose}>
+        <DialogFooter className="!mx-0 !mb-0 !rounded-none border-t-0 !bg-transparent !p-0 sm:flex-row">
+          <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
             취소
-          </button>
-          <button
-            type="button"
-            className={styles.joinButton}
-            onClick={handleJoin}
-            disabled={!canSubmit}
-          >
+          </Button>
+          <Button type="button" className="flex-1" onClick={handleJoin} disabled={!canSubmit}>
             {submitting ? '입장하는 중...' : '입장'}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
