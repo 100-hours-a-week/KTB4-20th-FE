@@ -1,0 +1,123 @@
+.page {
+  min-height: 100vh;
+  padding-bottom: 64px;
+}
+
+.container {
+  max-width: var(--max-width-mobile);
+  margin: 0 auto;
+  padding: var(--spacing-5) var(--spacing-4);
+}
+
+.title {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.status {
+  padding: var(--spacing-6) 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.retryButton {
+  margin-top: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-4);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.retryButton:hover {
+  background: var(--color-primary-dark);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.roomButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--spacing-4);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.roomButton:hover {
+  border-color: var(--color-border-strong);
+}
+
+.roomButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.roomButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.roomInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.roomName {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roomMeta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.joinedBadge {
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.loadMoreButton {
+  display: block;
+  width: 100%;
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.loadMoreButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
