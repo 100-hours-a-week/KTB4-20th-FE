@@ -1,0 +1,58 @@
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  color: var(--color-background);
+  background: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.md {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-sm);
+}
+
+.muted {
+  background: var(--color-avatar-muted);
+}
+
+.lg {
+  width: 48px;
+  height: 48px;
+  font-size: var(--font-size-base);
+}
+
+.sm {
+  width: 20px;
+  height: 20px;
+  font-size: var(--font-size-badge);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.group {
+  display: flex;
+}
+
+.groupItem {
+  display: flex;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 0 1.5px var(--color-background);
+}
+
+.groupItem + .groupItem {
+  margin-left: -4px;
+}
+
+.groupItem:nth-child(n + 2) > span {
+  background: var(--color-avatar-muted);
+}

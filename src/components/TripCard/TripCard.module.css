@@ -1,0 +1,84 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.card:has(.link:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+/* 카드 전체를 눌러도 이동하도록 링크 영역을 카드 크기로 넓힙니다. */
+.link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: '';
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.meta {
+  margin: 0 0 var(--spacing-2);
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-xs);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leaveButton {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: calc(var(--spacing-2) * -1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.leaveButton:hover {
+  background: var(--color-surface-strong);
+}
+
+.leaveButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+}
+
+.skeleton {
+  gap: var(--spacing-2);
+  border-color: transparent;
+  background: var(--color-surface);
+}
