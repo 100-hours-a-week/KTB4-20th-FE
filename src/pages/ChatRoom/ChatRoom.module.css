@@ -1,0 +1,153 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-background);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.roomName {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roomMeta {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.messageList {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-4);
+}
+
+.status {
+  padding: var(--spacing-6) 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.dateDivider {
+  margin: var(--spacing-4) 0;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.messageRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
+}
+
+.messageRow.mine {
+  justify-content: flex-end;
+}
+
+.avatarSlot {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
+  object-fit: cover;
+}
+
+.bubbleColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-0);
+  max-width: 74%;
+}
+
+.messageRow.mine .bubbleColumn {
+  align-items: flex-end;
+}
+
+.senderName {
+  margin-bottom: var(--spacing-0);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.bubbleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+.bubble {
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.messageRow.mine .bubble {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.bubbleFailed {
+  opacity: 0.6;
+  border: 1px solid var(--color-danger);
+}
+
+.timeLabel {
+  flex-shrink: 0;
+  font-size: var(--font-size-badge);
+  color: var(--color-text-muted-soft);
+  white-space: nowrap;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.centerStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  min-height: 100vh;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

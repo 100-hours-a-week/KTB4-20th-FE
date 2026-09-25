@@ -542,3 +542,22 @@ There are no progressive elevation tiers — the system either has the one shado
 - **Loading states / skeleton screens:** not visible on the extracted surfaces.
 - **Map view styling:** the search-results map uses Mapbox-tinted tiles with custom Indigo markers; not captured here.
 - **Form input error states:** error text color (`{colors.primary-error-text}`) is documented, but the full input outline + helper-text combination on validation failure was not visible in the captured surfaces.
+## 플랜잇 화면 구현 규칙
+
+공통 UI는 shadcn/ui(`src/components/ui/*`)를, 색상·간격·모서리는 `src/styles/variables.css`의 토큰을 쓴다. 아래는 화면을 만들면서 정한 추가 규칙이다.
+
+- **버튼:** shadcn `Button`을 쓴다. 화면 하단 주요 버튼은 `h-13 w-full rounded-full`(알약형), 보조 버튼은 `variant="secondary"`.
+- **안내 팝업 / 확인 팝업:** `src/components/AlertDialog`(경고 아이콘 + 세로 버튼), `src/components/ConfirmDialog`(가운데 정렬 + 가로 취소/확인 버튼, 선택 아이콘). 둘 다 shadcn `Dialog` 위에 만들었다.
+- **바텀시트:** `src/components/BottomSheet`. shadcn `Dialog`와 같은 base-ui Dialog로 만들었고, 위쪽 모서리 `--radius-lg`, 손잡이 막대, 바깥 영역을 누르면 닫힌다.
+- **토스트:** sonner의 `toast()`를 쓴다(`App.tsx`의 `Toaster`). 초대 링크 복사 알림은 2초 뒤 사라진다.
+- **로딩:** 목록은 shadcn `Skeleton`, 전체 화면은 `src/components/LoadingScreen`(스피너 + 선택 안내 문구).
+- **상태 안내(빈 상태·오류 화면):** `src/components/StatusMessage`. 점선 상자 아이콘 + 굵은 제목 + 보조색 설명, 필요하면 아래에 버튼.
+- **여행방 카드:** 흰 배경 + 1px `--color-border`, `--radius-md`, 안쪽 여백 16px. 상태 배지는 shadcn `Badge`(설문 중·여행 완료는 흐리게, 생성 완료·여행 중은 진하게).
+- **입력 칸:** 흰 배경 + 1px `--color-border`, `--radius-md`, 높이 `--height-button-md`. 이름표는 `--font-size-xs` 보조색, 안내 문구는 `--font-size-badge`, 오류는 `--color-danger`.
+- **선택 칩:** 알약형 테두리 칩. 선택하면 `--color-surface-strong` 배경 + 굵게. 고를 수 없으면 `--color-surface` 배경 + `--color-text-muted-soft`.
+- **지역 선택:** 대분류는 가로 스크롤 탭(선택 시 `--color-placeholder`), 소분류는 3열 격자 버튼(선택 시 `--color-primary` 배경 + 흰 글자).
+- **달력:** `src/components/Calendar/CalendarMonth`. 선택한 날은 `--color-primary` 원, 오늘은 `--color-placeholder` 원, 고를 수 없는 날은 `--color-border` 글자.
+- **아이콘:** lucide-react를 쓴다.
+- **진행 표시줄·선호도 바:** 높이 6px 알약형, 바탕 `--color-surface-strong`, 채움 `--color-primary`.
+- **여행방 상세:** 화면 바탕은 `--color-surface`, 카드와 멤버 행은 흰 배경 + 1px `--color-border-soft`, `--radius-md`. 나 이외 멤버의 글자 프로필은 `--color-avatar-muted` 배경.
+- **비활성 주요 버튼(여행방 상세):** 흐린 보라 대신 `bg-accent` + `text-muted-foreground`로 회색 처리한다.
