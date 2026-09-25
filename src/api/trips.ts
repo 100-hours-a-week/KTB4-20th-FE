@@ -44,7 +44,7 @@ export const HOST_CANNOT_LEAVE_ALONE = 'HOST_CANNOT_LEAVE_ALONE';
 
 export interface TripCreateRequest {
   name: string;
-  subRegionId: number;
+  regionId: number;
   /** YYYY-MM-DD */
   startDate: string;
   capacity: number;
@@ -111,10 +111,8 @@ export interface TripDetail {
   name: string;
   region: {
     regionId: string;
-    broadRegionCode: string;
-    broadRegionName: string;
-    subRegionCode: string;
-    subRegionName: string;
+    regionCode: string;
+    regionName: string;
   };
   /** YYYY-MM-DD */
   startDate: string;

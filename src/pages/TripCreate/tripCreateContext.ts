@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
+import type { RegionItem } from '../../api/regions';
 import type { TripCreateResponse } from '../../api/trips';
-import type { SelectedRegion } from '../../constants/regions';
 
 export type DeadlineOption = 'oneDay' | 'threeDays' | 'dayBefore' | 'custom';
 
 export interface TripCreateForm {
-  region: SelectedRegion | null;
+  region: RegionItem | null;
   /** YYYY-MM-DD */
   startDate: string | null;
   capacity: number;

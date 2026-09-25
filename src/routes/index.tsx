@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
 import ChatRoom from '../pages/ChatRoom/ChatRoom';
-import ComingSoon from '../pages/ComingSoon/ComingSoon';
 import Community from '../pages/Community/Community';
 import Home from '../pages/Home/Home';
 import InvitationJoin from '../pages/InvitationJoin/InvitationJoin';
@@ -14,6 +13,7 @@ import TripCreated from '../pages/TripCreate/TripCreated';
 import TripCreateLayout from '../pages/TripCreate/TripCreateLayout';
 import TripDate from '../pages/TripCreate/TripDate';
 import TripPlace from '../pages/TripCreate/TripPlace';
+import TripSchedule from '../pages/TripSchedule/TripSchedule';
 import GuestOnly from './GuestOnly';
 import RequireAuth from './RequireAuth';
 
@@ -39,7 +39,7 @@ export default function AppRoutes() {
           <Route path="done" element={<TripCreated />} />
         </Route>
         <Route path="/trips/:tripId" element={<TripDetail />} />
-        <Route path="/trips/:tripId/schedule" element={<ComingSoon title="여행 일정" />} />
+        <Route path="/trips/:tripId/schedule" element={<TripSchedule />} />
         <Route path="/trips/:tripId/survey" element={<Survey />} />
       </Route>
 

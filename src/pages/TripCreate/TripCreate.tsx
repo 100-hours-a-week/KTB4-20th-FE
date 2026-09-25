@@ -107,7 +107,7 @@ export default function TripCreate() {
     try {
       const result = await createTrip({
         name,
-        subRegionId: form.region.subRegionId,
+        regionId: Number(form.region.regionId),
         startDate: form.startDate,
         capacity: form.capacity,
         surveyDeadlineDate: isTripToday || !deadline ? undefined : deadline,
@@ -116,7 +116,7 @@ export default function TripCreate() {
       setCreatedTrip({
         ...result,
         name,
-        regionLabel: form.region.label,
+        regionLabel: form.region.regionName,
         startDate: form.startDate,
         capacity: form.capacity,
       });
@@ -148,7 +148,7 @@ export default function TripCreate() {
           >
             <MapPinIcon size={18} />
             <span className={form.region ? styles.value : styles.placeholder}>
-              {form.region?.label ?? '어디로 떠나시나요?'}
+              {form.region?.regionName ?? '어디로 떠나시나요?'}
             </span>
           </button>
           {errors.region && <p className={styles.error}>{errors.region}</p>}

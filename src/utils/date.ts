@@ -40,3 +40,12 @@ export function formatMonthDay(iso: string): string {
   const { monthIndex, day } = parseIsoDate(iso);
   return `${monthIndex + 1}월 ${day}일`;
 }
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** "2026-08-26" → "8/26(수)" */
+export function formatSlashDateWithWeekday(iso: string): string {
+  const { year, monthIndex, day } = parseIsoDate(iso);
+  const weekday = WEEKDAY_LABELS[new Date(Date.UTC(year, monthIndex, day)).getUTCDay()];
+  return `${monthIndex + 1}/${day}(${weekday})`;
+}
