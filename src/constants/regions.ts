@@ -1,98 +1,45 @@
 /*
-  여행지로 고를 수 있는 지역입니다.
-  백엔드에 지역 목록 API가 없어서, 백엔드 DB 초기 데이터(V3__seed_regions.sql)의 번호를 그대로 옮겨 적었습니다.
-  AI 일정 생성을 지원하는 지역(서울·부산·제주·경주·전주)만 보여줍니다.
+  여행지로 고를 수 있는 곳입니다. 백엔드가 AI 일정 생성 요청에 보내는 지역 값
+  (서울·경주·부산·전주·제주, ScheduleGenerationServiceImpl.resolveAiRegion)과 같게 맞췄습니다.
+
+  여행방 만들기 API는 세부 지역 번호(subRegionId)를 받으므로, 도시마다 백엔드 DB 초기 데이터
+  (V3__seed_regions.sql)의 대표 지역 하나를 연결했습니다. AI에는 도시 이름만 전달되어
+  어느 세부 지역을 골라도 같은 도시로 처리됩니다.
   백엔드에 지역 목록 API가 생기면 이 파일 대신 API로 불러오도록 바꿉니다.
 */
 
-export interface SubRegion {
-  id: number;
+export interface TripDestination {
+  /** 백엔드 sub_regions.id */
+  subRegionId: number;
+  /** 화면에 보여줄 이름 (AI 요청 값과 같음) */
   name: string;
 }
 
-export interface RegionGroup {
-  key: string;
-  name: string;
-  subRegions: SubRegion[];
-}
-
-const toSubRegions = (startId: number, names: string[]): SubRegion[] =>
-  names.map((name, index) => ({ id: startId + index, name }));
-
-export const REGION_GROUPS: RegionGroup[] = [
-  {
-    key: 'seoul',
-    name: '서울',
-    subRegions: toSubRegions(1, [
-      '강남구',
-      '강동구',
-      '강북구',
-      '강서구',
-      '관악구',
-      '광진구',
-      '구로구',
-      '금천구',
-      '노원구',
-      '도봉구',
-      '동대문구',
-      '동작구',
-      '마포구',
-      '서대문구',
-      '서초구',
-      '성동구',
-      '성북구',
-      '송파구',
-      '양천구',
-      '영등포구',
-      '용산구',
-      '은평구',
-      '종로구',
-      '중구',
-      '중랑구',
-    ]),
-  },
-  {
-    key: 'busan',
-    name: '부산',
-    subRegions: toSubRegions(26, [
-      '강서구',
-      '금정구',
-      '기장군',
-      '남구',
-      '동구',
-      '동래구',
-      '부산진구',
-      '북구',
-      '사상구',
-      '사하구',
-      '서구',
-      '수영구',
-      '연제구',
-      '영도구',
-      '중구',
-      '해운대구',
-    ]),
-  },
-  {
-    key: 'jeju',
-    name: '제주',
-    subRegions: [
-      { id: 227, name: '제주시' },
-      { id: 228, name: '서귀포시' },
-    ],
-  },
-  { key: 'gyeongju', name: '경주', subRegions: [{ id: 189, name: '경주시' }] },
-  { key: 'jeonju', name: '전주', subRegions: [{ id: 163, name: '전주시' }] },
+export const TRIP_DESTINATIONS: TripDestination[] = [
+  { subRegionId: 24, name: '서울' }, // 서울특별시 중구
+  { subRegionId: 189, name: '경주' }, // 경상북도 경주시
+  { subRegionId: 40, name: '부산' }, // 부산광역시 중구
+  { subRegionId: 163, name: '전주' }, // 전북특별자치도 전주시
+  { subRegionId: 227, name: '제주' }, // 제주특별자치도 제주시
 ];
 
 export interface SelectedRegion {
-  groupKey: string;
   subRegionId: number;
-  /** 화면에 보여줄 이름. 예: "서울 강남구", "경주시" */
   label: string;
 }
 
-export function toSelectedRegion(group: RegionGroup, subRegion: SubRegion): SelectedRegion {
-  const label = group.subRegions.length > 1 ? `${group.name} ${subRegion.name}` : subRegion.name;
-  return { groupKey: group.key, subRegionId: subRegion.id, label };
+export function toSelectedRegion(destination: TripDestination): SelectedRegion {
+  return { subRegionId: destination.subRegionId, label: destination.name };
+}
+
+/**
+ * 백엔드가 알려준 지역을 여행지 이름으로 바꿉니다. (예: 서울특별시 중구 → 서울)
+ * 목록에 없는 지역이면 백엔드 이름을 그대로 씁니다.
+ */
+export function getDestinationName(
+  subRegionId: string | number,
+  fallback: { broadRegionName: string; subRegionName: string },
+): string {
+  const destination = TRIP_DESTINATIONS.find((item) => item.subRegionId === Number(subRegionId));
+  return destination?.name ?? `${fallback.broadRegionName} ${fallback.subRegionName}`;
 }

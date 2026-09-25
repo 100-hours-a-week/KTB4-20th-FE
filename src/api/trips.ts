@@ -103,3 +103,46 @@ export const TRIP_JOIN_ERROR_CODES = {
   capacityExceeded: 'TRIP_CAPACITY_EXCEEDED',
   dateConflict: TRIP_DATE_CONFLICT,
 } as const;
+
+export type TripMemberRole = 'HOST' | 'MEMBER';
+
+export interface TripDetail {
+  tripId: string;
+  name: string;
+  region: {
+    regionId: string;
+    broadRegionCode: string;
+    broadRegionName: string;
+    subRegionCode: string;
+    subRegionName: string;
+  };
+  /** YYYY-MM-DD */
+  startDate: string;
+  endDate: string;
+  capacity: number;
+  memberCount: number;
+  myRole: TripMemberRole;
+  surveyDeadlineAt: string;
+  createdAt: string;
+  /** 참여한 순서대로 옵니다. */
+  members: {
+    userPublicId: string;
+    userName: string;
+    profileImageUrl: string | null;
+    role: TripMemberRole;
+  }[];
+}
+
+/** 여행방 상세를 조회합니다. 참여 중인 멤버만 볼 수 있어요. */
+export async function getTripDetail(tripId: string): Promise<TripDetail> {
+  const response = await apiClient.get<ApiResponse<TripDetail>>(
+    `/trips/${encodeURIComponent(tripId)}`,
+  );
+  return response.data.data;
+}
+
+/** 여행방 상세 조회에서 참여자가 아니거나 없는 방일 때 백엔드가 보내는 오류 코드 */
+export const TRIP_DETAIL_ERROR_CODES = {
+  memberRequired: 'TRIP_MEMBER_REQUIRED',
+  notFound: 'TRIP_NOT_FOUND',
+} as const;

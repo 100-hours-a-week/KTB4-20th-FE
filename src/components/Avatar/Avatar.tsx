@@ -5,16 +5,18 @@ interface AvatarProps {
   name: string;
   imageUrl?: string | null;
   size?: 'sm' | 'md' | 'lg';
+  /** true면 글자 배경을 회색으로 보여줍니다. (나 이외의 멤버 등) */
+  muted?: boolean;
 }
 
 /** 프로필 사진을 보여주고, 사진이 없거나 불러오지 못하면 이름의 첫 글자를 보여줍니다. */
-export default function Avatar({ name, imageUrl, size = 'md' }: AvatarProps) {
+export default function Avatar({ name, imageUrl, size = 'md', muted = false }: AvatarProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const showImage = Boolean(imageUrl) && failedUrl !== imageUrl;
   const initial = Array.from(name.trim())[0] ?? '';
 
   return (
-    <span className={`${styles.avatar} ${styles[size]}`}>
+    <span className={`${styles.avatar} ${styles[size]} ${muted ? styles.muted : ''}`}>
       {showImage && imageUrl ? (
         <img
           src={imageUrl}

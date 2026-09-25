@@ -8,30 +8,6 @@
   padding: var(--spacing-2) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
 }
 
-.tabs {
-  display: flex;
-  gap: var(--spacing-2);
-  margin: var(--spacing-3) calc(var(--spacing-4) * -1) 0;
-  padding: 0 var(--spacing-4) var(--spacing-2);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tab {
-  flex-shrink: 0;
-  padding: var(--spacing-2) var(--spacing-4);
-  border: 0;
-  border-radius: var(--radius-full);
-  color: var(--color-text);
-  background: var(--color-surface);
-  font-size: var(--font-size-sm);
-}
-
-.tabSelected {
-  background: var(--color-placeholder);
-  font-weight: var(--font-weight-semibold);
-}
-
 .body {
   flex: 1;
   margin-top: var(--spacing-4);
@@ -60,7 +36,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.tab:focus-visible,
 .option:focus-visible,
 .navButton:focus-visible {
   outline: 2px solid var(--color-primary);

@@ -9,6 +9,7 @@ import NotFound from '../pages/NotFound/NotFound';
 import OpenChat from '../pages/OpenChat/OpenChat';
 import Survey from '../pages/Survey/Survey';
 import TripCreate from '../pages/TripCreate/TripCreate';
+import TripDetail from '../pages/TripDetail/TripDetail';
 import TripCreated from '../pages/TripCreate/TripCreated';
 import TripCreateLayout from '../pages/TripCreate/TripCreateLayout';
 import TripDate from '../pages/TripCreate/TripDate';
@@ -37,7 +38,8 @@ export default function AppRoutes() {
           <Route path="date" element={<TripDate />} />
           <Route path="done" element={<TripCreated />} />
         </Route>
-        <Route path="/trips/:tripId" element={<ComingSoon title="여행방 상세" />} />
+        <Route path="/trips/:tripId" element={<TripDetail />} />
+        <Route path="/trips/:tripId/schedule" element={<ComingSoon title="여행 일정" />} />
         <Route path="/trips/:tripId/survey" element={<Survey />} />
       </Route>
 

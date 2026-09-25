@@ -5,49 +5,55 @@
 
 @custom-variant dark (&:is(.dark *));
 
-* {
-  box-sizing: border-box;
-}
+/*
+  기본 스타일은 base 레이어에 둔다. 레이어 밖에 두면 Tailwind 유틸리티(mx-auto 등)보다
+  우선순위가 높아져서, 예를 들어 하단 탭의 가운데 정렬(mx-auto)이 ul { margin: 0 }에 덮인다.
+*/
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
 
-body {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  background-color: var(--color-background);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    background-color: var(--color-background);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
 
-#root {
-  min-height: 100vh;
-}
+  #root {
+    min-height: 100vh;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
 
-ul,
-ol {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 
-img {
-  max-width: 100%;
-  display: block;
+  img {
+    max-width: 100%;
+    display: block;
+  }
 }
 
 @theme inline {

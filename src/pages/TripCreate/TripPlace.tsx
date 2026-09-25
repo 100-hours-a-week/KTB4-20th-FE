@@ -2,36 +2,28 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import PageHeader from '../../components/PageHeader/PageHeader';
-import { REGION_GROUPS, toSelectedRegion } from '../../constants/regions';
+import { TRIP_DESTINATIONS, toSelectedRegion } from '../../constants/regions';
 import { useTripCreate } from './tripCreateContext';
 import styles from './TripPicker.module.css';
 
-/** 여행지를 대분류(탭) → 소분류(칩) 순서로 하나 고르는 화면입니다. */
+/** 여행지를 하나 고르는 화면입니다. AI 일정 생성을 지원하는 도시만 보여줍니다. */
 export default function TripPlace() {
   const navigate = useNavigate();
   const { form, updateForm } = useTripCreate();
-  const [groupKey, setGroupKey] = useState(form.region?.groupKey ?? REGION_GROUPS[0].key);
   const [subRegionId, setSubRegionId] = useState<number | null>(form.region?.subRegionId ?? null);
   const completingRef = useRef(false);
 
-  const group = REGION_GROUPS.find((item) => item.key === groupKey) ?? REGION_GROUPS[0];
-  const subRegion = group.subRegions.find((item) => item.id === subRegionId);
+  const destination = TRIP_DESTINATIONS.find((item) => item.subRegionId === subRegionId);
 
-  const selectGroup = (key: string) => {
-    // 이미 선택된 대분류를 다시 눌러도 해제되지 않고, 다른 대분류로 바꾸면 소분류 선택은 초기화됩니다.
-    if (key === groupKey) return;
-    setGroupKey(key);
-    setSubRegionId(null);
-  };
-
-  const toggleSubRegion = (id: number) => {
+  // 같은 여행지를 다시 누르면 선택이 해제됩니다.
+  const toggleDestination = (id: number) => {
     setSubRegionId((current) => (current === id ? null : id));
   };
 
   const complete = () => {
-    if (!subRegion || completingRef.current) return;
+    if (!destination || completingRef.current) return;
     completingRef.current = true;
-    updateForm({ region: toSelectedRegion(group, subRegion) });
+    updateForm({ region: toSelectedRegion(destination) });
     navigate('/trips/new');
   };
 
@@ -39,31 +31,16 @@ export default function TripPlace() {
     <main className={styles.container}>
       <PageHeader title="여행 장소 등록" centered onBack={() => navigate('/trips/new')} />
 
-      <div className={styles.tabs} role="tablist" aria-label="지역">
-        {REGION_GROUPS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={item.key === groupKey}
-            className={`${styles.tab} ${item.key === groupKey ? styles.tabSelected : ''}`}
-            onClick={() => selectGroup(item.key)}
-          >
-            {item.name}
-          </button>
-        ))}
-      </div>
-
       <div className={styles.body}>
-        <div className={styles.optionGrid} role="radiogroup" aria-label={`${group.name} 세부 지역`}>
-          {group.subRegions.map((item) => (
+        <div className={styles.optionGrid} role="radiogroup" aria-label="여행지">
+          {TRIP_DESTINATIONS.map((item) => (
             <button
-              key={item.id}
+              key={item.subRegionId}
               type="button"
               role="radio"
-              aria-checked={item.id === subRegionId}
-              className={`${styles.option} ${item.id === subRegionId ? styles.optionSelected : ''}`}
-              onClick={() => toggleSubRegion(item.id)}
+              aria-checked={item.subRegionId === subRegionId}
+              className={`${styles.option} ${item.subRegionId === subRegionId ? styles.optionSelected : ''}`}
+              onClick={() => toggleDestination(item.subRegionId)}
             >
               {item.name}
             </button>
@@ -75,7 +52,7 @@ export default function TripPlace() {
         <Button
           size="lg"
           className="h-13 w-full rounded-full text-base font-semibold"
-          disabled={!subRegion}
+          disabled={!destination}
           onClick={complete}
         >
           선택 완료

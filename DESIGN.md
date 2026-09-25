@@ -558,3 +558,6 @@ There are no progressive elevation tiers — the system either has the one shado
 - **지역 선택:** 대분류는 가로 스크롤 탭(선택 시 `--color-placeholder`), 소분류는 3열 격자 버튼(선택 시 `--color-primary` 배경 + 흰 글자).
 - **달력:** `src/components/Calendar/CalendarMonth`. 선택한 날은 `--color-primary` 원, 오늘은 `--color-placeholder` 원, 고를 수 없는 날은 `--color-border` 글자.
 - **아이콘:** lucide-react를 쓴다.
+- **진행 표시줄·선호도 바:** 높이 6px 알약형, 바탕 `--color-surface-strong`, 채움 `--color-primary`.
+- **여행방 상세:** 화면 바탕은 `--color-surface`, 카드와 멤버 행은 흰 배경 + 1px `--color-border-soft`, `--radius-md`. 나 이외 멤버의 글자 프로필은 `--color-avatar-muted` 배경.
+- **비활성 주요 버튼(여행방 상세):** 흐린 보라 대신 `bg-accent` + `text-muted-foreground`로 회색 처리한다.
