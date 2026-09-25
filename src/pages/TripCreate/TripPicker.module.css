@@ -1,0 +1,118 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-2) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+}
+
+.tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  margin: var(--spacing-3) calc(var(--spacing-4) * -1) 0;
+  padding: 0 var(--spacing-4) var(--spacing-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+}
+
+.tabSelected {
+  background: var(--color-placeholder);
+  font-weight: var(--font-weight-semibold);
+}
+
+.body {
+  flex: 1;
+  margin-top: var(--spacing-4);
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-2);
+}
+
+.option {
+  min-height: 44px;
+  padding: 0 var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  background: var(--color-background);
+  font-size: var(--font-size-xs);
+}
+
+.optionSelected {
+  border-color: var(--color-button-dark);
+  color: var(--color-background);
+  background: var(--color-button-dark);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tab:focus-visible,
+.option:focus-visible,
+.navButton:focus-visible {
+  outline: 2px solid var(--color-button-dark);
+  outline-offset: 2px;
+}
+
+.calendarCard {
+  padding: var(--spacing-5) var(--spacing-4);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-dialog);
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-4);
+}
+
+.calendarYear {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.calendarNav {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.navButton:disabled {
+  color: var(--color-border);
+  cursor: default;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-3);
+  background: var(--color-background);
+}

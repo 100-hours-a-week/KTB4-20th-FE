@@ -1,0 +1,59 @@
+.dialog {
+  width: min(100% - (var(--spacing-5) * 2), 300px);
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  background: var(--color-background);
+  box-shadow: var(--shadow-dialog);
+}
+
+.dialog::backdrop {
+  background: var(--color-scrim-strong);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-5) var(--spacing-4) var(--spacing-4);
+  text-align: center;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--spacing-3);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: var(--color-surface-strong);
+}
+
+.title {
+  margin: 0 0 var(--spacing-3);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.description {
+  margin: 0 0 var(--spacing-5);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.actions > button {
+  border-radius: var(--radius-md);
+}

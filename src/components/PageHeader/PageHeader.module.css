@@ -1,0 +1,38 @@
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-height: var(--height-button-lg);
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(var(--spacing-2) * -1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.backButton:focus-visible {
+  outline: 2px solid var(--color-button-dark);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.centered .title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}

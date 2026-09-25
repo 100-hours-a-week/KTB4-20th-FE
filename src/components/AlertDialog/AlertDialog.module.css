@@ -1,0 +1,57 @@
+.dialog {
+  width: min(100% - (var(--spacing-5) * 2), 342px);
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xl);
+  color: var(--color-text);
+  background: var(--color-background);
+  box-shadow: var(--shadow-dialog);
+}
+
+.dialog::backdrop {
+  background: var(--color-scrim);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--spacing-7) var(--spacing-5) var(--spacing-5);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--spacing-5);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.title {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.description {
+  margin: 0 0 var(--spacing-5);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+}

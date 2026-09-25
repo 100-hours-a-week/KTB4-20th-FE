@@ -1,0 +1,47 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 128px;
+  width: min(100% - (var(--spacing-6) * 2), var(--max-width-mobile));
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-7) 0;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
+/* 로고 확정 전까지 설계서의 원형 자리표시자를 사용합니다. */
+.logo {
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-full);
+  background: var(--color-placeholder);
+}
+
+.serviceName {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.kakaoButton {
+  font-size: var(--font-size-base);
+}
+
+.kakaoIcon {
+  flex-shrink: 0;
+}
+
+@media (max-height: 640px) {
+  .container {
+    gap: var(--spacing-8);
+  }
+}

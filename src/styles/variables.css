@@ -13,6 +13,16 @@
   --color-border: #e2e4e8;
   --color-danger: #dc2626;
   --color-success: #16a34a;
+  --color-button-dark: #222222;
+  --color-button-dark-hover: #000000;
+  --color-surface-strong: #f2f2f2;
+  --color-surface-strong-hover: #e6e6e6;
+  --color-placeholder: #d9d9d9;
+  --color-scrim: rgba(0, 0, 0, 0.2);
+  --color-scrim-strong: rgba(0, 0, 0, 0.4);
+  --color-text-subtle: #9ca3af;
+  --color-skeleton: #e5e7eb;
+  --color-avatar-muted: #8a8a8a;
 
   /* Spacing (4px 기준) */
   --spacing-1: 4px;
@@ -27,17 +37,30 @@
   /* Typography */
   --font-family-base:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-2xs: 0.6875rem;
+  --font-size-xs: 0.8125rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 
   /* Layout */
   --max-width-content: 1200px;
+  --max-width-mobile: 480px;
+  --height-button-md: 48px;
+  --height-button-lg: 52px;
+  --height-tab-bar: 56px;
 
   /* Radius / Shadow */
   --radius-sm: 4px;
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
