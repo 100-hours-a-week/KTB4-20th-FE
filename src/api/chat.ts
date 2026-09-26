@@ -14,22 +14,13 @@ export interface RegionalChatRoomItem {
   canJoin: boolean;
 }
 
-export interface RegionalChatRoomPage {
-  nextCursor: string | null;
-  hasNext: boolean;
-}
-
 export interface RegionalChatRoomListData {
   items: RegionalChatRoomItem[];
-  page: RegionalChatRoomPage;
 }
 
-export async function fetchRegionalChatRooms(
-  cursor?: string,
-): Promise<RegionalChatRoomListData> {
+export async function fetchRegionalChatRooms(): Promise<RegionalChatRoomListData> {
   const response = await apiClient.get<ApiResponse<RegionalChatRoomListData>>(
     '/regional-chat-rooms',
-    { params: cursor ? { cursor } : undefined },
   );
   return response.data.data;
 }
