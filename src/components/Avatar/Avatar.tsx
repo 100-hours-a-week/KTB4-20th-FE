@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getProfileInitial, isDefaultProfileImage } from '../../utils/profileInitial';
 import styles from './Avatar.module.css';
 
 interface AvatarProps {
@@ -9,11 +10,15 @@ interface AvatarProps {
   muted?: boolean;
 }
 
-/** 프로필 사진을 보여주고, 사진이 없거나 불러오지 못하면 이름의 첫 글자를 보여줍니다. */
+/**
+ * 프로필 사진을 보여주고, 사진이 없거나(기본 이미지 포함) 불러오지 못하면
+ * 이름의 첫 글자(한국 이름은 성을 뺀 첫 글자)를 보여줍니다.
+ */
 export default function Avatar({ name, imageUrl, size = 'md', muted = false }: AvatarProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const showImage = Boolean(imageUrl) && failedUrl !== imageUrl;
-  const initial = Array.from(name.trim())[0] ?? '';
+  const showImage =
+    Boolean(imageUrl) && failedUrl !== imageUrl && !isDefaultProfileImage(imageUrl ?? '');
+  const initial = getProfileInitial(name);
 
   return (
     <span className={`${styles.avatar} ${styles[size]} ${muted ? styles.muted : ''}`}>

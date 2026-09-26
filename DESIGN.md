@@ -560,4 +560,5 @@ There are no progressive elevation tiers — the system either has the one shado
 - **아이콘:** lucide-react를 쓴다.
 - **진행 표시줄·선호도 바:** 높이 6px 알약형, 바탕 `--color-surface-strong`, 채움 `--color-primary`.
 - **여행방 상세:** 화면 바탕은 `--color-surface`, 카드와 멤버 행은 흰 배경 + 1px `--color-border-soft`, `--radius-md`. 나 이외 멤버의 글자 프로필은 `--color-avatar-muted` 배경.
-- **비활성 주요 버튼(여행방 상세):** 흐린 보라 대신 `bg-accent` + `text-muted-foreground`로 회색 처리한다.
+- **프로필 글자:** 사진이 없거나 백엔드 기본 이미지(`/images/default-profile.svg`)면 이름의 첫 글자를 보여준다. 한국 이름은 성을 뺀 첫 글자(김채령 → 채, 남궁민수 → 민), 두 글자 이하 이름은 첫 글자, 영어 이름은 첫 글자 대문자(Daniel → D).
+- **비활성 버튼:** 모든 화면에서 shadcn 기본(주 색상을 흐리게, 연한 보라)으로 통일한다. 따로 회색으로 바꾸지 않는다.

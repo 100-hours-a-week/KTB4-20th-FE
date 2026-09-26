@@ -227,13 +227,22 @@ export default function TripCreate() {
             required
             aria-invalid={Boolean(errors.name)}
             aria-describedby={nameHelperId}
-            // 한글을 조합하는 중에는 브라우저 글자 수 제한(maxLength)이 한 글자 더 들어가게 두는 경우가 있어서,
-            // 조합이 끝났을 때와 일반 입력일 때 12자를 넘는 부분을 잘라냅니다.
+            // 한글을 조합하는 중에는 브라우저 글자 수 제한(maxLength)이 13번째 글자를 들여보내는 경우가 있어서,
+            // 조합 중이어도 12자를 넘으면 입력칸의 글자를 바로 12자로 되돌려 13번째 글자를 막습니다.
             onChange={(event) => {
-              const composing = (event.nativeEvent as InputEvent).isComposing;
-              updateForm({ name: composing ? event.target.value : limitName(event.target.value) });
+              const limited = limitName(event.target.value);
+              if (limited !== event.target.value) {
+                event.target.value = limited;
+              }
+              updateForm({ name: limited });
             }}
-            onCompositionEnd={(event) => updateForm({ name: limitName(event.currentTarget.value) })}
+            onCompositionEnd={(event) => {
+              const limited = limitName(event.currentTarget.value);
+              if (limited !== event.currentTarget.value) {
+                event.currentTarget.value = limited;
+              }
+              updateForm({ name: limited });
+            }}
             onBlur={() =>
               setErrors((previous) => ({
                 ...previous,
