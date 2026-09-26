@@ -19,7 +19,7 @@ import Avatar, { AvatarGroup } from '../../components/Avatar/Avatar';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
-import { SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
+import { formatExclusionName, SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
 import { getInvitationToken } from '../../utils/invitationTokens';
 import { getScheduleButtonState } from './scheduleButtonState';
 import ScheduleProgress from './ScheduleProgress';
@@ -257,7 +257,7 @@ export default function TripDetail() {
                 <ul className={styles.chips}>
                   {summary.excludedCategories.map((item) => (
                     <li key={item.code} className={styles.chip}>
-                      {item.name}
+                      {formatExclusionName(item.name)}
                     </li>
                   ))}
                 </ul>

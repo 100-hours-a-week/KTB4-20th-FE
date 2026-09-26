@@ -27,6 +27,11 @@ import {
 import styles from './TripCreate.module.css';
 
 const MAX_NAME_LENGTH = 12;
+
+/** 12자를 넘는 부분을 잘라냅니다. 한글·이모지도 한 글자로 셉니다. */
+function limitName(value: string): string {
+  return Array.from(value).slice(0, MAX_NAME_LENGTH).join('');
+}
 const NAME_PATTERN = /^[가-힣A-Za-z ]+$/;
 const NAME_ERROR = '형식에 맞지 않는 이름입니다. 다시 입력해주세요';
 
@@ -222,7 +227,13 @@ export default function TripCreate() {
             required
             aria-invalid={Boolean(errors.name)}
             aria-describedby={nameHelperId}
-            onChange={(event) => updateForm({ name: event.target.value })}
+            // 한글을 조합하는 중에는 브라우저 글자 수 제한(maxLength)이 한 글자 더 들어가게 두는 경우가 있어서,
+            // 조합이 끝났을 때와 일반 입력일 때 12자를 넘는 부분을 잘라냅니다.
+            onChange={(event) => {
+              const composing = (event.nativeEvent as InputEvent).isComposing;
+              updateForm({ name: composing ? event.target.value : limitName(event.target.value) });
+            }}
+            onCompositionEnd={(event) => updateForm({ name: limitName(event.currentTarget.value) })}
             onBlur={() =>
               setErrors((previous) => ({
                 ...previous,
