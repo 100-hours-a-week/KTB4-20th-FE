@@ -1,6 +1,11 @@
 import { createContext, useContext } from 'react';
 import type { TripCreateResponse } from '../../api/trips';
-import type { SelectedRegion } from '../../constants/regions';
+
+/** 고른 여행지. 백엔드 지역 번호와 화면에 보여줄 이름입니다. */
+export interface SelectedRegion {
+  regionId: number;
+  label: string;
+}
 
 export type DeadlineOption = 'oneDay' | 'threeDays' | 'dayBefore' | 'custom';
 
