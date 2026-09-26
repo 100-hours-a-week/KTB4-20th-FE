@@ -16,8 +16,13 @@ export function formatDeadlineDday(deadlineAt: string): string {
   return days <= 0 ? 'D-Day' : `D-${days}`;
 }
 
+/** AI 일정은 여러 명의 취향을 합쳐 만들기 때문에, 이 인원 이상이어야 만들 수 있습니다. */
+const MIN_MEMBERS_FOR_SCHEDULE = 2;
+
 interface ScheduleButtonInput {
   isHost: boolean;
+  /** 지금 여행방에 참여 중인 인원 */
+  memberCount: number;
   mySurveySubmitted: boolean;
   allSubmitted: boolean;
   deadlinePassed: boolean;
@@ -28,6 +33,7 @@ interface ScheduleButtonInput {
 /**
  * AI 일정 생성하기 버튼의 활성 여부와 안내 문구 (화면설계서 7번)
  * - 그룹원은 조건과 관계없이 비활성화
+ * - 참여 인원이 1명(방장 혼자) → 비활성 · "멤버가 2명 이상이어야 일정을 만들 수 있어요"
  * - 본인 미제출 → 비활성 · "먼저 취향 설문에 답해주세요· 마감 D-{d}"
  * - 마감 전 · 미제출자 있음 → 비활성 · "{n}명이 더 제출하면 시작할 수 있어요 · 마감 D-{d}"
  * - 마감 전 · 전원 제출 → 활성 · "모두 제출했어요. 이제 일정을 만들 수 있어요"
@@ -36,6 +42,7 @@ interface ScheduleButtonInput {
  */
 export function getScheduleButtonState({
   isHost,
+  memberCount,
   mySurveySubmitted,
   allSubmitted,
   deadlinePassed,
@@ -43,6 +50,13 @@ export function getScheduleButtonState({
   deadlineAt,
 }: ScheduleButtonInput): { enabled: boolean; caption: string } {
   const dday = formatDeadlineDday(deadlineAt);
+
+  if (memberCount < MIN_MEMBERS_FOR_SCHEDULE) {
+    return {
+      enabled: false,
+      caption: '멤버가 2명 이상이어야 일정을 만들 수 있어요. 친구를 초대해 보세요',
+    };
+  }
 
   if (!mySurveySubmitted) {
     return { enabled: false, caption: `먼저 취향 설문에 답해주세요· 마감 ${dday}` };

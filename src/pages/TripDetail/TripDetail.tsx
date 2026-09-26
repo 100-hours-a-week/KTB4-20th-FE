@@ -195,6 +195,7 @@ export default function TripDetail() {
     summary.allSubmitted || (summary.deadlinePassed && summary.submittedCount > 0);
   const buttonState = getScheduleButtonState({
     isHost,
+    memberCount: summary.activeMemberCount,
     mySurveySubmitted: summary.mySurveySubmitted,
     allSubmitted: summary.allSubmitted,
     deadlinePassed: summary.deadlinePassed,
@@ -385,7 +386,7 @@ export default function TripDetail() {
           <div className={styles.actionGroup}>
             <Button
               size="lg"
-              className="h-13 w-full text-base font-semibold disabled:bg-accent disabled:text-muted-foreground disabled:opacity-100"
+              className="h-13 w-full text-base font-semibold"
               disabled={!buttonState.enabled}
               onClick={startGeneration}
             >
