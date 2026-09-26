@@ -5,7 +5,7 @@ export interface InvitationPreview {
   trip: {
     tripId: string;
     name: string;
-    region: { regionId: string; broadRegionName: string; subRegionName: string };
+    region: { regionId: string; regionName: string };
     /** YYYY-MM-DD */
     startDate: string;
     endDate: string;

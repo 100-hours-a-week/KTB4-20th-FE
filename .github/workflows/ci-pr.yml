@@ -19,13 +19,14 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # main에는 dev(정기 배포) 또는 hotfix/*(배포 후 긴급 수정)에서만 PR을 보낼 수 있다.
       - name: Check main PR source
         if: >-
           github.base_ref == 'main' &&
-          (github.head_ref != 'dev' ||
+          ((github.head_ref != 'dev' && !startsWith(github.head_ref, 'hotfix/')) ||
            github.event.pull_request.head.repo.full_name != github.repository)
         run: |
-          echo "::error::main에는 같은 저장소의 dev 브랜치에서 PR을 보내야 합니다."
+          echo "::error::main에는 같은 저장소의 dev 또는 hotfix/* 브랜치에서 PR을 보내야 합니다."
           exit 1
 
       - name: Checkout
