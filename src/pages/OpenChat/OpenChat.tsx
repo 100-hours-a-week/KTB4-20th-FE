@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import BottomNav from '../../components/BottomNav/BottomNav';
 import { fetchRegionalChatRooms, type RegionalChatRoomItem } from '../../api/chat';
 import { Badge } from '@/components/ui/badge';
@@ -26,21 +25,16 @@ function LocationIcon() {
 export default function OpenChat() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<RegionalChatRoomItem[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [activeRoom, setActiveRoom] = useState<RegionalChatRoomItem | null>(null);
 
-  const loadFirstPage = useCallback(async () => {
+  const loadRooms = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
       const data = await fetchRegionalChatRooms();
       setRooms(data.items);
-      setNextCursor(data.page.nextCursor);
-      setHasNext(data.page.hasNext);
     } catch {
       setLoadError(true);
     } finally {
@@ -49,25 +43,8 @@ export default function OpenChat() {
   }, []);
 
   useEffect(() => {
-    void loadFirstPage();
-  }, [loadFirstPage]);
-
-  async function loadMore() {
-    if (!nextCursor || loadingMore) {
-      return;
-    }
-    setLoadingMore(true);
-    try {
-      const data = await fetchRegionalChatRooms(nextCursor);
-      setRooms((prev) => [...prev, ...data.items]);
-      setNextCursor(data.page.nextCursor);
-      setHasNext(data.page.hasNext);
-    } catch {
-      toast.error('목록을 더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
-    } finally {
-      setLoadingMore(false);
-    }
-  }
+    void loadRooms();
+  }, [loadRooms]);
 
   function handleRoomJoined(room: RegionalChatRoomItem) {
     setActiveRoom(null);
@@ -107,7 +84,7 @@ export default function OpenChat() {
         {!loading && loadError && (
           <div className={styles.status}>
             <p>채팅방 목록을 불러오지 못했어요.</p>
-            <Button onClick={loadFirstPage}>다시 시도</Button>
+            <Button onClick={loadRooms}>다시 시도</Button>
           </div>
         )}
 
@@ -152,17 +129,6 @@ export default function OpenChat() {
               </li>
             ))}
           </ul>
-        )}
-
-        {!loading && !loadError && hasNext && (
-          <Button
-            variant="outline"
-            className="mt-5 w-full"
-            onClick={loadMore}
-            disabled={loadingMore}
-          >
-            {loadingMore ? '불러오는 중...' : '더 보기'}
-          </Button>
         )}
       </main>
 
