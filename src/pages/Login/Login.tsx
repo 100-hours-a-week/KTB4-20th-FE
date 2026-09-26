@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import planitSymbol from '../../assets/logo/planit-symbol.svg';
 import styles from './Login.module.css';
 
 const LOGIN_ERROR_MESSAGES: Record<string, string> = {
@@ -56,7 +57,8 @@ export default function Login() {
   return (
     <main className={styles.container}>
       <div className={styles.content}>
-        <div className={styles.logo} aria-hidden="true" />
+        {/* 로고 마크 아래에 서비스 이름 "플랜잇"을 둡니다. 글자는 화면 낭독기가 읽는 제목이기도 해서 이미지는 장식으로 둡니다. */}
+        <img src={planitSymbol} alt="" width={112} height={112} className={styles.logo} />
         <h1 className={styles.title}>플랜잇</h1>
 
         <Button type="button" size="lg" className={styles.kakaoButton} onClick={handleKakaoLogin}>

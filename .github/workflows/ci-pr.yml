@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # main에는 예외 없이 dev에서만 PR을 보낼 수 있다. (hotfix도 dev를 거쳐 main으로 올린다)
       - name: Check main PR source
         if: >-
           github.base_ref == 'main' &&
