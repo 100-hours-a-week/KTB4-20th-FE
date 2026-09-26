@@ -17,9 +17,7 @@
 .logo {
   width: 112px;
   height: 112px;
-  margin: 0 auto var(--spacing-5);
-  border-radius: var(--radius-full);
-  background: var(--color-surface-strong);
+  margin: 0 auto var(--spacing-3);
 }
 
 .title {
