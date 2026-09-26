@@ -107,7 +107,7 @@ export default function TripCreate() {
     try {
       const result = await createTrip({
         name,
-        subRegionId: form.region.subRegionId,
+        regionId: form.region.regionId,
         startDate: form.startDate,
         capacity: form.capacity,
         surveyDeadlineDate: isTripToday || !deadline ? undefined : deadline,

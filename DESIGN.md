@@ -555,7 +555,7 @@ There are no progressive elevation tiers — the system either has the one shado
 - **여행방 카드:** 흰 배경 + 1px `--color-border`, `--radius-md`, 안쪽 여백 16px. 상태 배지는 shadcn `Badge`(설문 중·여행 완료는 흐리게, 생성 완료·여행 중은 진하게).
 - **입력 칸:** 흰 배경 + 1px `--color-border`, `--radius-md`, 높이 `--height-button-md`. 이름표는 `--font-size-xs` 보조색, 안내 문구는 `--font-size-badge`, 오류는 `--color-danger`.
 - **선택 칩:** 알약형 테두리 칩. 선택하면 `--color-surface-strong` 배경 + 굵게. 고를 수 없으면 `--color-surface` 배경 + `--color-text-muted-soft`.
-- **지역 선택:** 대분류는 가로 스크롤 탭(선택 시 `--color-placeholder`), 소분류는 3열 격자 버튼(선택 시 `--color-primary` 배경 + 흰 글자).
+- **지역 선택:** 백엔드 지역 목록(`GET /api/regions`)을 3열 격자 버튼으로 보여준다. 선택하면 `--color-primary` 배경 + 흰 글자, 불러오는 동안은 스켈레톤.
 - **달력:** `src/components/Calendar/CalendarMonth`. 선택한 날은 `--color-primary` 원, 오늘은 `--color-placeholder` 원, 고를 수 없는 날은 `--color-border` 글자.
 - **아이콘:** lucide-react를 쓴다.
 - **진행 표시줄·선호도 바:** 높이 6px 알약형, 바탕 `--color-surface-strong`, 채움 `--color-primary`.

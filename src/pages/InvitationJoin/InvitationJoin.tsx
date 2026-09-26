@@ -29,7 +29,6 @@ import {
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { truncateTripName } from '../../components/TripCard/tripFormat';
-import { getDestinationName } from '../../constants/regions';
 import { useAuth } from '../../auth/AuthContext';
 import { formatDotDate } from '../../utils/date';
 import { withSubjectParticle } from '../../utils/korean';
@@ -289,7 +288,7 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
         <div className={styles.tripInfo}>
           <p className={styles.region}>
             <MapPinIcon size={18} />
-            {getDestinationName(trip.region.regionId, trip.region)}
+            {trip.region.regionName}
           </p>
           <p className={styles.date}>{formatDotDate(trip.startDate)}</p>
         </div>
