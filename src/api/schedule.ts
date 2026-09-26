@@ -27,4 +27,58 @@ export const SCHEDULE_ERROR_CODES = {
   alreadyExists: 'SCHEDULE_ALREADY_EXISTS',
   notReady: 'SCHEDULE_GENERATION_NOT_READY',
   accessDenied: 'ACCESS_DENIED',
+  /** 아직 확정된 일정이 없을 때 (일정 생성 전) */
+  notFound: 'ACTIVE_SCHEDULE_NOT_FOUND',
 } as const;
+
+// GET /api/trips/{tripId}/schedule — SCHEDULE_API_SPEC.md 3장(생성 일정 조회) 계약과 같은 모양입니다.
+export interface ScheduleStop {
+  stopId: string;
+  placeId: string;
+  order: number;
+  name: string;
+  categoryName: string | null;
+  address: string | null;
+  roadAddress: string | null;
+  latitude: number;
+  longitude: number;
+  selectionReason: string | null;
+}
+
+export interface ScheduleLeg {
+  legId: string;
+  fromStopId: string;
+  toStopId: string;
+  order: number;
+  distanceMeters: number;
+}
+
+export interface ScheduleDay {
+  dayId: string;
+  dayNumber: number;
+  /** YYYY-MM-DD */
+  date: string;
+  totalDistanceMeters: number;
+  stops: ScheduleStop[];
+  legs: ScheduleLeg[];
+}
+
+export interface ScheduleDetail {
+  tripId: string;
+  scheduleId: string;
+  strategy: string;
+  status: string;
+  /** V1은 일정을 수정할 수 없어서 항상 false예요. */
+  editable: boolean;
+  totalDistanceMeters: number;
+  createdAt: string;
+  days: ScheduleDay[];
+}
+
+/** GET /api/trips/{tripId}/schedule — 여행방 활성 멤버만 조회할 수 있어요. */
+export async function getSchedule(tripId: string): Promise<ScheduleDetail> {
+  const response = await apiClient.get<ApiResponse<ScheduleDetail>>(
+    `/trips/${encodeURIComponent(tripId)}/schedule`,
+  );
+  return response.data.data;
+}
