@@ -86,7 +86,8 @@ export default function TripDate() {
               selected={selected}
               showWeekdays={index === 0}
               isDisabled={(iso) => iso < today}
-              onSelect={setSelected}
+              // 이미 고른 날짜를 다시 누르면 선택이 취소됩니다.
+              onSelect={(iso) => setSelected((current) => (current === iso ? null : iso))}
             />
           ))}
         </section>
