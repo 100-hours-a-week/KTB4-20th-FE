@@ -72,14 +72,6 @@
   flex-shrink: 0;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface-strong);
-  object-fit: cover;
-}
-
 .bubbleColumn {
   display: flex;
   flex-direction: column;

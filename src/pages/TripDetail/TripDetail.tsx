@@ -382,7 +382,7 @@ export default function TripDetail() {
               AI 일정 재생성하기
             </Button>
           </div>
-        ) : (
+        ) : isHost ? (
           <div className={styles.actionGroup}>
             <Button
               size="lg"
@@ -394,6 +394,8 @@ export default function TripDetail() {
             </Button>
             <p className={styles.caption}>{buttonState.caption}</p>
           </div>
+        ) : (
+          <p className={styles.caption}>AI 일정 생성은 방장만 가능해요</p>
         )}
       </div>
 

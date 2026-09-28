@@ -32,7 +32,7 @@ const MAX_NAME_LENGTH = 12;
 function limitName(value: string): string {
   return Array.from(value).slice(0, MAX_NAME_LENGTH).join('');
 }
-const NAME_PATTERN = /^[가-힣A-Za-z ]+$/;
+const NAME_PATTERN = /^[가-힣A-Za-z0-9 ]+$/;
 const NAME_ERROR = '형식에 맞지 않는 이름입니다. 다시 입력해주세요';
 
 function isValidName(name: string): boolean {
@@ -252,7 +252,7 @@ export default function TripCreate() {
           />
           <div className={styles.helperRow}>
             <p id={nameHelperId} className={errors.name ? styles.error : styles.helper}>
-              {errors.name ?? `한글, 영어로 최대 ${MAX_NAME_LENGTH}글자까지 입력할 수 있어요`}
+              {errors.name ?? `한글, 영어, 숫자로 최대 ${MAX_NAME_LENGTH}글자까지 입력할 수 있어요`}
             </p>
             <span className={styles.counter} aria-hidden="true">
               {Array.from(form.name).length}/{MAX_NAME_LENGTH}

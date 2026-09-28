@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { fetchCurrentUser, withdrawUser, type CurrentUser } from '../api/user';
 import { clearPendingInvitation } from '../utils/pendingInvitation';
 import { logoutSession, refreshAccessTokenOnce } from './authSession';
+import { onSessionExpired } from './sessionEvents';
 import { setAccessToken } from './tokenStore';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -51,6 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  // 다른 탭에서 로그아웃했거나, 탈퇴 등으로 세션이 끝났는데 토큰 재발급도 실패한 경우를 감지한다.
+  // RequireAuth가 status 변화를 보고 로그인 화면으로 보낸다.
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        setUser(null);
+        setStatus('unauthenticated');
+      }),
+    [],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
