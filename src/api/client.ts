@@ -41,6 +41,13 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 
 const AUTH_REFRESH_EXEMPT_PATHS = ['/auth/refresh', '/auth/logout'];
 
+/**
+ * 이 Access Token으로는 더 이상 요청을 처리할 수 없다는 401 코드들.
+ * USER_WITHDRAWN은 다른 세션(다른 탭·기기)에서 방금 탈퇴 처리된 경우로,
+ * 이 토큰은 만료되지 않았지만 더 이상 유효한 사용자가 아니라서 갱신도 실패한다.
+ */
+const SESSION_INVALID_CODES = ['AUTHENTICATION_REQUIRED', 'USER_WITHDRAWN'];
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<{ code?: string }>) => {
@@ -49,7 +56,8 @@ apiClient.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      error.response.data?.code === 'AUTHENTICATION_REQUIRED' &&
+      !!error.response.data?.code &&
+      SESSION_INVALID_CODES.includes(error.response.data.code) &&
       config &&
       !config.skipAuth &&
       !config._retriedAfterRefresh &&
