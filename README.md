@@ -54,28 +54,48 @@ npm run dev
 
 | 브랜치 | 용도 |
 | --- | --- |
-| `master` | 배포 가능한 코드 |
-| `develop` | 다음 배포를 위한 개발 코드 |
-| `feature/*` | 기능 개발 (`develop`에서 분기) |
-| `release/*` | 배포 준비 (`develop`에서 분기) |
-| `hotfix/*` | 배포 버전의 긴급 수정 (`master`에서 분기) |
+| `main` | 배포되는 코드 (합쳐지면 자동 배포) |
+| `dev` | 다음 배포를 위한 개발 코드 |
+| `feat/*`, `fix/*` 등 | 기능 개발·수정 (`dev`에서 분기 → `dev`로 PR) |
+| `hotfix/*` | 배포 후 긴급 수정 (`dev`에서 분기 → `dev`로 PR → `dev`에서 `main`으로 PR) |
+
+`main`에는 예외 없이 `dev` 브랜치에서만 PR을 보낼 수 있습니다. (PR 검사에서 확인)
 
 ### 기능 개발
 
 ```bash
-git switch develop
-git pull origin develop
-git switch -c feature/kakao-login
+git switch dev
+git pull origin dev
+git switch -c feat/kakao-login
 
 # 작업 후
 npm run lint
 npm run build
 git add .
 git commit -m "feat: 카카오 로그인 구현"
-git push -u origin feature/kakao-login
+git push -u origin feat/kakao-login
 ```
 
-`feature/*` 브랜치에서 `develop` 브랜치로 Pull Request를 만들고, 리뷰를 받은 뒤 merge합니다.
+기능 브랜치에서 `dev` 브랜치로 Pull Request를 만들고, 리뷰를 받은 뒤 merge합니다.
+
+### 배포 후 긴급 수정 (hotfix)
+
+배포된 뒤 바로 고쳐야 하는 문제도 `dev`를 거쳐 `main`으로 올립니다. `main`에는 `dev`에서만 PR을 보낼 수 있습니다.
+
+```bash
+git switch dev
+git pull origin dev
+git switch -c hotfix/region-api
+
+# 작업 후
+npm run typecheck
+npm run lint
+npm run build
+git push -u origin hotfix/region-api
+```
+
+1. `hotfix/*` 브랜치에서 `dev`로 Pull Request를 만들고 merge합니다.
+2. `dev`에서 `main`으로 Pull Request를 만들고 merge합니다. merge되면 자동 배포됩니다.
 
 커밋 메시지는 변경 목적이 드러나게 작성합니다.
 

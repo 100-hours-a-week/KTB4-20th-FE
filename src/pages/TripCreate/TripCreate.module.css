@@ -1,0 +1,220 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-2) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+}
+
+.fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  margin-top: var(--spacing-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.selectButton,
+.input,
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-height: var(--height-button-md);
+  padding: 0 var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted-soft);
+  background: var(--color-background);
+  font-size: var(--font-size-sm);
+  text-align: left;
+}
+
+.selectButton:focus-visible,
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.selectButton[aria-invalid='true'],
+.input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.input {
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.input::placeholder,
+.placeholder {
+  color: var(--color-text-muted-soft);
+}
+
+.value {
+  color: var(--color-text);
+}
+
+.stepper {
+  justify-content: space-between;
+  padding-right: var(--spacing-2);
+}
+
+.stepperButtons {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.stepperButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface-strong);
+}
+
+.stepperButton:disabled {
+  color: var(--color-text-muted-soft);
+  cursor: not-allowed;
+}
+
+.stepperButton:focus-visible,
+.chip:focus-visible,
+.navButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.required {
+  margin-left: 2px;
+  color: var(--color-danger);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.helperRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.counter {
+  flex-shrink: 0;
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-badge);
+}
+
+.fixedDeadline {
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: var(--font-size-xs);
+}
+
+.helper {
+  margin: 0;
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-badge);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-badge);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.chip {
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-background);
+  font-size: var(--font-size-xs);
+}
+
+.chip:disabled {
+  color: var(--color-text-muted-soft);
+  background: var(--color-surface);
+  cursor: not-allowed;
+}
+
+.chipSelected {
+  border-color: var(--color-surface-strong);
+  background: var(--color-surface-strong);
+  font-weight: var(--font-weight-semibold);
+}
+
+.footer {
+  margin-top: var(--spacing-6);
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-4);
+}
+
+.calendarTitle {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.calendarNav {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.navButton:disabled {
+  color: var(--color-border);
+  cursor: default;
+}
