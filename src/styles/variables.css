@@ -3,18 +3,32 @@
   :root에 선언하면 프로젝트 어디서든 var(--변수명) 으로 사용할 수 있습니다.
 */
 :root {
-  /* Colors */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-text: #1f2024;
-  --color-text-muted: #6b7280;
+  /* Colors (DESIGN.md 기준) */
+  /* shadcn의 Tailwind 테마 네임스페이스(--color-*)는 secondary·accent를 중립 surface 색으로 쓴다.
+     의미가 다른 브랜드 색(Steel Blue·mint)은 이름이 겹치지 않도록 --color-brand-* 접두사를 쓴다. */
+  --color-primary: #301e67;
+  --color-primary-dark: #1f1248;
+  --color-primary-disabled: #cbc7d9;
+  --color-on-primary: #ffffff;
+  --color-brand-secondary: #5b8fb9;
+  --color-brand-accent: #b6eada;
+  --color-brand-accent-text: #03001c;
+  --color-text: #03001c;
+  --color-text-muted: #6a6a6a;
+  --color-text-muted-soft: #929292;
   --color-background: #ffffff;
-  --color-surface: #f5f6f8;
-  --color-border: #e2e4e8;
-  --color-danger: #dc2626;
+  --color-surface: #f7f7f7;
+  --color-surface-strong: #f2f2f2;
+  --color-border: #dddddd;
+  --color-border-soft: #ebebeb;
+  --color-border-strong: #c1c1c1;
+  --color-danger: #c13515;
+  --color-danger-dark: #b32505;
   --color-success: #16a34a;
+  --color-scrim: #03001c;
 
   /* Spacing (4px 기준) */
+  --spacing-0: 2px;
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-3: 12px;
@@ -25,8 +39,12 @@
   --spacing-8: 64px;
 
   /* Typography */
+  /* DESIGN.md는 Airbnb Cereal VF·Circular 기준이지만 두 글꼴 모두 한글을 지원하지 않아
+     한글 UI에는 Pretendard를 기본 글꼴로 유지한다. */
   --font-family-base:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-badge: 0.6875rem;
+  --font-size-xs: 0.8125rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
@@ -35,9 +53,35 @@
 
   /* Layout */
   --max-width-content: 1200px;
+  --max-width-mobile: 480px;
 
   /* Radius / Shadow */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  /* --radius-sm/md/lg와 --shadow-sm도 Tailwind 테마 네임스페이스와 이름이 겹친다.
+     여기 선언이 variables.css import 순서상 shadcn의 theme inline 값보다 나중에 적용되어
+     의도적으로 이 값들이 rounded 계열과 shadow-sm 유틸리티에도 그대로 쓰이게 한다. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-card:
+    rgba(0, 0, 0, 0.02) 0 0 0 1px, rgba(0, 0, 0, 0.04) 0 2px 6px 0, rgba(0, 0, 0, 0.1) 0 4px 8px 0;
+}
+
+/*
+  화면(메인·여행방 만들기·초대 참여)에서 추가로 쓰는 토큰.
+  색상·모서리는 위 토큰을 그대로 쓰고, 겹치지 않는 값만 여기에 둔다.
+*/
+:root {
+  --color-placeholder: #d9d9d9;
+  --color-avatar-muted: #8a8a8a;
+  --color-scrim-strong: rgb(3 0 28 / 40%);
+
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --height-button-md: 48px;
+  --height-button-lg: 52px;
+  --height-tab-bar: 64px;
 }
