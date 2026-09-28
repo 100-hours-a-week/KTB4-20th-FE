@@ -30,13 +30,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build Docker image
-        run: |
-          docker build \
-            --platform linux/amd64 \
-            --build-arg VITE_API_BASE_URL=/api \
-            -t planit-frontend:ci .
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
@@ -44,11 +37,37 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           allowed-account-ids: '577483323183'
 
+      - name: Build Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VITE_GOOGLE_MAPS_API_KEY=$(aws ssm get-parameter \
+            --name "/planit/FE/GOOGLE-MAPS-API-KEY" \
+            --with-decryption \
+            --query 'Parameter.Value' \
+            --output text)
+
+          if [[ -z "$VITE_GOOGLE_MAPS_API_KEY" || "$VITE_GOOGLE_MAPS_API_KEY" == "None" ]]; then
+            echo "::error::Google Maps API key is missing."
+            exit 1
+          fi
+
+          echo "::add-mask::$VITE_GOOGLE_MAPS_API_KEY"
+          export VITE_GOOGLE_MAPS_API_KEY
+
+          docker build \
+            --platform linux/amd64 \
+            --build-arg VITE_API_BASE_URL=/api \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY \
+            -t planit-frontend:ci .
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Tag and push image
+        shell: bash
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
