@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { refreshAccessTokenOnce } from '../auth/authSession';
+import { emitSessionExpired } from '../auth/sessionEvents';
 import { getAccessToken } from '../auth/tokenStore';
 
 declare module 'axios' {
@@ -60,6 +61,8 @@ apiClient.interceptors.response.use(
         config.headers.set('Authorization', `Bearer ${token}`);
         return apiClient(config);
       }
+      // 재발급도 실패하면 세션이 완전히 끝난 것이다. 로그인 상태를 해제해서 로그인 화면으로 보낸다.
+      emitSessionExpired();
     }
 
     return Promise.reject(error);
