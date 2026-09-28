@@ -34,13 +34,26 @@ export async function getTrips(params: { cursor?: string; size: number }): Promi
   return response.data.data;
 }
 
-/** 여행방에서 나갑니다. 방장이 나가면 다음 멤버에게 방장이 넘어갑니다. */
-export async function leaveTrip(tripId: string): Promise<void> {
-  await apiClient.delete(`/trips/${encodeURIComponent(tripId)}/members/me`);
+export interface TripLeaveResponse {
+  /** 나간 뒤 활성 멤버가 1명 이하로 남아 여행방이 삭제됐으면 true */
+  tripDeleted: boolean;
+  /** 방장 위임이 있었으면 새 방장의 memberId, 아니면 null */
+  newHostMemberId: string | null;
 }
 
-/** 혼자 남은 방장은 나갈 수 없을 때 백엔드가 보내는 오류 코드 */
-export const HOST_CANNOT_LEAVE_ALONE = 'HOST_CANNOT_LEAVE_ALONE';
+/**
+ * 여행방에서 나갑니다. 나간 뒤 활성 멤버가 1명만 남으면(한 번이라도 2명 이상이었던 방 포함)
+ * 여행방이 삭제되고, 그렇지 않고 방장이 나갔다면 가장 먼저 참가한 멤버에게 방장이 넘어갑니다.
+ */
+export async function leaveTrip(tripId: string): Promise<TripLeaveResponse> {
+  const response = await apiClient.delete<ApiResponse<TripLeaveResponse>>(
+    `/trips/${encodeURIComponent(tripId)}/members/me`,
+  );
+  return response.data.data;
+}
+
+/** 여행이 이미 시작됐거나 종료돼 나갈 수 없을 때 백엔드가 보내는 오류 코드 */
+export const TRIP_LEAVE_NOT_ALLOWED = 'TRIP_LEAVE_NOT_ALLOWED';
 
 export interface TripCreateRequest {
   name: string;

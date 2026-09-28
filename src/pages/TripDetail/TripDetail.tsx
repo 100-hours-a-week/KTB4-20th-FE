@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CheckIcon, CircleAlertIcon, ClockIcon, MapIcon, PencilIcon } from 'lucide-react';
+import { CheckIcon, CircleAlertIcon, ClockIcon, Crown, MapIcon, PencilIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
@@ -324,7 +324,17 @@ export default function TripDetail() {
               const isMe = member.userPublicId === user?.publicId;
               return (
                 <li key={member.userPublicId} className={styles.memberRow}>
-                  <Avatar name={member.userName} imageUrl={member.profileImageUrl} muted={!isMe} />
+                  <span className={styles.avatarWrap}>
+                    <Avatar name={member.userName} imageUrl={member.profileImageUrl} muted={!isMe} />
+                    {member.role === 'HOST' && (
+                      <Crown
+                        className={styles.hostBadge}
+                        size={14}
+                        fill="currentColor"
+                        aria-label="방장"
+                      />
+                    )}
+                  </span>
                   <span className={styles.memberName}>
                     {member.userName}
                     {isMe && ' (나)'}
