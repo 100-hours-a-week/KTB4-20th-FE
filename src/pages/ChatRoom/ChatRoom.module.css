@@ -1,7 +1,10 @@
 .page {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
   height: 100vh;
+  margin: 0 auto;
   background: var(--color-background);
 }
 
