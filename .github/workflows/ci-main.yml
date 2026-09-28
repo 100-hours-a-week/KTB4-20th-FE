@@ -39,6 +39,9 @@ jobs:
 
       - name: Build Docker image
         shell: bash
+        env:
+          DOCKER_BUILDKIT: '1'
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -58,6 +61,8 @@ jobs:
 
           docker build \
             --platform linux/amd64 \
+            --secret id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
+            --build-arg SENTRY_UPLOAD_REQUIRED=true \
             --build-arg VITE_API_BASE_URL=/api \
             --build-arg VITE_GOOGLE_MAPS_API_KEY \
             -t planit-frontend:ci .
