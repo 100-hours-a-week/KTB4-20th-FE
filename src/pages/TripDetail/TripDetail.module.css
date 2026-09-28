@@ -103,6 +103,23 @@
   font-weight: var(--font-weight-medium);
 }
 
+.avatarWrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.hostBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  color: #f5b301;
+  background: var(--color-background);
+  box-shadow: 0 0 0 1px var(--color-background);
+}
+
 .submitted,
 .waiting {
   display: inline-flex;

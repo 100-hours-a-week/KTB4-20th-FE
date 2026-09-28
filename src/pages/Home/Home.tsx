@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
-import { HOST_CANNOT_LEAVE_ALONE, leaveTrip, type TripSummary } from '../../api/trips';
+import { toast } from 'sonner';
+import { getApiErrorCode } from '../../api/errors';
+import { leaveTrip, TRIP_LEAVE_NOT_ALLOWED, type TripSummary } from '../../api/trips';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import Avatar from '../../components/Avatar/Avatar';
 import BottomSheet from '../../components/BottomSheet/BottomSheet';
@@ -68,16 +69,20 @@ export default function Home() {
     if (!leavingTrip) return;
     setIsSubmitting(true);
     try {
-      await leaveTrip(leavingTrip.tripId);
+      const response = await leaveTrip(leavingTrip.tripId);
       tripList.removeTrip(leavingTrip.tripId);
       setLeavingTrip(null);
+      toast.success(response.tripDeleted ? '여행방을 삭제했어요.' : '여행방을 나갔어요.');
     } catch (error) {
       setLeavingTrip(null);
-      setNotice(
-        getApiErrorCode(error) === HOST_CANNOT_LEAVE_ALONE
-          ? { title: '아직 여행방을 나갈 수 없어요', description: getApiErrorMessage(error) }
-          : { title: '여행방을 나가지 못했어요', description: '잠시 후 다시 시도해 주세요.' },
-      );
+      if (getApiErrorCode(error) === TRIP_LEAVE_NOT_ALLOWED) {
+        setNotice({
+          title: '여행방을 나갈 수 없어요',
+          description: '이미 시작됐거나 끝난 여행은 나갈 수 없어요.',
+        });
+        return;
+      }
+      setNotice({ title: '여행방을 나가지 못했어요', description: '잠시 후 다시 시도해 주세요.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -145,10 +150,24 @@ export default function Home() {
 
       <ConfirmDialog
         open={leavingTrip !== null}
-        title="여행방을 나갈까요?"
-        description={leavingTrip ? `'${leavingTrip.name}' 여행방이 목록에서 사라져요.` : undefined}
+        title={
+          leavingTrip && leavingTrip.memberCount <= 2
+            ? '여행방을 삭제할까요?'
+            : '여행방을 나갈까요?'
+        }
+        description={
+          leavingTrip
+            ? leavingTrip.memberCount <= 2
+              ? `나가면 남은 인원이 1명이 되어, '${leavingTrip.name}' 여행방이 삭제되고 복구할 수 없어요.`
+              : `'${leavingTrip.name}' 여행방이 목록에서 사라져요.`
+            : undefined
+        }
         cancelAction={{ label: '취소', onClick: () => setLeavingTrip(null) }}
-        confirmAction={{ label: '나가기', onClick: handleLeaveTrip, disabled: isSubmitting }}
+        confirmAction={{
+          label: leavingTrip && leavingTrip.memberCount <= 2 ? '삭제하기' : '나가기',
+          onClick: handleLeaveTrip,
+          disabled: isSubmitting,
+        }}
         onClose={() => setLeavingTrip(null)}
       />
 
