@@ -21,7 +21,7 @@ RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
       exit 1; \
     fi; \
     VITE_API_BASE_URL="$VITE_API_BASE_URL" \
-    VITE_GOOGLE_MAPS_API_KEY="$VITE_GOOGLE_MAPS_API_KEY" \
+    VITE_GOOGLE_MAPS_API_KEY="${VITE_GOOGLE_MAPS_API_KEY:-}" \
     npm run build; \
     test -z "$(find dist -type f -name '*.map' -print -quit)"
 
