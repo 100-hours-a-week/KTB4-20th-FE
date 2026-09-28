@@ -9,10 +9,21 @@ COPY . .
 
 ARG VITE_API_BASE_URL=/api
 ARG VITE_GOOGLE_MAPS_API_KEY
+ARG SENTRY_UPLOAD_REQUIRED=false
 
-RUN VITE_API_BASE_URL="$VITE_API_BASE_URL" \
-    VITE_GOOGLE_MAPS_API_KEY="$VITE_GOOGLE_MAPS_API_KEY" \
-    npm run build
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    set -eu; \
+    if [ -s /run/secrets/SENTRY_AUTH_TOKEN ]; then \
+      export SENTRY_AUTH_TOKEN="$(cat /run/secrets/SENTRY_AUTH_TOKEN)"; \
+    fi; \
+    if [ "$SENTRY_UPLOAD_REQUIRED" = "true" ] && [ -z "${SENTRY_AUTH_TOKEN:-}" ]; then \
+      echo "ERROR: Sentry token is required for production builds." >&2; \
+      exit 1; \
+    fi; \
+    VITE_API_BASE_URL="$VITE_API_BASE_URL" \
+    VITE_GOOGLE_MAPS_API_KEY="${VITE_GOOGLE_MAPS_API_KEY:-}" \
+    npm run build; \
+    test -z "$(find dist -type f -name '*.map' -print -quit)"
 
 FROM nginx:stable-alpine
 
