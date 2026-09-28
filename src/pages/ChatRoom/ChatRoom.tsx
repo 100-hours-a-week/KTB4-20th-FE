@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, SendHorizontal, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/AuthContext';
 import { getAccessToken } from '../../auth/tokenStore';
+import Avatar from '../../components/Avatar/Avatar';
 import { generateUuidV7 } from '../../utils/uuidv7';
 import {
   fetchChatMessages,
@@ -32,6 +33,8 @@ type RoomSummary = Pick<RegionalChatRoomItem, 'roomId' | 'name' | 'memberCount' 
 type DisplayMessage = ChatMessageItem & { status?: 'sending' | 'failed' };
 
 const MESSAGE_LENGTH_LIMIT = 1000;
+/** 접속 중인 인원 수는 실시간 이벤트로 오지 않아서, 방에 머무는 동안 이 주기로 다시 조회한다. */
+const ACTIVE_USER_COUNT_POLL_MS = 5_000;
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -121,6 +124,23 @@ export default function ChatRoom() {
       cancelled = true;
     };
   }, [room, roomId]);
+
+  // 접속 중인 인원 수는 실시간 이벤트로 오지 않아서, 방에 머무는 동안 주기적으로 다시 조회한다.
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      fetchRegionalChatRooms()
+        .then((data) => {
+          const found = data.items.find((item) => item.roomId === roomId);
+          if (found) {
+            setRoom((prev) => (prev ? { ...prev, ...found } : found));
+          }
+        })
+        .catch(() => {
+          // 조회 실패는 조용히 넘어가고 다음 주기에 다시 시도한다.
+        });
+    }, ACTIVE_USER_COUNT_POLL_MS);
+    return () => window.clearInterval(interval);
+  }, [roomId]);
 
   // 메시지 이력 최초 조회
   useEffect(() => {
@@ -401,11 +421,11 @@ export default function ChatRoom() {
                     {!isMine && (
                       <div className={styles.avatarSlot}>
                         {groupChanged && (
-                          <img
-                            className={styles.avatar}
-                            src={message.sender.profileImageUrl}
-                            alt=""
-                            aria-hidden="true"
+                          <Avatar
+                            name={message.sender.userName}
+                            imageUrl={message.sender.profileImageUrl}
+                            size="md"
+                            muted
                           />
                         )}
                       </div>

@@ -120,7 +120,8 @@ export default function Survey() {
 
   function goToPreviousStep() {
     if (stepIndex === 0) {
-      navigate(-1);
+      // 초대 링크로 들어오면 이 화면 전에 방문 기록이 없어서, 뒤로가기 대신 설문 종합 화면으로 보낸다.
+      navigate(`/trips/${encodeURIComponent(tripId)}`, { replace: true });
       return;
     }
     setStepIndex((index) => index - 1);
@@ -175,7 +176,9 @@ export default function Survey() {
     return (
       <div className={styles.centerStatus}>
         <p>{loadErrorMessage ?? '설문을 불러오지 못했어요.'}</p>
-        <Button onClick={() => navigate(-1)}>돌아가기</Button>
+        <Button onClick={() => navigate(`/trips/${encodeURIComponent(tripId)}`, { replace: true })}>
+          돌아가기
+        </Button>
       </div>
     );
   }
@@ -286,16 +289,28 @@ export default function Survey() {
 
       <footer className={styles.footer}>
         {stepIndex > 0 && (
-          <Button type="button" variant="secondary" className="flex-1" onClick={goToPreviousStep}>
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            className="h-13 flex-1"
+            onClick={goToPreviousStep}
+          >
             이전
           </Button>
         )}
         {isDealbreakerStep ? (
-          <Button type="button" className="flex-1" onClick={handleSubmit} disabled={submitting}>
+          <Button
+            type="button"
+            size="lg"
+            className="h-13 flex-1"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
             {submitting ? '제출하는 중...' : '제출하기'}
           </Button>
         ) : (
-          <Button type="button" className="flex-1" onClick={goToNextStep}>
+          <Button type="button" size="lg" className="h-13 flex-1" onClick={goToNextStep}>
             다음
           </Button>
         )}

@@ -135,7 +135,7 @@
   margin: 0;
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-md);
-  color: var(--color-text);
+  color: var(--color-text-muted-soft);
   background: var(--color-surface);
   font-size: var(--font-size-xs);
 }
@@ -174,8 +174,8 @@
 }
 
 .chipSelected {
-  border-color: var(--color-surface-strong);
-  background: var(--color-surface-strong);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, white);
+  background: color-mix(in srgb, var(--color-primary) 40%, white);
   font-weight: var(--font-weight-semibold);
 }
 

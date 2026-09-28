@@ -5,7 +5,7 @@ import { CheckIcon, CircleAlertIcon, ClockIcon, MapIcon, PencilIcon } from 'luci
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
-import { generateSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { generateSchedule, getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
 import { fetchSurveySummary, type SurveySummary } from '../../api/survey';
 import {
   getInvitationUrl,
@@ -32,15 +32,30 @@ const TOAST_DURATION_MS = 2000;
 
 type LoadState =
   | { status: 'loading' }
-  | { status: 'ready'; trip: TripDetailData; summary: SurveySummary }
+  | { status: 'ready'; trip: TripDetailData; summary: SurveySummary; hasSchedule: boolean }
   | { status: 'invalid' }
   | { status: 'error' };
 
 type Generation = 'idle' | 'generating' | 'failed';
 
+/** 일정이 아직 없는 게 정상 상태라, 일정 조회 404는 실패로 보지 않고 false로 바꾼다. */
+async function checkHasSchedule(tripId: string): Promise<boolean> {
+  try {
+    await getSchedule(tripId);
+    return true;
+  } catch (error) {
+    if (getApiErrorCode(error) === SCHEDULE_ERROR_CODES.notFound) return false;
+    throw error;
+  }
+}
+
 async function loadTrip(tripId: string) {
-  const [trip, summary] = await Promise.all([getTripDetail(tripId), fetchSurveySummary(tripId)]);
-  return { trip, summary };
+  const [trip, summary, hasSchedule] = await Promise.all([
+    getTripDetail(tripId),
+    fetchSurveySummary(tripId),
+    checkHasSchedule(tripId),
+  ]);
+  return { trip, summary, hasSchedule };
 }
 
 function toLoadFailure(error: unknown): LoadState {
@@ -57,7 +72,6 @@ export default function TripDetail() {
   const { user } = useAuth();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [generation, setGeneration] = useState<Generation>('idle');
-  const [hasSchedule, setHasSchedule] = useState(false);
   const [notice, setNotice] = useState<{ title: string; description?: string } | null>(null);
   const generatingRef = useRef(false);
 
@@ -73,6 +87,9 @@ export default function TripDetail() {
       ),
     [tripId],
   );
+
+  const markScheduleExists = () =>
+    setState((previous) => (previous.status === 'ready' ? { ...previous, hasSchedule: true } : previous));
 
   useEffect(() => {
     void refresh();
@@ -98,13 +115,13 @@ export default function TripDetail() {
 
     try {
       await generateSchedule(tripId);
-      setHasSchedule(true);
+      markScheduleExists();
       // 생성이 끝나면 생성된 여행 일정 화면으로 자동 이동합니다. (설계서 10번)
       goToSchedule();
     } catch (error) {
       const code = getApiErrorCode(error);
       if (code === SCHEDULE_ERROR_CODES.alreadyExists) {
-        setHasSchedule(true);
+        markScheduleExists();
         setGeneration('idle');
         setNotice({ title: '이미 만든 일정이 있어요', description: getApiErrorMessage(error) });
       } else if (
@@ -151,7 +168,7 @@ export default function TripDetail() {
     );
   }
 
-  const { trip, summary } = state;
+  const { trip, summary, hasSchedule } = state;
 
   if (generation === 'generating') {
     return <ScheduleProgress memberCount={summary.submittedCount} />;
@@ -382,7 +399,7 @@ export default function TripDetail() {
               AI 일정 재생성하기
             </Button>
           </div>
-        ) : (
+        ) : isHost ? (
           <div className={styles.actionGroup}>
             <Button
               size="lg"
@@ -394,6 +411,8 @@ export default function TripDetail() {
             </Button>
             <p className={styles.caption}>{buttonState.caption}</p>
           </div>
+        ) : (
+          <p className={styles.caption}>AI 일정 생성은 방장만 가능해요</p>
         )}
       </div>
 
