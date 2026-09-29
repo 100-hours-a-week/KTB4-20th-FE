@@ -77,6 +77,17 @@ export async function createTrip(request: TripCreateRequest): Promise<TripCreate
   return response.data.data;
 }
 
+/**
+ * 방장이 여행방의 초대 토큰을 다시 받습니다.
+ * 초대 토큰은 여행방마다 고정이라, 어느 기기에서 받아도 여행방을 만들 때 받은 값과 같아요.
+ */
+export async function getTripInvitationToken(tripId: string): Promise<string> {
+  const response = await apiClient.get<ApiResponse<TripCreateResponse>>(
+    `/trips/${encodeURIComponent(tripId)}/invitation`,
+  );
+  return response.data.data.invitationToken;
+}
+
 /** 이미 같은 날짜에 참여 중인 여행이 있을 때 백엔드가 보내는 오류 코드 */
 export const TRIP_DATE_CONFLICT = 'TRIP_DATE_CONFLICT';
 
