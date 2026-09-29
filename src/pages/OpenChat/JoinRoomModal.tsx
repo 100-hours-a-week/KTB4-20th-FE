@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ChevronDownIcon } from 'lucide-react';
 import {
   consentToChatPolicy,
   fetchChatPolicy,
@@ -37,6 +38,7 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
   const [loadingPolicy, setLoadingPolicy] = useState(true);
   const [policyError, setPolicyError] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [isPolicyOpen, setIsPolicyOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -106,11 +108,40 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
           <p className="text-sm text-muted-foreground">운영 원칙을 불러오지 못했어요.</p>
         )}
 
-        {!loadingPolicy && !policyError && (
-          <label className="flex items-center gap-3 rounded-lg bg-muted p-3 text-sm font-medium">
-            <Checkbox checked={agreed} onCheckedChange={(checked) => setAgreed(checked === true)} />
-            오픈 채팅 운영 원칙에 동의합니다
-          </label>
+        {!loadingPolicy && !policyError && policy && (
+          <div className="rounded-lg bg-muted p-3 text-sm">
+            <div className="flex items-center gap-3">
+              <label className="flex flex-1 items-center gap-3 font-medium">
+                <Checkbox
+                  checked={agreed}
+                  onCheckedChange={(checked) => setAgreed(checked === true)}
+                />
+                오픈 채팅 운영 원칙에 동의합니다
+              </label>
+              <button
+                type="button"
+                className="shrink-0 text-muted-foreground"
+                onClick={() => setIsPolicyOpen((open) => !open)}
+                aria-expanded={isPolicyOpen}
+                aria-label="운영 원칙 내용 펼치기"
+              >
+                <ChevronDownIcon
+                  className={`size-4 transition-transform ${isPolicyOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </div>
+            {isPolicyOpen && (
+              <div className="mt-3 space-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
+                {policy.content
+                  .split('\n')
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line, index) => (
+                    <p key={index}>{line}</p>
+                  ))}
+              </div>
+            )}
+          </div>
         )}
 
         {submitError && <p className="text-sm text-destructive">{submitError}</p>}
