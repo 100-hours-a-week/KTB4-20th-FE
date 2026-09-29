@@ -138,7 +138,9 @@ export interface TripDetail {
   createdAt: string;
   /** 참여한 순서대로 옵니다. */
   members: {
-    userPublicId: string;
+    memberId: string;
+    /** 탈퇴한 사용자면 null이에요. */
+    userPublicId: string | null;
     userName: string;
     profileImageUrl: string | null;
     role: TripMemberRole;
