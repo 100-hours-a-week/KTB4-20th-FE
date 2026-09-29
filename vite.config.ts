@@ -17,10 +17,16 @@ export default defineConfig({
                     org: 'planit-gb',
                     project: 'planit',
                     authToken: process.env.SENTRY_AUTH_TOKEN,
+
+                    errorHandler: (error) => {
+                        throw error;
+                    },
+
                     sourcemaps: {
                         assets: './dist/**',
                         filesToDeleteAfterUpload: './dist/**/*.map',
                     },
+
                     telemetry: false,
                 }),
             ]
