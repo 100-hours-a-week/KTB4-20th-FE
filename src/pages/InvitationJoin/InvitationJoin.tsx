@@ -7,6 +7,7 @@ import {
   INVITATION_ERROR_CODES,
   type InvitationPreview,
 } from '../../api/invitations';
+import { fetchSurveySummary } from '../../api/survey';
 import {
   HOST_CANNOT_LEAVE_ALONE,
   isValidInvitationToken,
@@ -249,7 +250,13 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
       }
 
       const result = await retryOnTimeout(() => joinTrip(invitationToken));
-      navigate(`/trips/${encodeURIComponent(result.tripId)}/survey`, { replace: true });
+      const tripPath = `/trips/${encodeURIComponent(result.tripId)}`;
+      // 설문 마감 뒤에 들어온 멤버는 설문을 낼 수 없어서 설문 대신 여행방으로 보냅니다.
+      // 마감 여부를 확인하지 못하면 원래대로 설문으로 보내요. 설문 화면이 마감을 다시 안내합니다.
+      const deadlinePassed = await fetchSurveySummary(result.tripId)
+        .then((summary) => summary.deadlinePassed)
+        .catch(() => false);
+      navigate(deadlinePassed ? tripPath : `${tripPath}/survey`, { replace: true });
     } catch (error) {
       setIsJoining(false);
       const code = getApiErrorCode(error);

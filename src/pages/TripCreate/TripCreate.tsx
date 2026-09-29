@@ -16,7 +16,6 @@ import {
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { formatDotDate, formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
-import { saveInvitationToken } from '../../utils/invitationTokens';
 import { DEADLINE_OPTIONS, isValidDeadline, resolveDeadline } from './deadline';
 import {
   MAX_CAPACITY,
@@ -117,7 +116,6 @@ export default function TripCreate() {
         capacity: form.capacity,
         surveyDeadlineDate: isTripToday || !deadline ? undefined : deadline,
       });
-      saveInvitationToken(result.tripId, result.invitationToken);
       setCreatedTrip({
         ...result,
         name,

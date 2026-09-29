@@ -10,6 +10,7 @@ import { fetchSurveySummary, type SurveySummary } from '../../api/survey';
 import {
   getInvitationUrl,
   getTripDetail,
+  getTripInvitationToken,
   TRIP_DETAIL_ERROR_CODES,
   type TripDetail as TripDetailData,
 } from '../../api/trips';
@@ -20,7 +21,7 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { formatExclusionName, SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
-import { getInvitationToken } from '../../utils/invitationTokens';
+import { getToday } from '../../utils/date';
 import { getScheduleButtonState } from './scheduleButtonState';
 import ScheduleProgress from './ScheduleProgress';
 import styles from './TripDetail.module.css';
@@ -232,8 +233,13 @@ export default function TripDetail() {
         onBack={() => navigate('/')}
       />
 
-      {/* 초대는 방장만 할 수 있고, 정원이 다 차면 보여주지 않습니다. */}
-      {isHost && trip.memberCount < trip.capacity && <InviteSection tripId={trip.tripId} />}
+      {/*
+        초대는 방장만 할 수 있고, 정원이 다 차면 보여주지 않습니다.
+        설문 마감이 지나도 여행 당일까지는 초대할 수 있고, 여행이 끝나면 링크가 만료돼 숨깁니다.
+      */}
+      {isHost && trip.memberCount < trip.capacity && trip.endDate >= getToday() && (
+        <InviteSection tripId={trip.tripId} />
+      )}
 
       {showSummary ? (
         <>
@@ -429,15 +435,31 @@ export default function TripDetail() {
 
 /**
  * 멤버 초대하기 (방장만, 설계서 3번)
- * 백엔드는 초대 토큰을 여행방을 만들 때 한 번만 알려주고 다시 조회할 수 없습니다.
- * 그래서 이 탭에서 만든 여행방만 링크를 복사할 수 있고, 그 밖에는 복사 실패로 안내합니다.
+ * 초대 토큰은 여행방마다 고정이라, 화면을 열 때 백엔드에서 받아 둡니다.
+ * 버튼을 누른 뒤에 받으면 사파리에서 "사용자가 누른 동작"이 끊겨 복사가 실패할 수 있어서 미리 받아요.
  */
 function InviteSection({ tripId }: { tripId: string }) {
+  const [invitationToken, setInvitationToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getTripInvitationToken(tripId)
+      .then((token) => {
+        if (!cancelled) setInvitationToken(token);
+      })
+      .catch(() => {
+        // 미리 받지 못하면 버튼을 눌렀을 때 한 번 더 받아요.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
+
   const copyLink = async () => {
-    const invitationToken = getInvitationToken(tripId);
     try {
-      if (!invitationToken) throw new Error('초대 토큰을 알 수 없음');
-      await navigator.clipboard.writeText(getInvitationUrl(invitationToken));
+      const token = invitationToken ?? (await getTripInvitationToken(tripId));
+      setInvitationToken(token);
+      await navigator.clipboard.writeText(getInvitationUrl(token));
       toast.success('초대 링크를 복사했어요.', { duration: TOAST_DURATION_MS });
     } catch {
       toast.error('링크를 복사하지 못했어요. 다시 시도해 주세요.', { duration: TOAST_DURATION_MS });
