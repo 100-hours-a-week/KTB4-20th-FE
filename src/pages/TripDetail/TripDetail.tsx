@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CheckIcon, CircleAlertIcon, ClockIcon, MapIcon, PencilIcon } from 'lucide-react';
+import { CheckIcon, CircleAlertIcon, ClockIcon, Crown, MapIcon, PencilIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
@@ -204,11 +204,13 @@ export default function TripDetail() {
   const submittedIds = new Set(
     summary.memberSubmissions.filter((item) => item.submitted).map((item) => item.userPublicId),
   );
-  // 방장을 맨 위에, 나머지는 참여한 순서대로 보여줍니다. 같은 사람은 한 번만 보여줍니다. (설계서 5번)
+  // 방장을 맨 위에, 나머지는 참여한 순서대로 보여줍니다. 같은 멤버십은 한 번만 보여줍니다. (설계서 5번)
   const members = [
-    ...new Map(trip.members.map((member) => [member.userPublicId, member])).values(),
+    ...new Map(trip.members.map((member) => [member.memberId, member])).values(),
   ].sort((a, b) => Number(b.role === 'HOST') - Number(a.role === 'HOST'));
-  const submittedMembers = members.filter((member) => submittedIds.has(member.userPublicId));
+  const submittedMembers = members.filter(
+    (member) => member.userPublicId !== null && submittedIds.has(member.userPublicId),
+  );
   const showSummary =
     summary.allSubmitted || (summary.deadlinePassed && summary.submittedCount > 0);
   const buttonState = getScheduleButtonState({
@@ -326,11 +328,22 @@ export default function TripDetail() {
 
           <ul className={styles.memberList}>
             {members.map((member) => {
-              const submitted = submittedIds.has(member.userPublicId);
-              const isMe = member.userPublicId === user?.publicId;
+              const submitted =
+                member.userPublicId !== null && submittedIds.has(member.userPublicId);
+              const isMe = member.userPublicId !== null && member.userPublicId === user?.publicId;
               return (
-                <li key={member.userPublicId} className={styles.memberRow}>
-                  <Avatar name={member.userName} imageUrl={member.profileImageUrl} muted={!isMe} />
+                <li key={member.memberId} className={styles.memberRow}>
+                  <span className={styles.avatarWrap}>
+                    <Avatar name={member.userName} imageUrl={member.profileImageUrl} muted={!isMe} />
+                    {member.role === 'HOST' && (
+                      <Crown
+                        className={styles.hostBadge}
+                        size={14}
+                        fill="currentColor"
+                        aria-label="방장"
+                      />
+                    )}
+                  </span>
                   <span className={styles.memberName}>
                     {member.userName}
                     {isMe && ' (나)'}

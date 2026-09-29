@@ -9,7 +9,6 @@ import {
 } from '../../api/invitations';
 import { fetchSurveySummary } from '../../api/survey';
 import {
-  HOST_CANNOT_LEAVE_ALONE,
   isValidInvitationToken,
   joinTrip,
   leaveTrip,
@@ -236,14 +235,11 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
       if (leaveTripId) {
         try {
           await leaveTrip(leaveTripId);
-        } catch (error) {
+        } catch {
           setIsJoining(false);
           setNotice({
             title: '기존 여행방에서 나가지 못했어요',
-            description:
-              getApiErrorCode(error) === HOST_CANNOT_LEAVE_ALONE
-                ? getApiErrorMessage(error)
-                : '잠시 후 다시 시도해 주세요.',
+            description: '잠시 후 다시 시도해 주세요.',
           });
           return;
         }
