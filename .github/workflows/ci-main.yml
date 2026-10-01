@@ -63,6 +63,7 @@ jobs:
             --platform linux/amd64 \
             --secret id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
             --build-arg SENTRY_UPLOAD_REQUIRED=true \
+            --build-arg SENTRY_RELEASE=planit-frontend@${{ github.sha }} \
             --build-arg VITE_API_BASE_URL=/api \
             --build-arg VITE_GOOGLE_MAPS_API_KEY \
             -t planit-frontend:ci .
