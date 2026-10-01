@@ -60,19 +60,34 @@ interface MessageGroupItem {
   showDateDivider: boolean;
 }
 
-/** 연속된 같은 발신자 메시지를 하나의 그룹으로, 날짜가 바뀌는 지점을 표시하기 위해 미리 계산한다. */
+/** 그룹의 첫 메시지로부터 이 시간이 지나면 같은 발신자라도 새 그룹으로 나눈다. */
+const MESSAGE_GROUP_WINDOW_MS = 15_000;
+
+/**
+ * 같은 발신자가 같은 날짜에 연속으로 보낸 메시지를 하나의 그룹으로 묶고,
+ * 날짜가 바뀌는 지점을 표시하기 위해 미리 계산한다.
+ * 날짜가 바뀌거나 그룹의 첫 메시지로부터 15초가 지나면 같은 발신자라도 새 그룹으로 보고 프로필을 다시 보여준다.
+ */
 function messageGroups(messages: DisplayMessage[], currentUserPublicId?: string): MessageGroupItem[] {
   let lastSenderId: string | undefined;
+  let groupStartedAt: number | null = null;
   let lastDateLabel: string | null = null;
 
   return messages.map((message) => {
     const isMine = message.sender.publicId === currentUserPublicId;
-    const groupChanged = message.sender.publicId !== lastSenderId;
-    lastSenderId = message.sender.publicId;
 
     const dateLabel = formatDateDivider(message.createdAt);
     const showDateDivider = dateLabel !== lastDateLabel;
     lastDateLabel = dateLabel;
+
+    const sentAt = new Date(message.createdAt).getTime();
+    const groupChanged =
+      message.sender.publicId !== lastSenderId ||
+      showDateDivider ||
+      groupStartedAt === null ||
+      sentAt - groupStartedAt > MESSAGE_GROUP_WINDOW_MS;
+    lastSenderId = message.sender.publicId;
+    if (groupChanged) groupStartedAt = sentAt;
 
     return { message, isMine, groupChanged, dateLabel, showDateDivider };
   });
