@@ -64,7 +64,6 @@ export default function TripCreate() {
   const capacityLabelId = useId();
 
   const today = getToday();
-  const isTripToday = form.startDate === today;
   const deadline = resolveDeadline(form.deadlineOption, today, form.startDate, form.customDeadline);
 
   const isOptionDisabled = (option: DeadlineOption): boolean => {
@@ -87,12 +86,10 @@ export default function TripCreate() {
     const nextErrors: FieldErrors = {};
     if (!form.region) nextErrors.region = '여행지를 선택해 주세요.';
     if (!form.startDate) nextErrors.startDate = '여행 날짜를 선택해 주세요.';
+    // 날짜를 고른 뒤 자정이 지나 오늘이 되었을 수도 있어서 다시 확인합니다.
+    else if (form.startDate <= today) nextErrors.startDate = '여행 날짜를 다시 선택해 주세요.';
     if (!isValidName(form.name)) nextErrors.name = NAME_ERROR;
-    if (
-      form.startDate &&
-      !isTripToday &&
-      (!deadline || !isValidDeadline(deadline, today, form.startDate))
-    ) {
+    if (form.startDate && (!deadline || !isValidDeadline(deadline, today, form.startDate))) {
       nextErrors.deadline = '설문 마감일을 다시 선택해 주세요.';
     }
     return nextErrors;
@@ -114,7 +111,7 @@ export default function TripCreate() {
         regionId: form.region.regionId,
         startDate: form.startDate,
         capacity: form.capacity,
-        surveyDeadlineDate: isTripToday || !deadline ? undefined : deadline,
+        surveyDeadlineDate: deadline ?? undefined,
       });
       setCreatedTrip({
         ...result,
@@ -262,35 +259,29 @@ export default function TripCreate() {
           <span className={styles.label} id={deadlineLabelId}>
             취향 설문 마감일
           </span>
-          {isTripToday ? (
-            <p className={styles.fixedDeadline}>여행 당일이라 오늘 낮 12시에 설문이 마감돼요</p>
+          <div className={styles.chips} role="radiogroup" aria-labelledby={deadlineLabelId}>
+            {DEADLINE_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={form.deadlineOption === value}
+                className={`${styles.chip} ${form.deadlineOption === value ? styles.chipSelected : ''}`}
+                disabled={isOptionDisabled(value)}
+                onClick={() => selectDeadlineOption(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {errors.deadline ? (
+            <p className={styles.error}>{errors.deadline}</p>
           ) : (
-            <>
-              <div className={styles.chips} role="radiogroup" aria-labelledby={deadlineLabelId}>
-                {DEADLINE_OPTIONS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={form.deadlineOption === value}
-                    className={`${styles.chip} ${form.deadlineOption === value ? styles.chipSelected : ''}`}
-                    disabled={isOptionDisabled(value)}
-                    onClick={() => selectDeadlineOption(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {errors.deadline ? (
-                <p className={styles.error}>{errors.deadline}</p>
-              ) : (
-                <p className={styles.helper}>
-                  {deadline && form.startDate
-                    ? `${formatMonthDay(deadline)} 밤 12시에 설문이 마감돼요`
-                    : '여행 날짜를 고르면 마감일이 정해져요'}
-                </p>
-              )}
-            </>
+            <p className={styles.helper}>
+              {deadline && form.startDate
+                ? `${formatMonthDay(deadline)} 밤 12시에 설문이 마감돼요`
+                : '여행 날짜를 고르면 마감일이 정해져요'}
+            </p>
           )}
         </div>
       </div>

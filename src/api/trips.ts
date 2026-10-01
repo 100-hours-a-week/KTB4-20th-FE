@@ -62,7 +62,7 @@ export interface TripCreateRequest {
   /** YYYY-MM-DD */
   startDate: string;
   capacity: number;
-  /** YYYY-MM-DD. 비우면 백엔드가 여행 전날로 정하고, 여행 당일이면 당일 12시로 고정합니다. */
+  /** YYYY-MM-DD. 비우면 백엔드가 여행 전날로 정합니다. */
   surveyDeadlineDate?: string;
 }
 

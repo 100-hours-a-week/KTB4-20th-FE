@@ -5,7 +5,7 @@ import App from './App';
 import './styles/global.css';
 
 Sentry.init({
-    dsn: 'https://3455cd727c3b8efa05d05a03201b83f1@o4512164086153216.ingest.us.sentry.io/4512164125343744',
+    dsn: 'https://59a4527b8854a770e5aaf8ad6f85e6c0@o4512170174382080.ingest.us.sentry.io/4512172554977280',
     enabled:
         import.meta.env.PROD &&
         window.location.hostname === 'planit-ai.site',
