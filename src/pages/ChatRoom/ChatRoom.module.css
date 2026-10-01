@@ -3,18 +3,28 @@
   flex-direction: column;
   width: 100%;
   max-width: var(--max-width-mobile);
-  height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
-  background: var(--color-background);
+  background: var(--background-canvas);
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-bottom: 1px solid var(--color-border);
+  /* 다른 화면 머리글처럼 바탕 위에 바로 얹는다. 스크롤해도 위에 남는다 */
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-3) var(--spacing-2);
+  border-bottom: 1px solid var(--color-border-soft);
   flex-shrink: 0;
+}
+
+/* 목록과 같은 지역 풍경 썸네일 */
+.headerThumb {
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
 }
 
 .headerInfo {
@@ -33,6 +43,9 @@
 }
 
 .roomMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
@@ -52,10 +65,14 @@
 }
 
 .dateDivider {
-  margin: var(--spacing-4) 0;
-  text-align: center;
-  font-size: var(--font-size-xs);
+  width: fit-content;
+  margin: var(--spacing-4) auto;
+  padding: 2px var(--spacing-3);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
   color: var(--color-text-muted);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-semibold);
 }
 
 .messageRow {
@@ -101,8 +118,9 @@
 
 .bubble {
   padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  border-radius: 18px 18px 18px 6px;
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-sm);
   color: var(--color-text);
   font-size: var(--font-size-sm);
   line-height: 1.4;
@@ -111,6 +129,7 @@
 }
 
 .messageRow.mine .bubble {
+  border-radius: 18px 18px 6px 18px;
   background: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -127,12 +146,14 @@
   white-space: nowrap;
 }
 
+/* 첨부·입력·보내기를 모두 40px 높이로 맞춘다. 여러 줄이 되면 버튼은 아래에 붙는다 */
 .composer {
   display: flex;
   align-items: flex-end;
   gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-3) var(--spacing-4) calc(var(--spacing-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border-soft);
+  background: var(--color-ticket);
   flex-shrink: 0;
 }
 
@@ -145,4 +166,11 @@
   min-height: 100vh;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+.onlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-progress);
 }

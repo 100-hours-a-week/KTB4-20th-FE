@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CheckIcon, CircleAlertIcon, ClockIcon, Crown, MapIcon, PencilIcon } from 'lucide-react';
+import {
+  CheckIcon,
+  CircleAlertIcon,
+  ClockIcon,
+  Crown,
+  Link2Icon,
+  MapIcon,
+  PencilIcon,
+  SparklesIcon,
+  UsersIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
@@ -13,13 +23,18 @@ import {
   getTripInvitationToken,
   TRIP_DETAIL_ERROR_CODES,
   type TripDetail as TripDetailData,
+  type TripStatus,
 } from '../../api/trips';
 import { useAuth } from '../../auth/AuthContext';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
-import Avatar, { AvatarGroup } from '../../components/Avatar/Avatar';
+import Avatar from '../../components/Avatar/Avatar';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
+import TripProgress from '../../components/TripCard/TripProgress';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
+import TicketStub from '../../components/TripCard/TicketStub';
+import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { formatExclusionName, SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
 import { getToday } from '../../utils/date';
 import { getScheduleButtonState } from './scheduleButtonState';
@@ -90,7 +105,9 @@ export default function TripDetail() {
   );
 
   const markScheduleExists = () =>
-    setState((previous) => (previous.status === 'ready' ? { ...previous, hasSchedule: true } : previous));
+    setState((previous) =>
+      previous.status === 'ready' ? { ...previous, hasSchedule: true } : previous,
+    );
 
   useEffect(() => {
     void refresh();
@@ -208,9 +225,6 @@ export default function TripDetail() {
   const members = [
     ...new Map(trip.members.map((member) => [member.memberId, member])).values(),
   ].sort((a, b) => Number(b.role === 'HOST') - Number(a.role === 'HOST'));
-  const submittedMembers = members.filter(
-    (member) => member.userPublicId !== null && submittedIds.has(member.userPublicId),
-  );
   const showSummary =
     summary.allSubmitted || (summary.deadlinePassed && summary.submittedCount > 0);
   const buttonState = getScheduleButtonState({
@@ -229,11 +243,9 @@ export default function TripDetail() {
 
   return (
     <main className={styles.container}>
-      <PageHeader
-        title={trip.name}
-        subtitle={`${trip.startDate.replaceAll('-', '.')} · ${trip.capacity}명 초대`}
-        onBack={() => navigate('/')}
-      />
+      <PageHeader title="취향 설문 결과" onBack={() => navigate('/')} />
+
+      <TripHero trip={trip} hasSchedule={hasSchedule} />
 
       {/*
         초대는 방장만 할 수 있고, 정원이 다 차면 보여주지 않습니다.
@@ -243,128 +255,119 @@ export default function TripDetail() {
         <InviteSection tripId={trip.tripId} />
       )}
 
-      {showSummary ? (
-        <>
-          <section className={styles.card} aria-labelledby="summary-title">
-            <div className={styles.summaryHeader}>
-              <h2 id="summary-title" className={styles.summaryTitle}>
-                우리 방 취향 종합
-              </h2>
-              <Badge variant="secondary" className="bg-accent">
-                {summary.submittedCount}명 완료
-              </Badge>
-            </div>
-            <ul className={styles.categoryList}>
-              {categories.map((category) => (
-                <li key={category.categoryCode} className={styles.categoryRow}>
-                  <span className={styles.categoryName}>
-                    {SURVEY_CATEGORY_LABELS[category.categoryCode] ?? category.categoryCode}
-                  </span>
+      {showSummary && (
+        <section className={styles.card} aria-labelledby="summary-title">
+          <div className={styles.summaryHeader}>
+            <h2 id="summary-title" className={styles.summaryTitle}>
+              우리 방 취향 종합
+            </h2>
+            <Badge className="bg-[var(--color-success-soft)] font-semibold text-[var(--color-success)]">
+              {summary.submittedCount}명 완료
+            </Badge>
+          </div>
+          {categories.length === 0 && (
+            <p className={styles.emptyHint}>아직 모인 취향 데이터가 없어요</p>
+          )}
+          <ul className={styles.categoryList}>
+            {categories.map((category) => (
+              <li key={category.categoryCode} className={styles.categoryRow}>
+                <span className={styles.categoryName}>
+                  {SURVEY_CATEGORY_LABELS[category.categoryCode] ?? category.categoryCode}
+                </span>
+                <span
+                  className={styles.bar}
+                  role="meter"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={category.preferencePercent}
+                  aria-label={`${SURVEY_CATEGORY_LABELS[category.categoryCode] ?? category.categoryCode} 선호도`}
+                >
                   <span
-                    className={styles.bar}
-                    role="meter"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={category.preferencePercent}
-                    aria-label={`${SURVEY_CATEGORY_LABELS[category.categoryCode] ?? category.categoryCode} 선호도`}
-                  >
-                    <span
-                      className={styles.barFill}
-                      style={{ width: `${category.preferencePercent}%` }}
-                    />
-                  </span>
-                  <span className={styles.percent}>{category.preferencePercent}%</span>
-                </li>
-              ))}
-            </ul>
-            {summary.excludedCategories.length > 0 && (
-              <div className={styles.summaryGroup}>
-                <h3 className={styles.groupTitle}>이번엔 빼드려요</h3>
-                <ul className={styles.chips}>
-                  {summary.excludedCategories.map((item) => (
-                    <li key={item.code} className={styles.chip}>
-                      {formatExclusionName(item.name)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
+                    className={styles.barFill}
+                    style={{ width: `${category.preferencePercent}%` }}
+                  />
+                </span>
+                <span className={styles.percent}>{category.preferencePercent}%</span>
+              </li>
+            ))}
+          </ul>
+          {summary.excludedCategories.length > 0 && (
+            <div className={styles.summaryGroup}>
+              <h3 className={styles.groupTitle}>이번엔 빼드려요</h3>
+              <ul className={styles.chips}>
+                {summary.excludedCategories.map((item) => (
+                  <li key={item.code} className={styles.chip}>
+                    {formatExclusionName(item.name)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
-          <section className={`${styles.card} ${styles.submittedRow}`} aria-label="설문 완료 멤버">
-            <AvatarGroup
-              members={submittedMembers.map((member) => ({
-                name: member.userName,
-                imageUrl: member.profileImageUrl,
-              }))}
-            />
-            <span className={styles.submittedCount}>
+      <section className={`${styles.card} ${styles.members}`} aria-labelledby="members-title">
+        <div className={styles.progress}>
+          <div className={styles.progressHeader}>
+            <h2 id="members-title" className={styles.progressTitle}>
+              참여 멤버
+            </h2>
+            <span className={styles.progressCount}>
               {summary.submittedCount}/{summary.activeMemberCount}명 제출 완료
             </span>
-          </section>
-        </>
-      ) : (
-        <>
-          <section className={styles.progress} aria-labelledby="members-title">
-            <div className={styles.progressHeader}>
-              <h2 id="members-title" className={styles.progressTitle}>
-                참여 멤버
-              </h2>
-              <span className={styles.progressCount}>
-                {summary.submittedCount}/{summary.activeMemberCount}명 제출 완료
-              </span>
-            </div>
-            <span
-              className={styles.bar}
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={summary.progressPercent}
-              aria-label="설문 제출 진행률"
-            >
-              <span className={styles.barFill} style={{ width: `${summary.progressPercent}%` }} />
-            </span>
-          </section>
+          </div>
+          <span
+            className={styles.bar}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={summary.progressPercent}
+            aria-label="설문 제출 진행률"
+          >
+            <span className={styles.barFill} style={{ width: `${summary.progressPercent}%` }} />
+          </span>
+        </div>
 
-          <ul className={styles.memberList}>
-            {members.map((member) => {
-              const submitted =
-                member.userPublicId !== null && submittedIds.has(member.userPublicId);
-              const isMe = member.userPublicId !== null && member.userPublicId === user?.publicId;
-              return (
-                <li key={member.memberId} className={styles.memberRow}>
-                  <span className={styles.avatarWrap}>
-                    <Avatar name={member.userName} imageUrl={member.profileImageUrl} muted={!isMe} />
-                    {member.role === 'HOST' && (
-                      <Crown
-                        className={styles.hostBadge}
-                        size={14}
-                        fill="currentColor"
-                        aria-label="방장"
-                      />
-                    )}
-                  </span>
-                  <span className={styles.memberName}>
-                    {member.userName}
-                    {isMe && ' (나)'}
-                  </span>
-                  {submitted ? (
-                    <span className={styles.submitted}>
-                      <CheckIcon className="size-4" aria-hidden="true" />
-                      제출완료
-                    </span>
-                  ) : (
-                    <span className={styles.waiting}>
-                      <ClockIcon className="size-3.5" aria-hidden="true" />
-                      대기중
+        <ul className={styles.memberList}>
+          {members.map((member) => {
+            const submitted = member.userPublicId !== null && submittedIds.has(member.userPublicId);
+            const isMe = member.userPublicId !== null && member.userPublicId === user?.publicId;
+            return (
+              <li key={member.memberId} className={styles.memberRow}>
+                <span className={styles.avatarWrap}>
+                  <Avatar
+                    name={member.userName}
+                    imageUrl={member.profileImageUrl}
+                    host={member.role === 'HOST'}
+                    muted={member.role !== 'HOST'}
+                  />
+                </span>
+                <span className={styles.memberName}>
+                  {member.userName}
+                  {isMe && ' (나)'}
+                  {member.role === 'HOST' && (
+                    <span className={styles.hostTag}>
+                      <Crown size={11} fill="currentColor" aria-hidden="true" />
+                      방장
                     </span>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
+                </span>
+                {submitted ? (
+                  <span className={styles.submitted}>
+                    <CheckIcon className="size-3.5" strokeWidth={3} aria-hidden="true" />
+                    제출완료
+                  </span>
+                ) : (
+                  <span className={styles.waiting}>
+                    <ClockIcon className="size-3.5" aria-hidden="true" />
+                    대기중
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <div className={styles.actions}>
         <div className={styles.actionGroup}>
@@ -381,7 +384,6 @@ export default function TripDetail() {
           ) : (
             <Button
               size="lg"
-              variant="outline"
               className="h-13 w-full text-base font-semibold"
               disabled={summary.deadlinePassed}
               onClick={() => navigate(surveyPath)}
@@ -402,6 +404,7 @@ export default function TripDetail() {
               className="h-13 flex-1 text-base font-semibold"
               onClick={goToSchedule}
             >
+              <SparklesIcon className="size-4" aria-hidden="true" />
               AI 일정 보기
             </Button>
             <Button
@@ -426,6 +429,7 @@ export default function TripDetail() {
               disabled={!buttonState.enabled}
               onClick={startGeneration}
             >
+              <SparklesIcon className="size-4" aria-hidden="true" />
               AI 일정 생성하기
             </Button>
             <p className={styles.caption}>{buttonState.caption}</p>
@@ -481,17 +485,64 @@ function InviteSection({ tripId }: { tripId: string }) {
 
   return (
     <section className={styles.invite} aria-labelledby="invite-title">
-      <h2 id="invite-title" className={styles.inviteTitle}>
-        멤버 초대하기
-      </h2>
-      <Button
-        size="lg"
-        variant="outline"
-        className="h-11 w-full border-foreground font-semibold"
-        onClick={copyLink}
-      >
-        초대 링크 복사
+      <span className={styles.inviteIcon} aria-hidden="true">
+        <UsersIcon size={20} />
+      </span>
+      <div className={styles.inviteText}>
+        <h2 id="invite-title" className={styles.inviteTitle}>
+          멤버 초대하기
+        </h2>
+        <p className={styles.inviteDescription}>링크를 보내 친구를 불러보세요</p>
+      </div>
+      <Button size="lg" className="h-10 shrink-0 px-3.5" onClick={copyLink}>
+        <Link2Icon className="size-4" aria-hidden="true" />
+        링크 복사
       </Button>
+    </section>
+  );
+}
+
+/** 상세 화면에는 여행 상태가 따로 오지 않아 날짜와 일정 유무로 단계를 정합니다. */
+function getTripStatus(trip: TripDetailData, hasSchedule: boolean): TripStatus {
+  // 백엔드 목록과 같은 규칙: 출발일 당일만 여행 중, 출발일이 지나면 여행 완료
+  const today = getToday();
+  if (trip.startDate < today) return 'TRIP_COMPLETED';
+  if (trip.startDate === today) return 'TRIP_IN_PROGRESS';
+  return hasSchedule ? 'SCHEDULE_COMPLETED' : 'SURVEY_IN_PROGRESS';
+}
+
+/**
+ * 여행방 상단: 여행지 풍경 그림 아래에 탑승권.
+ * 탑승권에는 여행지, 날짜, 인원, 진행 단계와 오른쪽 D-day 칸이 있습니다.
+ */
+function TripHero({ trip, hasSchedule }: { trip: TripDetailData; hasSchedule: boolean }) {
+  const status = getTripStatus(trip, hasSchedule);
+
+  return (
+    <section className={styles.hero} aria-label="여행 요약">
+      <div className={styles.heroScene}>
+        <RegionIllustration
+          regionCode={trip.region.regionCode}
+          regionName={trip.region.regionName}
+        />
+      </div>
+      <div className={styles.heroTicket}>
+        <div className={styles.heroMain}>
+          <p className={styles.heroName}>
+            <span className={styles.heroNameText} title={trip.name}>
+              {trip.name}
+            </span>
+            <span className={styles.heroCount}>{trip.memberCount}명</span>
+          </p>
+          <p className={styles.heroDate}>
+            {trip.region.regionName} · {formatTripDate(trip.startDate, true)} 출발
+          </p>
+          <div className={styles.heroProgress}>
+            <TripProgress status={status} />
+          </div>
+        </div>
+        <TicketStub status={status} startDate={trip.startDate} size="lg" />
+      </div>
     </section>
   );
 }

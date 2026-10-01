@@ -23,19 +23,21 @@ import {
   CalendarIcon,
   XIcon as CloseIcon,
   LockIcon,
-  MapPinIcon,
+  InfoIcon,
   UsersIcon,
 } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { truncateTripName } from '../../components/TripCard/tripFormat';
+import { formatTripDate, getDaysUntil } from '../../components/TripCard/tripDisplay';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
+import planitSymbol from '../../assets/logo/planit-symbol.svg';
 import { useAuth } from '../../auth/AuthContext';
-import { formatDotDate } from '../../utils/date';
 import { withSubjectParticle } from '../../utils/korean';
 import { clearPendingInvitation, savePendingInvitation } from '../../utils/pendingInvitation';
 import styles from './InvitationJoin.module.css';
 
-const MAX_VISIBLE_MEMBERS = 3;
+const MAX_VISIBLE_MEMBERS = 5;
 
 type ErrorKind = 'deleted' | 'full' | 'surveyClosed' | 'invalid' | 'unknown';
 
@@ -271,15 +273,17 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
     }
   };
 
-  const visibleMembers = members.slice(0, MAX_VISIBLE_MEMBERS);
-  const hiddenCount = members.length - visibleMembers.length;
+  const daysUntil = getDaysUntil(trip.startDate, 'SURVEY_IN_PROGRESS');
 
   return (
     <main className={styles.container}>
-      <p className={styles.brand}>PLAN IT</p>
+      <header className={styles.brand}>
+        <img src={planitSymbol} alt="" width={26} height={26} />
+        <span>PlanIt</span>
+      </header>
 
-      <section className={styles.card} aria-labelledby="invitation-title">
-        <Avatar name={inviter.userName} imageUrl={inviter.profileImageUrl} size="lg" />
+      <section className={styles.intro} aria-labelledby="invitation-title">
+        <Avatar name={inviter.userName} imageUrl={inviter.profileImageUrl} size="lg" host />
         <p className={styles.inviteText}>
           {withSubjectParticle(inviter.userName)} 여행에 초대했어요
         </p>
@@ -288,37 +292,45 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
           <br />
           함께할까요?
         </h1>
-        <div className={styles.tripInfo}>
-          <p className={styles.region}>
-            <MapPinIcon size={18} />
-            {trip.region.regionName}
-          </p>
-          <p className={styles.date}>{formatDotDate(trip.startDate)}</p>
-        </div>
       </section>
 
-      <section className={styles.members} aria-labelledby="members-title">
-        <h2 id="members-title" className={styles.membersTitle}>
-          현재 참여 멤버 · {trip.memberCount}/{trip.capacity}명
-        </h2>
+      {/* 여행 정보를 탑승권처럼: 위에 여행지 풍경, 아래 여행지·출발일과 D-day 칸 */}
+      <section className={styles.ticket} aria-label="여행 정보">
+        <div className={styles.ticketScene} aria-hidden="true">
+          <RegionIllustration
+            regionCode={trip.region.regionId}
+            regionName={trip.region.regionName}
+          />
+        </div>
+        <div className={styles.ticketBody}>
+          <div className={styles.ticketMain}>
+            <p className={styles.region}>{trip.region.regionName}</p>
+            <p className={styles.date}>{formatTripDate(trip.startDate, true)} 출발</p>
+          </div>
+          {daysUntil !== null && (
+            <span className={styles.ticketStub}>
+              {daysUntil === 0 ? 'D-DAY' : `D-${daysUntil}`}
+            </span>
+          )}
+        </div>
         <div className={styles.memberRow}>
           <AvatarGroup
-            members={visibleMembers.map((member) => ({
+            members={members.map((member) => ({
               name: member.userName,
               imageUrl: member.profileImageUrl,
             }))}
+            max={MAX_VISIBLE_MEMBERS}
+            size="sm"
           />
-          {hiddenCount > 0 && (
-            <span className={styles.more} aria-label={`외 ${hiddenCount}명`}>
-              …
-            </span>
-          )}
+          <span className={styles.memberCount}>
+            {trip.memberCount}명 참여 중 · 최대 {trip.capacity}명
+          </span>
         </div>
       </section>
 
       <div className={styles.notice}>
         <span className={styles.noticeIcon} aria-hidden="true">
-          !
+          <InfoIcon size={16} />
         </span>
         <div>
           <p className={styles.noticeTitle}>참여하면 이름과 취향 결과가</p>

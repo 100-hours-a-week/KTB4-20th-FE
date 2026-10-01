@@ -14,8 +14,8 @@ export default defineConfig({
         ...(uploadSourceMaps
             ? [
                 sentryVitePlugin({
-                    org: 'planit-gb',
-                    project: 'planit',
+                    org: '0da92dac133e',
+                    project: 'planit-frontend',
                     authToken: process.env.SENTRY_AUTH_TOKEN,
 
                     errorHandler: (error) => {

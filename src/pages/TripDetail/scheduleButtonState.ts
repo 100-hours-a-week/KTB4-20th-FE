@@ -34,7 +34,7 @@ interface ScheduleButtonInput {
  * AI 일정 생성하기 버튼의 활성 여부와 안내 문구 (화면설계서 7번)
  * - 그룹원은 조건과 관계없이 비활성화
  * - 참여 인원이 1명(방장 혼자) → 비활성 · "멤버가 2명 이상이어야 일정을 만들 수 있어요"
- * - 본인 미제출 → 비활성 · "먼저 취향 설문에 답해주세요· 마감 D-{d}"
+ * - 본인 미제출 → 비활성 · "먼저 취향 설문에 답해주세요 · 마감 D-{d}"
  * - 마감 전 · 미제출자 있음 → 비활성 · "{n}명이 더 제출하면 시작할 수 있어요 · 마감 D-{d}"
  * - 마감 전 · 전원 제출 → 활성 · "모두 제출했어요. 이제 일정을 만들 수 있어요"
  * - 마감 경과 · 미제출자 있음 → 활성 · "설문이 마감됐어요. 지금 인원으로 일정을 만들어요"
@@ -59,7 +59,7 @@ export function getScheduleButtonState({
   }
 
   if (!mySurveySubmitted) {
-    return { enabled: false, caption: `먼저 취향 설문에 답해주세요· 마감 ${dday}` };
+    return { enabled: false, caption: `먼저 취향 설문에 답해주세요 · 마감 ${dday}` };
   }
 
   let ready: boolean;

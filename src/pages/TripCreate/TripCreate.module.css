@@ -13,7 +13,7 @@
   flex: 1;
   flex-direction: column;
   gap: var(--spacing-5);
-  margin-top: var(--spacing-4);
+  margin-top: var(--spacing-6);
 }
 
 .field {
@@ -131,15 +131,6 @@
   font-size: var(--font-size-badge);
 }
 
-.fixedDeadline {
-  margin: 0;
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted-soft);
-  background: var(--color-surface);
-  font-size: var(--font-size-xs);
-}
-
 .helper {
   margin: 0;
   color: var(--color-text-muted-soft);
@@ -217,4 +208,35 @@
 .navButton:disabled {
   color: var(--color-border);
   cursor: default;
+}
+
+/* 여행 날짜: 이름 옆에 고른 날짜, 아래에 처음부터 펼쳐 둔 달력 */
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.dateValue {
+  color: var(--color-point-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.datePlaceholder {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.calendarCard {
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+}
+
+.calendarCardInvalid {
+  border-color: var(--color-danger);
 }

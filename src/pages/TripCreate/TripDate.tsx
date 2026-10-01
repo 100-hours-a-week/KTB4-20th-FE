@@ -16,7 +16,7 @@ function shiftMonth(year: number, monthIndex: number, delta: number) {
   return { year: date.getUTCFullYear(), monthIndex: date.getUTCMonth() };
 }
 
-/** 여행 출발 날짜를 하루 고르는 화면입니다. 오늘 이전 날짜는 고를 수 없어요. */
+/** 여행 출발 날짜를 하루 고르는 화면입니다. 오늘을 포함한 이전 날짜는 고를 수 없어요. */
 export default function TripDate() {
   const navigate = useNavigate();
   const { form, updateForm } = useTripCreate();
@@ -85,7 +85,8 @@ export default function TripDate() {
               monthIndex={monthIndex}
               selected={selected}
               showWeekdays={index === 0}
-              isDisabled={(iso) => iso < today}
+              // 당일 여행은 바로 진행 중 상태가 되므로 내일부터 고를 수 있어요.
+              isDisabled={(iso) => iso <= today}
               // 이미 고른 날짜를 다시 누르면 선택이 취소됩니다.
               onSelect={(iso) => setSelected((current) => (current === iso ? null : iso))}
             />
