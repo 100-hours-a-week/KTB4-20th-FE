@@ -9,6 +9,7 @@ import {
   type RegionalChatRoomItem,
 } from '../../api/chat';
 import { Button } from '@/components/ui/button';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
@@ -96,20 +97,26 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent showCloseButton={false}>
+      <DialogContent showCloseButton={false} className="overflow-hidden rounded-[var(--radius-xl)] p-5">
+        {/* 목록과 같은 지역 풍경 띠 */}
+        <div className="-mx-5 -mt-5 h-24 overflow-hidden" aria-hidden="true">
+          <RegionIllustration regionCode={room.regionId} regionName={room.name.split(' ')[0]} />
+        </div>
         <DialogHeader>
           <DialogTitle>{room.name} 여행자방에 참여할까요?</DialogTitle>
           <DialogDescription>정확한 위치는 공개하지 않습니다.</DialogDescription>
         </DialogHeader>
 
-        {loadingPolicy && <p className="text-sm text-muted-foreground">운영 원칙을 불러오는 중이에요.</p>}
+        {loadingPolicy && (
+          <p className="text-sm text-muted-foreground">운영 원칙을 불러오는 중이에요.</p>
+        )}
 
         {!loadingPolicy && policyError && (
           <p className="text-sm text-muted-foreground">운영 원칙을 불러오지 못했어요.</p>
         )}
 
         {!loadingPolicy && !policyError && policy && (
-          <div className="rounded-lg bg-muted p-3 text-sm">
+          <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] p-3 text-sm">
             <div className="flex items-center gap-3">
               <label className="flex flex-1 items-center gap-3 font-medium">
                 <Checkbox
@@ -147,10 +154,20 @@ export default function JoinRoomModal({ room, onClose, onJoined }: JoinRoomModal
         {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
         <DialogFooter className="!mx-0 !mb-0 !rounded-none border-t-0 !bg-transparent !p-0 sm:flex-row">
-          <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 flex-1 rounded-full"
+            onClick={onClose}
+          >
             취소
           </Button>
-          <Button type="button" className="flex-1" onClick={handleJoin} disabled={!canSubmit}>
+          <Button
+            type="button"
+            className="h-11 flex-1 rounded-full"
+            onClick={handleJoin}
+            disabled={!canSubmit}
+          >
             {submitting ? '입장하는 중...' : '입장'}
           </Button>
         </DialogFooter>

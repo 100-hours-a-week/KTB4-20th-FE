@@ -1,24 +1,47 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import BottomNav from '../../components/BottomNav/BottomNav';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
 import { fetchRegionalChatRooms, type RegionalChatRoomItem } from '../../api/chat';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import JoinRoomModal from './JoinRoomModal';
 import styles from './OpenChat.module.css';
 
-function LocationIcon() {
+/** 채팅방 이름("서울 여행 이야기")의 첫 단어를 지역 이름으로 보고 풍경 그림을 고른다. */
+function RoomThumb({ room }: { room: RegionalChatRoomItem }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 21.5s7-6.55 7-11.8A7 7 0 0 0 5 9.7c0 5.25 7 11.8 7 11.8Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="9.7" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
+    <span className={styles.thumb} aria-hidden="true">
+      <RegionIllustration regionCode={room.regionId} regionName={room.name.split(' ')[0]} />
+    </span>
+  );
+}
+
+function RoomRow({
+  room,
+  onClick,
+}: {
+  room: RegionalChatRoomItem;
+  onClick: (room: RegionalChatRoomItem) => void;
+}) {
+  return (
+    <li>
+      <button type="button" className={styles.roomButton} onClick={() => onClick(room)}>
+        <RoomThumb room={room} />
+        <span className={styles.roomInfo}>
+          <span className={styles.roomNameRow}>
+            <span className={styles.roomName}>{room.name}</span>
+            {room.joined && <span className={styles.joined}>참여 중</span>}
+          </span>
+          <span className={styles.roomMeta}>
+            <span className={styles.onlineDot} aria-hidden="true" />
+            {room.activeUserCount}명 대화 중 · {room.memberCount}명 참여
+          </span>
+        </span>
+        <MessageCircle className={styles.enterIcon} size={18} aria-hidden="true" />
+      </button>
+    </li>
   );
 }
 
@@ -46,6 +69,9 @@ export default function OpenChat() {
     void loadRooms();
   }, [loadRooms]);
 
+  const myRooms = rooms.filter((room) => room.relatedToMyTrip);
+  const otherRooms = rooms.filter((room) => !room.relatedToMyTrip);
+
   function handleRoomJoined(room: RegionalChatRoomItem) {
     setActiveRoom(null);
     navigate(`/open-chat/rooms/${room.roomId}`, { state: { room: { ...room, joined: true } } });
@@ -64,17 +90,17 @@ export default function OpenChat() {
       <main className={styles.container}>
         <header className={styles.header}>
           <h1 className={styles.title}>오픈 채팅</h1>
-          <p className={styles.subtitle}>지역별 공개 채팅에서 여행 정보를 나눠보세요.</p>
+          <p className={styles.subtitle}>같은 곳으로 떠나는 사람들과 여행 정보를 나눠요</p>
         </header>
 
         {loading && (
-          <ul className={styles.list} aria-label="채팅방 목록을 불러오는 중">
+          <ul className={styles.list} aria-busy="true" aria-label="채팅방 목록을 불러오는 중">
             {[0, 1, 2].map((key) => (
               <li key={key} className={styles.roomButton}>
-                <Skeleton className="size-10 shrink-0 rounded-full" />
+                <Skeleton className="size-12 shrink-0 rounded-[12px] bg-accent" />
                 <div className="flex flex-1 flex-col gap-2">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-28 bg-accent" />
+                  <Skeleton className="h-3 w-40 bg-accent" />
                 </div>
               </li>
             ))}
@@ -92,43 +118,30 @@ export default function OpenChat() {
           <p className={styles.status}>참여할 수 있는 지역 채팅방이 없어요.</p>
         )}
 
-        {!loading && !loadError && rooms.length > 0 && (
-          <ul className={styles.list}>
-            {rooms.map((room) => (
-              <li key={room.roomId}>
-                <button
-                  type="button"
-                  className={styles.roomButton}
-                  onClick={() => handleRoomClick(room)}
-                >
-                  <span className={styles.roomIcon}>
-                    <LocationIcon />
-                  </span>
-                  <span className={styles.roomInfo}>
-                    <span className={styles.roomNameRow}>
-                      <span className={styles.roomName}>{room.name}</span>
-                      {room.relatedToMyTrip && (
-                        <Badge
-                          variant="outline"
-                          className="border-[var(--color-brand-secondary)] text-[var(--color-brand-secondary)]"
-                        >
-                          내 여행 지역
-                        </Badge>
-                      )}
-                    </span>
-                    <span className={styles.roomMeta}>
-                      {room.memberCount}명 참여 · {room.activeUserCount}명 접속 중
-                    </span>
-                  </span>
-                  {room.joined && (
-                    <Badge className="shrink-0 bg-[var(--color-brand-accent)] text-[var(--color-brand-accent-text)]">
-                      참여 중인 채팅방
-                    </Badge>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {!loading && !loadError && myRooms.length > 0 && (
+          <section className={styles.section} aria-labelledby="my-region-rooms">
+            <h2 id="my-region-rooms" className={styles.sectionTitle}>
+              내 여행 지역
+            </h2>
+            <ul className={styles.list}>
+              {myRooms.map((room) => (
+                <RoomRow key={room.roomId} room={room} onClick={handleRoomClick} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {!loading && !loadError && otherRooms.length > 0 && (
+          <section className={styles.section} aria-labelledby="all-region-rooms">
+            <h2 id="all-region-rooms" className={styles.sectionTitle}>
+              {myRooms.length > 0 ? '다른 지역' : '모든 지역'}
+            </h2>
+            <ul className={styles.list}>
+              {otherRooms.map((room) => (
+                <RoomRow key={room.roomId} room={room} onClick={handleRoomClick} />
+              ))}
+            </ul>
+          </section>
         )}
       </main>
 

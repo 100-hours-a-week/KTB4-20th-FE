@@ -18,7 +18,14 @@
 }
 
 .muted {
+  color: var(--color-accent-brown);
   background: var(--color-avatar-muted);
+}
+
+/* 방장: 브라운 배경 + 크림 글자로 다른 멤버와 확실히 구분 */
+.host {
+  color: var(--color-on-accent-brown);
+  background: var(--color-accent-brown);
 }
 
 .lg {
@@ -27,9 +34,15 @@
   font-size: var(--font-size-base);
 }
 
+.xs {
+  width: 22px;
+  height: 22px;
+  font-size: var(--font-size-badge);
+}
+
 .sm {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   font-size: var(--font-size-badge);
 }
 
@@ -46,13 +59,20 @@
 .groupItem {
   display: flex;
   border-radius: var(--radius-full);
-  box-shadow: 0 0 0 1.5px var(--color-background);
+  box-shadow: 0 0 0 2px var(--color-background);
 }
 
 .groupItem + .groupItem {
   margin-left: -4px;
 }
 
-.groupItem:nth-child(n + 2) > span {
-  background: var(--color-avatar-muted);
+
+/* 다 못 보여준 멤버 수 (+2) */
+.more {
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface-strong);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-semibold);
 }

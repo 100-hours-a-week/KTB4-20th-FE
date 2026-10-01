@@ -1,31 +1,49 @@
+/* 오픈 채팅: 홈과 같은 바탕, 지역 풍경 썸네일이 있는 한 줄 목록 */
 .page {
-  min-height: 100vh;
-  padding-bottom: 84px;
-  background: var(--color-background);
+  min-height: 100dvh;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
 }
 
 .container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
   max-width: var(--max-width-mobile);
   margin: 0 auto;
-  padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
+  padding: var(--spacing-7) var(--spacing-4) var(--spacing-4);
 }
 
 .header {
-  margin-bottom: var(--spacing-5);
+  padding: 0 var(--spacing-1);
 }
 
 .title {
   margin: 0 0 var(--spacing-1);
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  letter-spacing: -0.2px;
   color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .subtitle {
   margin: 0;
-  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.sectionTitle {
+  margin: 0;
+  padding: 0 var(--spacing-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .status {
@@ -34,15 +52,25 @@
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--spacing-8) 0;
-  text-align: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  text-align: center;
 }
 
+/* 한 장의 카드 안에 줄로 나눈 목록 */
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
+  margin: 0;
+  padding: var(--spacing-1) var(--spacing-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .roomButton {
@@ -51,49 +79,36 @@
   gap: var(--spacing-3);
   width: 100%;
   min-height: 44px;
-  padding: var(--spacing-4);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--spacing-3) 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
   text-align: left;
-  transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.roomButton:hover {
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-1px);
-}
-
-.roomButton:active {
-  transform: translateY(0);
 }
 
 .roomButton:focus-visible {
+  border-radius: var(--radius-md);
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.roomIcon {
+.roomButton:active {
+  opacity: 0.8;
+}
+
+.thumb {
+  overflow: hidden;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface-strong);
-  color: var(--color-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
 }
 
 .roomInfo {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: var(--spacing-1);
+  gap: 2px;
   min-width: 0;
 }
 
@@ -105,15 +120,41 @@
 }
 
 .roomName {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-text);
   overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.joined {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-semibold);
+}
+
 .roomMeta {
-  font-size: var(--font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.onlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-progress);
+}
+
+.enterIcon {
+  flex-shrink: 0;
   color: var(--color-text-muted);
 }

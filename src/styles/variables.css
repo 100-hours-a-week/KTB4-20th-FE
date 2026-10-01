@@ -1,31 +1,91 @@
 /*
   디자인 토큰 (색상, 스페이싱, 타이포)
   :root에 선언하면 프로젝트 어디서든 var(--변수명) 으로 사용할 수 있습니다.
+
+  컨셉: "탑승권". 팔레트는 사용자가 정한 네 색이다.
+    밝은 그레이(#f6f5f1) 위쪽만 옅은 숲빛(#e9efe9) 그러데이션 화면 바탕
+    오프화이트(#fdfdfb) 탑승권·카드·시트 면. 순수 흰색은 쓰지 않는다
+    숲 초록 #3f6b4a 주 버튼·여행 중·선택 표시, 옅은 숲 초록 #86a98c 진행 단계 바
+    소프트 차콜 #2a2f2c 제목·본문, 브라운 #6E3511 D-day 숫자, 방장, 여행 완료 도장 (사람과 시간)
+  흰색·살구색 면은 쓰지 않는다. 본문 글자는 브라운에서 뽑은 아주 진한 갈색.
 */
 :root {
-  /* Colors (DESIGN.md 기준) */
+  /* 팔레트 원색 */
+  --palette-cream: #fcecd8;
+  /* 초록은 처음 팔레트(올리브 #597928, 세이지 #91AC67)에서 노란 기운을 뺀 숲 초록으로 바꿨다 */
+  --palette-olive: #3f6b4a;
+  --palette-sage: #86a98c;
+  --palette-brown: #6e3511;
+
+  /* Colors (역할) */
   /* shadcn의 Tailwind 테마 네임스페이스(--color-*)는 secondary·accent를 중립 surface 색으로 쓴다.
-     의미가 다른 브랜드 색(Steel Blue·mint)은 이름이 겹치지 않도록 --color-brand-* 접두사를 쓴다. */
-  --color-primary: #301e67;
-  --color-primary-dark: #1f1248;
-  --color-primary-disabled: #cbc7d9;
+     의미가 다른 브랜드 색은 이름이 겹치지 않도록 --color-brand-*, --color-point-* 접두사를 쓴다. */
+  --color-primary: var(--palette-olive);
+  --color-primary-dark: #33583c;
+  --color-primary-disabled: #deded8;
+  --color-primary-soft: #e3eee5;
   --color-on-primary: #ffffff;
-  --color-brand-secondary: #5b8fb9;
-  --color-brand-accent: #b6eada;
-  --color-brand-accent-text: #03001c;
-  --color-text: #03001c;
-  --color-text-muted: #6a6a6a;
-  --color-text-muted-soft: #929292;
-  --color-background: #ffffff;
-  --color-surface: #f7f7f7;
-  --color-surface-strong: #f2f2f2;
-  --color-border: #dddddd;
-  --color-border-soft: #ebebeb;
-  --color-border-strong: #c1c1c1;
-  --color-danger: #c13515;
-  --color-danger-dark: #b32505;
-  --color-success: #16a34a;
-  --color-scrim: #03001c;
+  /* 포인트(숲 초록): 흰 글자 6.2:1. 옅은 면 위 글자는 --color-point-text(6.8:1) */
+  --color-point: var(--palette-olive);
+  --color-point-soft: #e3eee5;
+  --color-point-text: #33583c;
+  --color-on-point: #ffffff;
+  /* 사람과 지금을 뜻하는 색: 제목, 방장, 여행 중 칸. 위 글자는 크림(8.3:1) */
+  --color-accent-brown: var(--palette-brown);
+  --color-accent-brown-soft: #f2e7de;
+  --color-on-accent-brown: var(--palette-cream);
+  /* 진행 단계 바 */
+  --color-progress: var(--palette-sage);
+
+  --color-brand-secondary: var(--palette-sage);
+  --color-brand-accent: #e3eee5;
+  --color-brand-accent-text: #33583c;
+  /* 글자: 순수 검정 대신 브라운에서 뽑은 아주 진한 갈색(흰 바탕 16:1) */
+  --color-text: #2a2f2c;
+  --color-text-muted: #646862;
+  --color-text-muted-soft: #646862;
+  /* 카드·시트처럼 떠 있는 면의 색(아이보리). 화면 바닥은 옅은 세이지 --color-canvas. */
+  --color-background: #fdfdfb;
+  --color-canvas: #f6f5f1;
+  /* 화면 위쪽만 은은한 숲빛이 돌고 아래로 갈수록 바탕색이 되는 배경 */
+  --color-canvas-glow: #e9efe9;
+  --background-canvas: linear-gradient(180deg, var(--color-canvas-glow) 0, var(--color-canvas) 22rem) top / 100% 22rem no-repeat, var(--color-canvas);
+  --color-surface: #f7f6f3;
+  /* 탑승권(여행방 카드, 상세 상단) 종이 색: 아이보리 */
+  --color-ticket: #fdfdfb;
+  --color-surface-strong: #eae9e4;
+  --color-border: #deded8;
+  --color-border-soft: #ebeae5;
+  --color-border-strong: #c4c5be;
+  --color-danger: #c0392b;
+  --color-danger-dark: #a02f23;
+  --color-danger-soft: #fbe8e4;
+  --color-success: #33583c;
+  --color-success-soft: #e3eee5;
+  --color-warning: #8a5a12;
+  --color-warning-soft: #f8ead0;
+  --color-scrim: #2e1c0e;
+  /* 지역 풍경 그림(RegionIllustration)의 색. 사진 대신 쓰는 그림이라 채도를 낮춘 풍경색만 쓴다. */
+  --scene-sky-seoul: #dde7f3;
+  --scene-sky-gyeongju: #f6e2c9;
+  --scene-sky-busan: #d3e8f4;
+  --scene-sky-jeonju: #f3e8d6;
+  --scene-sky-jeju: #d9eeec;
+  --scene-sun: #f2d56b;
+  --scene-hill: #a9c49a;
+  --scene-hill-dark: #7fa487;
+  --scene-leaf: #6f9a5e;
+  --scene-sea: #8dbbe0;
+  --scene-sea-deep: #5b93c8;
+  --scene-building: #c3cfdf;
+  --scene-building-dark: #9fb0c8;
+  --scene-stone: #dccaa9;
+  --scene-basalt: #8f8c88;
+  --scene-roof: #4b5059;
+  --scene-wall: #fffaf1;
+  --scene-canola: #f2d56b;
+  --color-kakao: #fee500;
+  --color-on-kakao: rgb(0 0 0 / 85%);
 
   /* Spacing (4px 기준) */
   --spacing-0: 2px;
@@ -40,9 +100,11 @@
 
   /* Typography */
   /* DESIGN.md는 Airbnb Cereal VF·Circular 기준이지만 두 글꼴 모두 한글을 지원하지 않아
-     한글 UI에는 Pretendard를 기본 글꼴로 유지한다. */
+     한글 UI에는 Pretendard를 기본 글꼴로 쓴다. (index.html에서 가변 글꼴을 불러온다) */
   --font-family-base:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  /* 숫자(날짜·D-day·인원)는 따로 글꼴을 두지 않고 Pretendard + 고정폭 숫자(tabular-nums)로 맞춘다. */
   --font-size-badge: 0.6875rem;
   --font-size-xs: 0.8125rem;
   --font-size-sm: 0.875rem;
@@ -50,6 +112,9 @@
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
+  --letter-spacing-tight: -0.03em;
+  /* 탑승권 칸 머리글(출발·도착·인원)의 자간 */
+  --letter-spacing-label: 0.04em;
 
   /* Layout */
   --max-width-content: 1200px;
@@ -61,11 +126,18 @@
      의도적으로 이 값들이 rounded 계열과 shadow-sm 유틸리티에도 그대로 쓰이게 한다. */
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-card:
-    rgba(0, 0, 0, 0.02) 0 0 0 1px, rgba(0, 0, 0, 0.04) 0 2px 6px 0, rgba(0, 0, 0, 0.1) 0 4px 8px 0;
+  /* 회색 바탕 위 흰 면으로 구분하고, 그림자는 떠 있는 요소(시트·팝업)에만 쓴다. */
+  --shadow-sm: 0 1px 0 rgb(29 35 32 / 4%);
+  --shadow-card: 0 1px 2px rgb(42 47 44 / 3%), 0 12px 28px -18px rgb(42 47 44 / 18%);
+  --shadow-raised: 0 20px 48px -20px rgb(42 47 44 / 22%);
+  --shadow-primary: none;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
 }
 
 /*
@@ -73,9 +145,9 @@
   색상·모서리는 위 토큰을 그대로 쓰고, 겹치지 않는 값만 여기에 둔다.
 */
 :root {
-  --color-placeholder: #d9d9d9;
-  --color-avatar-muted: #8a8a8a;
-  --color-scrim-strong: rgb(3 0 28 / 40%);
+  --color-placeholder: #ddd8ce;
+  --color-avatar-muted: #e6e2da;
+  --color-scrim-strong: rgb(46 28 14 / 50%);
 
   --font-weight-medium: 500;
   --font-weight-semibold: 600;

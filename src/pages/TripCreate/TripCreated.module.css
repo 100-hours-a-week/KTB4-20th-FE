@@ -6,6 +6,7 @@
   min-height: 100dvh;
   margin: 0 auto;
   padding: var(--spacing-8) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
 }
 
 .hero {
@@ -19,12 +20,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 104px;
-  height: 104px;
-  margin-bottom: var(--spacing-6);
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-5);
   border-radius: var(--radius-full);
-  color: var(--color-text);
-  background: var(--color-surface-strong);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  animation: created-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
 .title {
@@ -36,46 +38,65 @@
 .subtitle {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
 }
 
-.summary {
-  margin-top: var(--spacing-7);
-  padding: var(--spacing-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+.ticket {
+  overflow: hidden;
+  margin-top: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-card);
 }
 
-.roomName {
-  margin: 0 0 var(--spacing-3);
+.ticketScene {
+  height: 96px;
+}
+
+.ticketBody {
+  display: flex;
+}
+
+.ticketMain {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-4) var(--spacing-5) var(--spacing-5);
+}
+
+.region {
+  margin: 0 0 2px;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
 
-.summaryCard {
-  padding: var(--spacing-4);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-}
-
-.region {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin: 0;
-  padding-bottom: var(--spacing-3);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
+.roomName {
+  overflow: hidden;
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meta {
-  display: flex;
-  justify-content: space-between;
-  padding-top: var(--spacing-3);
+  margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-badge);
+  font-size: var(--font-size-xs);
+}
+
+/* 절취선 오른쪽 D-day 칸 */
+.ticketStub {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 var(--spacing-5);
+  border-left: 2px dashed var(--color-border-strong);
+  color: var(--color-accent-brown);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
 }
 
 .actions {
@@ -84,4 +105,21 @@
   gap: var(--spacing-3);
   margin-top: auto;
   padding-top: var(--spacing-7);
+}
+
+@keyframes created-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkCircle {
+    animation: none;
+  }
 }

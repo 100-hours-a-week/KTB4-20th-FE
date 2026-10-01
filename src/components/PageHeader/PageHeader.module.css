@@ -10,14 +10,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  /* 배경 없이 아이콘만. 누르는 영역은 40px로 두고 아이콘이 본문 왼쪽 끝과 맞도록 당긴다 */
   margin-left: calc(var(--spacing-2) * -1);
   padding: 0;
   border: 0;
   border-radius: var(--radius-full);
   color: var(--color-text);
   background: transparent;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.backButton:active {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  transform: scale(0.94);
 }
 
 .backButton:focus-visible {
@@ -26,7 +34,9 @@
 
 .title {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.3;
   font-weight: var(--font-weight-bold);
 }
 
@@ -39,7 +49,7 @@
 .subtitle {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-badge);
+  font-size: var(--font-size-xs);
 }
 
 .centered .titleGroup {

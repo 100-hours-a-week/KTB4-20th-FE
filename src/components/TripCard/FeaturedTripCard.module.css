@@ -1,0 +1,143 @@
+/* 다가오는 여행 큰 카드: 위에 풍경 띠, 이름과 큰 D-day, 맨 아래 날짜·상태와 오른쪽 참여자 */
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.card:active {
+  transform: scale(0.99);
+}
+
+.card:has(.link:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.scene {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+}
+
+.leaveButton {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-ticket) 88%, transparent);
+}
+
+.leaveButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5) var(--spacing-4);
+}
+
+/* 위: 여행방 이름과 D-day */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+/* 아래: 날짜·진행 상태와 오른쪽 참여자 얼굴 */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  max-width: 100%;
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 카드 전체를 눌러도 이동하도록 링크 영역을 카드 크기로 넓힙니다. */
+.link::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-progress);
+}
+
+.dDay {
+  color: var(--color-accent-brown);
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:active {
+    transform: none;
+  }
+}
