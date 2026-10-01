@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 export default function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
       aria-label="주요 화면 이동"
     >
       <ul className="mx-auto flex max-w-[480px]">
@@ -22,15 +22,19 @@ export default function BottomNav() {
               end={to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'relative flex h-16 flex-col items-center justify-center gap-0.5 text-muted-foreground transition-colors',
-                  isActive && 'text-primary before:absolute before:top-0 before:h-0.5 before:w-7 before:rounded-full before:bg-primary',
+                  'relative flex h-16 flex-col items-center justify-center gap-1 text-[var(--color-text-muted-soft)] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+                  // 선택된 탭은 위쪽에 포인트 색 선을 긋는다.
+                  isActive &&
+                    'text-foreground before:absolute before:top-[-1px] before:h-[3px] before:w-8 before:bg-[var(--color-point)]',
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon className="size-6" strokeWidth={isActive ? 2.4 : 1.8} />
-                  <span className="text-[11px] font-semibold">{label}</span>
+                  <Icon className="size-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
+                  <span className={cn('text-[11px]', isActive ? 'font-bold' : 'font-medium')}>
+                    {label}
+                  </span>
                 </>
               )}
             </NavLink>

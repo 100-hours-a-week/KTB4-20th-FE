@@ -6,7 +6,6 @@ import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import { Button } from '@/components/ui/button';
 import CalendarMonth from '../../components/Calendar/CalendarMonth';
 import {
-  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MapPinIcon,
@@ -15,7 +14,8 @@ import {
 } from 'lucide-react';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { formatDotDate, formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
+import { formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
+import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { DEADLINE_OPTIONS, isValidDeadline, resolveDeadline } from './deadline';
 import {
   MAX_CAPACITY,
@@ -56,6 +56,7 @@ export default function TripCreate() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeadlineCalendarOpen, setIsDeadlineCalendarOpen] = useState(false);
+  const dateLabelId = useId();
   const [notice, setNotice] = useState<string | null>(null);
   const submittingRef = useRef(false);
   const nameInputId = useId();
@@ -67,8 +68,8 @@ export default function TripCreate() {
   const deadline = resolveDeadline(form.deadlineOption, today, form.startDate, form.customDeadline);
 
   const isOptionDisabled = (option: DeadlineOption): boolean => {
-    if (option === 'custom') return form.startDate === null;
-    if (!form.startDate) return false;
+    // 여행 날짜를 고르기 전에도 마감일은 고를 수 있다. 날짜를 고른 뒤 맞지 않으면 여행 전날로 되돌린다.
+    if (option === 'custom' || !form.startDate) return false;
     const candidate = resolveDeadline(option, today, form.startDate, form.customDeadline);
     return candidate === null || !isValidDeadline(candidate, today, form.startDate);
   };
@@ -155,18 +156,39 @@ export default function TripCreate() {
         </div>
 
         <div className={styles.field}>
-          <span className={styles.label}>여행 날짜</span>
-          <button
-            type="button"
-            className={styles.selectButton}
-            onClick={() => navigate('/trips/new/date')}
-            aria-invalid={Boolean(errors.startDate)}
-          >
-            <CalendarIcon size={18} />
-            <span className={form.startDate ? styles.value : styles.placeholder}>
-              {form.startDate ? formatDotDate(form.startDate) : '날짜를 선택하세요'}
+          <div className={styles.labelRow}>
+            <span className={styles.label} id={dateLabelId}>
+              여행 날짜
             </span>
-          </button>
+            <span className={form.startDate ? styles.dateValue : styles.datePlaceholder}>
+              {form.startDate
+                ? `${formatTripDate(form.startDate, true)} 출발`
+                : '출발할 날을 골라주세요'}
+            </span>
+          </div>
+          {/* 달력을 처음부터 펼쳐 두고 바로 고르게 한다 */}
+          <StartDateCalendar
+            labelledBy={dateLabelId}
+            invalid={Boolean(errors.startDate)}
+            today={today}
+            selected={form.startDate}
+            onSelect={(iso) => {
+              // 날짜가 바뀌어 기존 설문 마감일이 맞지 않게 되면 기본값(여행 전날)으로 되돌립니다.
+              const nextDeadline = resolveDeadline(
+                form.deadlineOption,
+                today,
+                iso,
+                form.customDeadline,
+              );
+              const keepDeadline =
+                nextDeadline !== null && isValidDeadline(nextDeadline, today, iso);
+              updateForm({
+                startDate: iso,
+                ...(keepDeadline ? {} : { deadlineOption: 'dayBefore', customDeadline: null }),
+              });
+              setErrors((prev) => ({ ...prev, startDate: undefined }));
+            }}
+          />
           {errors.startDate && <p className={styles.error}>{errors.startDate}</p>}
         </div>
 
@@ -278,9 +300,9 @@ export default function TripCreate() {
             <p className={styles.error}>{errors.deadline}</p>
           ) : (
             <p className={styles.helper}>
-              {deadline && form.startDate
+              {deadline
                 ? `${formatMonthDay(deadline)} 밤 12시에 설문이 마감돼요`
-                : '여행 날짜를 고르면 마감일이 정해져요'}
+                : '여행 날짜를 고르면 여행 전날로 정해져요'}
             </p>
           )}
         </div>
@@ -297,19 +319,17 @@ export default function TripCreate() {
         </Button>
       </div>
 
-      {form.startDate && (
-        <DeadlineCalendarDialog
-          open={isDeadlineCalendarOpen}
-          today={today}
-          startDate={form.startDate}
-          selected={form.deadlineOption === 'custom' ? form.customDeadline : null}
-          onSelect={(iso) => {
-            updateForm({ deadlineOption: 'custom', customDeadline: iso });
-            setIsDeadlineCalendarOpen(false);
-          }}
-          onClose={() => setIsDeadlineCalendarOpen(false)}
-        />
-      )}
+      <DeadlineCalendarDialog
+        open={isDeadlineCalendarOpen}
+        today={today}
+        startDate={form.startDate}
+        selected={form.deadlineOption === 'custom' ? form.customDeadline : null}
+        onSelect={(iso) => {
+          updateForm({ deadlineOption: 'custom', customDeadline: iso });
+          setIsDeadlineCalendarOpen(false);
+        }}
+        onClose={() => setIsDeadlineCalendarOpen(false)}
+      />
 
       <AlertDialog
         open={notice !== null}
@@ -322,16 +342,93 @@ export default function TripCreate() {
   );
 }
 
+/**
+ * 여행방 만들기 화면에 펼쳐 둔 여행 날짜 달력입니다.
+ * 여행은 내일부터 시작할 수 있어서 오늘과 그 이전 날짜는 고를 수 없어요.
+ */
+function StartDateCalendar({
+  labelledBy,
+  invalid,
+  today,
+  selected,
+  onSelect,
+}: {
+  labelledBy: string;
+  invalid: boolean;
+  today: string;
+  selected: string | null;
+  onSelect: (iso: string) => void;
+}) {
+  const initial = parseIsoDate(selected ?? today);
+  const [view, setView] = useState({ year: initial.year, monthIndex: initial.monthIndex });
+  const todayParts = parseIsoDate(today);
+  const canGoPrev =
+    view.year > todayParts.year ||
+    (view.year === todayParts.year && view.monthIndex > todayParts.monthIndex);
+
+  const moveMonth = (delta: number) => {
+    setView(({ year, monthIndex }) => {
+      const next = new Date(Date.UTC(year, monthIndex + delta, 1));
+      return { year: next.getUTCFullYear(), monthIndex: next.getUTCMonth() };
+    });
+  };
+
+  return (
+    <div
+      className={`${styles.calendarCard} ${invalid ? styles.calendarCardInvalid : ''}`}
+      role="group"
+      aria-labelledby={labelledBy}
+    >
+      <div className={styles.calendarHeader}>
+        <p className={styles.calendarTitle}>
+          {view.year}년 {view.monthIndex + 1}월
+        </p>
+        <div className={styles.calendarNav}>
+          <button
+            type="button"
+            className={styles.navButton}
+            onClick={() => moveMonth(-1)}
+            disabled={!canGoPrev}
+            aria-label="이전 달"
+          >
+            <ChevronLeftIcon size={18} />
+          </button>
+          <button
+            type="button"
+            className={styles.navButton}
+            onClick={() => moveMonth(1)}
+            aria-label="다음 달"
+          >
+            <ChevronRightIcon size={18} />
+          </button>
+        </div>
+      </div>
+      <CalendarMonth
+        year={view.year}
+        monthIndex={view.monthIndex}
+        selected={selected}
+        showMonthName={false}
+        isDisabled={(iso) => iso <= today}
+        onSelect={onSelect}
+      />
+    </div>
+  );
+}
+
 interface DeadlineCalendarDialogProps {
   open: boolean;
   today: string;
-  startDate: string;
+  /** 아직 여행 날짜를 고르지 않았으면 null. 그때는 오늘 이후 아무 날이나 고를 수 있다. */
+  startDate: string | null;
   selected: string | null;
   onSelect: (iso: string) => void;
   onClose: () => void;
 }
 
-/** '직접 선택'을 눌렀을 때 마감일을 고르는 달력 팝업입니다. 오늘부터 여행 전날까지 고를 수 있어요. */
+/**
+ * '직접 선택'을 눌렀을 때 마감일을 고르는 달력 팝업입니다. 오늘부터 여행 전날까지 고를 수 있어요.
+ * 여행 날짜를 아직 고르지 않았으면 오늘 이후 아무 날이나 고를 수 있고, 백엔드가 만들 때 다시 확인합니다.
+ */
 function DeadlineCalendarDialog({
   open,
   today,
@@ -343,11 +440,12 @@ function DeadlineCalendarDialog({
   const initial = parseIsoDate(selected ?? today);
   const [view, setView] = useState({ year: initial.year, monthIndex: initial.monthIndex });
   const todayParts = parseIsoDate(today);
-  const startParts = parseIsoDate(startDate);
+  const startParts = startDate ? parseIsoDate(startDate) : null;
   const canGoPrev =
     view.year > todayParts.year ||
     (view.year === todayParts.year && view.monthIndex > todayParts.monthIndex);
   const canGoNext =
+    startParts === null ||
     view.year < startParts.year ||
     (view.year === startParts.year && view.monthIndex < startParts.monthIndex);
 
@@ -393,7 +491,7 @@ function DeadlineCalendarDialog({
           monthIndex={view.monthIndex}
           selected={selected}
           showMonthName={false}
-          isDisabled={(iso) => !isValidDeadline(iso, today, startDate)}
+          isDisabled={(iso) => (startDate ? !isValidDeadline(iso, today, startDate) : iso < today)}
           onSelect={onSelect}
         />
       </DialogContent>

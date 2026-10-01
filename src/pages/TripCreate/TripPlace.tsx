@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchRegions, type Region } from '../../api/regions';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { useTripCreate } from './tripCreateContext';
 import styles from './TripPicker.module.css';
@@ -54,9 +55,13 @@ export default function TripPlace() {
 
       <div className={styles.body}>
         {regionsState.status === 'loading' && (
-          <div className={styles.optionGrid} aria-busy="true" aria-label="여행지를 불러오는 중">
+          <div
+            className={`${styles.optionGrid} ${styles.regionGrid}`}
+            aria-busy="true"
+            aria-label="여행지를 불러오는 중"
+          >
             {Array.from({ length: 5 }, (_, index) => (
-              <Skeleton key={index} className="h-11 rounded-[var(--radius-md)] bg-accent" />
+              <Skeleton key={index} className="h-[132px] rounded-[var(--radius-lg)] bg-accent" />
             ))}
           </div>
         )}
@@ -82,7 +87,11 @@ export default function TripPlace() {
         )}
 
         {regionsState.status === 'ready' && (
-          <div className={styles.optionGrid} role="radiogroup" aria-label="여행지">
+          <div
+            className={`${styles.optionGrid} ${styles.regionGrid}`}
+            role="radiogroup"
+            aria-label="여행지"
+          >
             {regions.map((region) => {
               const id = Number(region.regionId);
               const isSelected = id === regionId;
@@ -92,10 +101,15 @@ export default function TripPlace() {
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  className={`${styles.option} ${isSelected ? styles.optionSelected : ''}`}
+                  className={`${styles.option} ${styles.regionOption} ${isSelected ? styles.optionSelected : ''}`}
                   onClick={() => toggleRegion(id)}
                 >
-                  {region.regionName}
+                  <RegionIllustration
+                    regionCode={region.regionCode}
+                    regionName={region.regionName}
+                    className={styles.optionArt}
+                  />
+                  <span>{region.regionName}</span>
                 </button>
               );
             })}

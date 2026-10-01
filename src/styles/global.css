@@ -24,9 +24,12 @@
     font-family: var(--font-family-base);
     font-size: var(--font-size-base);
     color: var(--color-text);
-    background-color: var(--color-background);
+    background: var(--background-canvas);
     line-height: 1.5;
+    letter-spacing: -0.01em;
+    word-break: keep-all;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #root {
@@ -53,6 +56,18 @@
   img {
     max-width: 100%;
     display: block;
+  }
+
+  /* 브라우저 기본 요소도 디자인 색을 따른다 (선택 영역·입력 커서·체크박스·스크롤바) */
+  ::selection {
+    color: var(--color-text);
+    background: var(--color-point-soft);
+  }
+
+  html {
+    caret-color: var(--color-text);
+    accent-color: var(--color-text);
+    scrollbar-color: var(--color-border-strong) transparent;
   }
 }
 
@@ -111,7 +126,7 @@
   --primary-foreground: var(--color-on-primary);
   --secondary: var(--color-surface);
   --secondary-foreground: var(--color-text);
-  --muted: var(--color-surface);
+  --muted: var(--color-surface-strong);
   --muted-foreground: var(--color-text-muted);
   --accent: var(--color-surface-strong);
   --accent-foreground: var(--color-text);
@@ -124,7 +139,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.75rem;
+  --radius: 1rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -173,8 +188,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* 화면 바닥은 옅은 라벤더(canvas), 카드·시트는 흰색(background)으로 띄운다. */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[var(--color-canvas)] text-foreground;
   }
   html {
     @apply font-sans;

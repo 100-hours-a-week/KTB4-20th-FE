@@ -5,94 +5,115 @@
   max-width: var(--max-width-mobile);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: var(--spacing-5) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+  padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
 }
 
 .brand {
-  margin: 0 0 var(--spacing-4);
-  font-size: var(--font-size-badge);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 40px;
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.04em;
 }
 
-.card {
+/* 초대한 사람과 큰 질문 */
+.intro {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-strong);
+  margin-top: var(--spacing-6);
   text-align: center;
 }
 
 .inviteText {
-  margin: var(--spacing-3) 0 var(--spacing-4);
+  margin: var(--spacing-3) 0 var(--spacing-2);
   color: var(--color-text-muted);
-  font-size: var(--font-size-badge);
+  font-size: var(--font-size-sm);
 }
 
 .title {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  line-height: 1.4;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.3;
+  word-break: keep-all;
 }
 
-.tripInfo {
-  width: 100%;
-  margin-top: var(--spacing-5);
-  padding: var(--spacing-4);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-  text-align: left;
+/* 여행 정보 탑승권 */
+.ticket {
+  overflow: hidden;
+  margin-top: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-card);
+}
+
+.ticketScene {
+  height: 96px;
+}
+
+.ticketBody {
+  display: flex;
+}
+
+.ticketMain {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-4) var(--spacing-5) var(--spacing-3);
 }
 
 .region {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
   margin: 0;
-  padding-bottom: var(--spacing-3);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .date {
-  margin: var(--spacing-3) 0 0;
+  margin: 2px 0 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-badge);
+  font-size: var(--font-size-sm);
 }
 
-.members {
-  margin-top: var(--spacing-5);
+.ticketStub {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 var(--spacing-5);
+  border-left: 2px dashed var(--color-border-strong);
+  color: var(--color-accent-brown);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
 }
 
-.membersTitle {
-  margin: 0 0 var(--spacing-2);
-  font-size: var(--font-size-badge);
-  font-weight: var(--font-weight-semibold);
-}
-
+/* 함께 가는 사람: 얼굴(첫 멤버가 방장)과 인원 */
 .memberRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  margin: 0 var(--spacing-5);
+  padding: var(--spacing-3) 0 var(--spacing-4);
+  border-top: 1px solid var(--color-border-soft);
 }
 
-.more {
+.memberCount {
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 
 .notice {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  margin-top: var(--spacing-5);
+  margin-top: var(--spacing-4);
   padding: var(--spacing-3) var(--spacing-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-point-soft);
 }
 
 .noticeIcon {
@@ -101,7 +122,7 @@
   align-items: center;
   justify-content: center;
   width: 24px;
-  font-weight: var(--font-weight-bold);
+  color: var(--color-point-text);
 }
 
 .noticeTitle {
@@ -146,5 +167,5 @@
   min-height: 100dvh;
   margin: 0 auto;
   padding: var(--spacing-5) var(--spacing-4);
-  background: var(--color-surface);
+  background: var(--background-canvas);
 }

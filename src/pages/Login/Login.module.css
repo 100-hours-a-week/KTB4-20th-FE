@@ -1,35 +1,292 @@
+/* 왼쪽 정렬: 위에 로고, 가운데 큰 문구, 아래에 로그인 버튼 */
 .container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-4) var(--spacing-5) calc(var(--spacing-6) + env(safe-area-inset-bottom));
+  color: var(--color-text);
+  background: var(--background-canvas);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 48px;
+}
+
+/* 로고 자리 (배경 없이 로고만) */
+.logoTile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: var(--spacing-6);
+}
+
+/* 기능 소개 슬라이드: 가운데 정렬, 옆으로 넘어간다 */
+.slides {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-5);
+}
+
+.slideViewport {
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  width: calc(100% + var(--spacing-5) * 2);
+  margin: 0 calc(var(--spacing-5) * -1);
+}
+
+.slideTrack {
+  display: flex;
+  transition: transform 0.55s var(--ease-out);
+}
+
+.slide {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5) 0;
+  text-align: center;
+}
+
+.dots {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  transition:
+    width var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.dotActive {
+  width: 22px;
+  background: var(--color-primary);
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.headline {
+  margin: 0 0 var(--spacing-4);
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.035em;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.highlight {
+  color: var(--color-point);
+}
+
+/* 제주 풍경이 담긴 탑승권 그림 (살짝 기울여 놓는다) */
+.ticket {
+  width: min(100%, 280px);
+  margin-bottom: var(--spacing-6);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-ticket);
+  box-shadow: var(--shadow-raised);
+  transform: rotate(-3deg);
+}
+
+.ticketScene {
+  aspect-ratio: 2 / 1;
+}
+
+.ticketRow {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.ticketCity {
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.ticketStub {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-4);
+  border-left: 2px dashed var(--color-border-strong);
+  color: var(--color-accent-brown);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+
+.tagline {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+}
+
+.bottom {
+  width: 100%;
+}
+
+.kakaoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  height: 56px;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-on-kakao);
+  background: var(--color-kakao);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.kakaoButton:active {
+  transform: scale(0.98);
+}
+
+.kakaoButton:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 3px;
+}
+
+/* ---------- 스플래시 ----------
+   0~0.45초 로고가 가운데에서 떠오름 → 0.45초 설명이 나타남 → 1.3초부터 스플래시가 사라지고
+   로그인 화면(로고·문구·버튼)이 아래에서 올라온다. 전체 약 1.7초. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: var(--spacing-4);
-  background: var(--color-background);
+  gap: var(--spacing-3);
+  padding: 0 var(--spacing-5);
+  background: var(--background-canvas);
+  pointer-events: none;
+  animation: splash-out 0.4s var(--ease-out) 1.3s forwards;
 }
 
-.content {
-  width: 100%;
-  max-width: 320px;
+.splashLogo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  animation: splash-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.splashName {
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  animation: splash-rise 0.4s var(--ease-out) 0.15s both;
+}
+
+.splashTagline {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
   text-align: center;
+  animation: splash-rise 0.4s var(--ease-out) 0.45s both;
 }
 
-.logo {
-  width: 112px;
-  height: 112px;
-  margin: 0 auto var(--spacing-3);
+/* 로그인 화면 요소는 스플래시가 걷힐 때 아래에서 올라온다 */
+.reveal {
+  animation: splash-rise 0.45s var(--ease-out) 1.35s both;
 }
 
-.title {
-  margin: 0 0 var(--spacing-8);
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  color: var(--color-primary);
+.revealLate {
+  animation-delay: 1.45s;
 }
 
-.kakaoButton {
-  width: 100%;
-  height: 52px;
-  border-radius: var(--radius-full);
+@keyframes splash-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kakaoButton:active {
+    transform: none;
+  }
+
+  .splash {
+    display: none;
+  }
+
+  .slideTrack,
+  .dot {
+    transition: none;
+  }
+
+  .reveal,
+  .splashLogo,
+  .splashName,
+  .splashTagline {
+    animation: none;
+  }
 }

@@ -9,10 +9,20 @@ import BottomSheet from '../../components/BottomSheet/BottomSheet';
 import BottomNav from '../../components/BottomNav/BottomNav';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
-import { PencilIcon, PlusIcon, UsersIcon } from 'lucide-react';
-import TripCard, { TripCardSkeleton } from '../../components/TripCard/TripCard';
+import {
+  ArrowUpRightIcon,
+  CircleAlertIcon,
+  LogOutIcon,
+  PlaneIcon,
+  PlusIcon,
+  UserXIcon,
+} from 'lucide-react';
+import FeaturedTripCard, {
+  FeaturedTripCardSkeleton,
+} from '../../components/TripCard/FeaturedTripCard';
+import TripRow, { TripRowSkeleton } from '../../components/TripCard/TripRow';
+import planitSymbol from '../../assets/logo/planit-symbol.svg';
 import { useAuth } from '../../auth/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import useTripList from '../../hooks/useTripList';
 import styles from './Home.module.css';
@@ -88,51 +98,73 @@ export default function Home() {
     }
   };
 
+  const userName = user ? `${user.userName}님` : '여행자님';
+
   return (
     <>
       <main className={styles.container}>
-        <header className={styles.header}>
-          <div className={styles.greeting}>
-            <p className={styles.hello}>안녕하세요</p>
-            <h1 className={styles.userName}>{user ? `${user.userName}님` : '여행자님'}</h1>
+        <header className={styles.hero}>
+          <div className={styles.topBar}>
+            <span className={styles.brand}>
+              <img src={planitSymbol} alt="" width={24} height={24} />
+              PlanIt
+            </span>
+            <button
+              type="button"
+              className={styles.profileButton}
+              onClick={() => setIsProfileOpen(true)}
+              aria-label="프로필 관리 열기"
+              aria-haspopup="dialog"
+            >
+              <Avatar name={user?.userName ?? ''} imageUrl={user?.profileImageUrl} />
+            </button>
           </div>
+
+          <h1 className={styles.headline}>
+            {userName},
+            <br />
+            어디로 떠나볼까요?
+          </h1>
+
           <button
             type="button"
-            className={styles.profileButton}
-            onClick={() => setIsProfileOpen(true)}
-            aria-label="프로필 관리 열기"
-            aria-haspopup="dialog"
+            className={styles.createButton}
+            onClick={() => navigate('/trips/new')}
           >
-            <Avatar name={user?.userName ?? ''} imageUrl={user?.profileImageUrl} />
+            <span className={styles.createIcon} aria-hidden="true">
+              <PlusIcon size={16} strokeWidth={2.75} />
+            </span>
+            <span className={styles.createText}>새 여행 만들기</span>
+            <ArrowUpRightIcon size={20} strokeWidth={2.25} aria-hidden="true" />
           </button>
         </header>
 
-        <Button
-          size="lg"
-          className="mb-6 h-11 w-full rounded-[var(--radius-sm)] font-semibold"
-          onClick={() => navigate('/trips/new')}
-        >
-          <PlusIcon size={18} />
-          여행 시작하기
-        </Button>
-
-        <TripListSection {...tripList} onLeave={setLeavingTrip} />
+        <div className={styles.content}>
+          <TripListSection {...tripList} onLeave={setLeavingTrip} />
+        </div>
       </main>
 
       <BottomNav />
 
       <BottomSheet open={isProfileOpen} label="프로필 관리" onClose={() => setIsProfileOpen(false)}>
-        <p className={styles.sheetSection}>정보</p>
+        <div className={styles.sheetProfile}>
+          <Avatar name={user?.userName ?? ''} imageUrl={user?.profileImageUrl} size="lg" />
+          <p className={styles.sheetName}>{user?.userName ?? '여행자'}</p>
+        </div>
         <ul className={styles.sheetMenu}>
           <li>
             <button type="button" className={styles.sheetItem} onClick={handleLogout}>
-              <PencilIcon size={18} />
+              <LogOutIcon size={18} />
               로그아웃
             </button>
           </li>
           <li>
-            <button type="button" className={styles.sheetItem} onClick={openWithdrawDialog}>
-              <UsersIcon size={18} />
+            <button
+              type="button"
+              className={`${styles.sheetItem} ${styles.sheetItemDanger}`}
+              onClick={openWithdrawDialog}
+            >
+              <UserXIcon size={18} />
               회원탈퇴
             </button>
           </li>
@@ -216,10 +248,10 @@ function TripListSection({
     return (
       <section className={styles.section} aria-busy="true" aria-label="여행방 목록을 불러오는 중">
         <Skeleton className="h-[18px] w-[88px] bg-accent" />
-        <div className={styles.list}>
-          <TripCardSkeleton />
-          <TripCardSkeleton />
-          <TripCardSkeleton />
+        <FeaturedTripCardSkeleton />
+        <div className={styles.rows}>
+          <TripRowSkeleton />
+          <TripRowSkeleton />
         </div>
       </section>
     );
@@ -229,7 +261,7 @@ function TripListSection({
     return (
       <div className={styles.statusArea}>
         <StatusMessage
-          icon="!"
+          icon={<CircleAlertIcon size={26} strokeWidth={1.8} />}
           title="여행방 목록을 가져오지 못했어요"
           description="새로고침 해주세요"
         />
@@ -241,7 +273,7 @@ function TripListSection({
     return (
       <div className={styles.statusArea}>
         <StatusMessage
-          icon="+"
+          icon={<PlaneIcon size={26} strokeWidth={1.8} />}
           title="아직 참여 중인 여행방이 없어요"
           description={'위 버튼으로 방을 만들거나,\n친구가 보낸 초대 링크로 들어와 보세요'}
         />
@@ -249,21 +281,46 @@ function TripListSection({
     );
   }
 
+  // 백엔드가 다가오는 여행을 출발일 순으로 먼저 보내지만, 불러온 범위 안에서 한 번 더 출발일 순으로 맞춘다.
+  // (YYYY-MM-DD 문자열이라 문자열 비교가 곧 날짜 비교)
+  const notCompleted = trips
+    .filter((trip) => trip.status !== 'TRIP_COMPLETED')
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const [featured, ...upcoming] = notCompleted;
+  const completed = trips.filter((trip) => trip.status === 'TRIP_COMPLETED');
+
   return (
-    <section className={styles.section} aria-labelledby="trip-list-title">
-      <h2 id="trip-list-title" className={styles.sectionTitle}>
-        참여 중인 여행방
-      </h2>
-      <ul className={styles.list}>
-        {trips.map((trip) => (
-          <li key={trip.tripId}>
-            <TripCard trip={trip} onLeave={onLeave} />
-          </li>
-        ))}
-      </ul>
+    <div className={styles.sections}>
+      {featured && (
+        <section className={styles.section} aria-labelledby="featured-trip-title">
+          <h2 id="featured-trip-title" className={styles.sectionTitle}>
+            다가오는 여행
+          </h2>
+          <FeaturedTripCard trip={featured} onLeave={onLeave} />
+          {upcoming.length > 0 && (
+            <ul className={styles.rows} aria-label="이어지는 여행">
+              {upcoming.map((trip) => (
+                <li key={trip.tripId}>
+                  <TripRow trip={trip} onLeave={onLeave} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {completed.length > 0 && (
+        <TripRowSection
+          id="completed-trips-title"
+          title="완료한 여행"
+          trips={completed}
+          onLeave={onLeave}
+        />
+      )}
+
       {isLoadingMore && (
-        <div className={styles.list} aria-hidden="true">
-          <TripCardSkeleton />
+        <div className={styles.rows} aria-busy="true" aria-label="여행방을 더 불러오는 중">
+          <TripRowSkeleton />
         </div>
       )}
       {loadMoreFailed && (
@@ -272,6 +329,34 @@ function TripListSection({
         </button>
       )}
       <div ref={sentinelRef} className={styles.sentinel} />
+    </div>
+  );
+}
+
+/** 한 줄 여행 목록 묶음 (완료한 여행) */
+function TripRowSection({
+  id,
+  title,
+  trips,
+  onLeave,
+}: {
+  id: string;
+  title: string;
+  trips: TripSummary[];
+  onLeave: (trip: TripSummary) => void;
+}) {
+  return (
+    <section className={styles.section} aria-labelledby={id}>
+      <h2 id={id} className={styles.sectionTitle}>
+        {title}
+      </h2>
+      <ul className={styles.rows}>
+        {trips.map((trip) => (
+          <li key={trip.tripId}>
+            <TripRow trip={trip} onLeave={onLeave} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

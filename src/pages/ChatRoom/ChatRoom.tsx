@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, SendHorizontal, TriangleAlert } from 'lucide-react';
+import { ChevronLeft, LogOut, Plus, SendHorizontal, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/AuthContext';
 import { getAccessToken } from '../../auth/tokenStore';
 import Avatar from '../../components/Avatar/Avatar';
+import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
 import { generateUuidV7 } from '../../utils/uuidv7';
 import {
   fetchChatMessages,
@@ -29,7 +30,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import styles from './ChatRoom.module.css';
 
-type RoomSummary = Pick<RegionalChatRoomItem, 'roomId' | 'name' | 'memberCount' | 'activeUserCount'>;
+type RoomSummary = Pick<
+  RegionalChatRoomItem,
+  'roomId' | 'name' | 'memberCount' | 'activeUserCount'
+>;
 type DisplayMessage = ChatMessageItem & { status?: 'sending' | 'failed' };
 
 const MESSAGE_LENGTH_LIMIT = 1000;
@@ -46,7 +50,9 @@ function formatDateDivider(iso: string): string {
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
   const sameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
   if (sameDay(date, today)) return '오늘';
   if (sameDay(date, yesterday)) return '어제';
   return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
@@ -68,7 +74,10 @@ const MESSAGE_GROUP_WINDOW_MS = 15_000;
  * 날짜가 바뀌는 지점을 표시하기 위해 미리 계산한다.
  * 날짜가 바뀌거나 그룹의 첫 메시지로부터 15초가 지나면 같은 발신자라도 새 그룹으로 보고 프로필을 다시 보여준다.
  */
-function messageGroups(messages: DisplayMessage[], currentUserPublicId?: string): MessageGroupItem[] {
+function messageGroups(
+  messages: DisplayMessage[],
+  currentUserPublicId?: string,
+): MessageGroupItem[] {
   let lastSenderId: string | undefined;
   let groupStartedAt: number | null = null;
   let lastDateLabel: string | null = null;
@@ -378,18 +387,33 @@ export default function ChatRoom() {
           onClick={() => navigate('/open-chat')}
           aria-label="목록으로 돌아가기"
         >
-          <ArrowLeft className="size-5" />
+          <ChevronLeft className="size-6" />
         </Button>
+        {room && (
+          // 목록과 같은 지역 풍경 썸네일. 방 이름("부산 여행 이야기")의 첫 단어로 지역을 고른다.
+          <span className={styles.headerThumb} aria-hidden="true">
+            <RegionIllustration regionName={room.name.split(' ')[0]} />
+          </span>
+        )}
         <div className={styles.headerInfo}>
           <h1 className={styles.roomName}>{room ? `${room.name} 여행자방` : '채팅방'}</h1>
           {room && (
             <p className={styles.roomMeta}>
-              {room.memberCount}명 · 지금 {room.activeUserCount}명 접속
+              <span className={styles.onlineDot} aria-hidden="true" />
+              {room.activeUserCount}명 대화 중 · {room.memberCount}명 참여
             </p>
           )}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={handleLeave} disabled={leaving}>
-          나가기
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-[var(--color-text-muted)]"
+          onClick={handleLeave}
+          disabled={leaving}
+          aria-label="채팅방 나가기"
+        >
+          <LogOut className="size-5" />
         </Button>
       </header>
 
@@ -429,9 +453,7 @@ export default function ChatRoom() {
                 <div key={message.messageId}>
                   {showDateDivider && <div className={styles.dateDivider}>{dateLabel}</div>}
                   <div
-                    className={
-                      isMine ? `${styles.messageRow} ${styles.mine}` : styles.messageRow
-                    }
+                    className={isMine ? `${styles.messageRow} ${styles.mine}` : styles.messageRow}
                   >
                     {!isMine && (
                       <div className={styles.avatarSlot}>
@@ -468,7 +490,9 @@ export default function ChatRoom() {
                         >
                           {message.text}
                         </div>
-                        {!isMine && <span className={styles.timeLabel}>{formatTime(message.createdAt)}</span>}
+                        {!isMine && (
+                          <span className={styles.timeLabel}>{formatTime(message.createdAt)}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -483,16 +507,16 @@ export default function ChatRoom() {
       <div className={styles.composer}>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="rounded-full"
+          className="size-10 shrink-0 rounded-full bg-[var(--color-surface-strong)] text-[var(--color-text-muted)]"
           onClick={handleImageButtonClick}
           aria-label="이미지 첨부"
         >
           <Plus className="size-5" />
         </Button>
         <Textarea
-          className="max-h-24 min-h-10 flex-1 resize-none rounded-3xl py-2"
+          className="max-h-24 min-h-10 flex-1 resize-none rounded-[20px] border-[var(--color-border-soft)] bg-[var(--color-canvas)] px-4 py-2 shadow-none"
           placeholder="메시지를 입력하세요"
           value={composerText}
           onChange={(event) => setComposerText(event.target.value)}
@@ -503,7 +527,7 @@ export default function ChatRoom() {
         <Button
           type="button"
           size="icon"
-          className="rounded-full"
+          className="size-10 shrink-0 rounded-full"
           onClick={handleSend}
           disabled={!composerText.trim() || sending}
           aria-label="메시지 전송"

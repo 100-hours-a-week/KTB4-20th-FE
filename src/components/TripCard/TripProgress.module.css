@@ -1,0 +1,50 @@
+.steps {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-surface-strong);
+}
+
+.label {
+  overflow: hidden;
+  color: var(--color-text-muted-soft);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.done .bar {
+  background: var(--color-progress);
+}
+
+.done .label {
+  color: var(--color-text-muted);
+}
+
+.current .bar {
+  background: var(--color-progress);
+}
+
+.current .label {
+  color: var(--color-point-text);
+  font-weight: var(--font-weight-bold);
+}

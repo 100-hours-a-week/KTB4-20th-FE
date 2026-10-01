@@ -10,7 +10,6 @@ import {
   type PreferenceQuestion,
   type SurveyExclusionCategory,
 } from '../../api/survey';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
 import LikertScale from './LikertScale';
@@ -196,7 +195,8 @@ export default function Survey() {
           모두 제출하면 동선이 만들어져요
         </p>
         <Button
-          className="mt-2 w-full max-w-xs"
+          size="lg"
+          className="mt-2 h-12 w-full max-w-xs rounded-full text-base font-semibold"
           onClick={() => navigate(`/trips/${encodeURIComponent(tripId)}`, { replace: true })}
         >
           방으로 돌아가기
@@ -237,9 +237,7 @@ export default function Survey() {
       <div className={styles.content}>
         {!isDealbreakerStep && currentCategory && (
           <>
-            <Badge variant="outline" className={styles.categoryBadge}>
-              {currentCategory.label}
-            </Badge>
+            <span className={styles.categoryBadge}>{currentCategory.label}</span>
             <h1 className={styles.title}>이번 여행에서 어떤 걸 하고 싶으세요?</h1>
 
             <div className={styles.questionList}>
@@ -292,8 +290,8 @@ export default function Survey() {
           <Button
             type="button"
             size="lg"
-            variant="secondary"
-            className="h-13 flex-1"
+            variant="outline"
+            className="h-13 flex-1 rounded-full border-[var(--color-border)] bg-[var(--color-ticket)] shadow-[var(--shadow-sm)]"
             onClick={goToPreviousStep}
           >
             이전
@@ -303,14 +301,14 @@ export default function Survey() {
           <Button
             type="button"
             size="lg"
-            className="h-13 flex-1"
+            className="h-13 flex-1 rounded-full"
             onClick={handleSubmit}
             disabled={submitting}
           >
             {submitting ? '제출하는 중...' : '제출하기'}
           </Button>
         ) : (
-          <Button type="button" size="lg" className="h-13 flex-1" onClick={goToNextStep}>
+          <Button type="button" size="lg" className="h-13 flex-1 rounded-full" onClick={goToNextStep}>
             다음
           </Button>
         )}

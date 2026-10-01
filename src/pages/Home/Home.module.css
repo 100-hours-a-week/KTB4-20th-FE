@@ -3,34 +3,29 @@
   max-width: var(--max-width-mobile);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: var(--spacing-5) var(--spacing-4)
-    calc(var(--height-tab-bar) + var(--spacing-6) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--height-tab-bar) + var(--spacing-7) + env(safe-area-inset-bottom));
 }
 
-.header {
+/* 상단: 왼쪽 정렬. 브라운 인사 제목 → 올리브 새 여행 버튼 */
+.hero {
+  padding: var(--spacing-2) var(--spacing-4) 0;
+  color: var(--color-text);
+}
+
+.topBar {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-5);
+  min-height: 52px;
 }
 
-.greeting {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.hello {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
-.userName {
-  margin: 0;
-  font-size: var(--font-size-xl);
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-  line-height: 1.3;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .profileButton {
@@ -42,8 +37,70 @@
 }
 
 .profileButton:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline: 2px solid var(--color-text);
   outline-offset: 2px;
+}
+
+.headline {
+  margin: var(--spacing-6) 0 0;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  height: 56px;
+  margin-top: var(--spacing-5);
+  padding: 0 var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background var(--duration-fast);
+}
+
+.createButton:hover {
+  background: var(--color-primary-dark);
+}
+
+/* + 아이콘은 크림 동그라미 안에 */
+.createIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  background: var(--color-canvas);
+}
+
+.createButton:active {
+  transform: scale(0.98);
+}
+
+.createButton:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.createText {
+  flex: 1;
+}
+
+.content {
+  padding: var(--spacing-6) var(--spacing-4) 0;
 }
 
 .section {
@@ -56,13 +113,29 @@
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
-.list {
+/* 다가오는 여행 / 다른 여행 두 묶음 */
+.sections {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
+  gap: var(--spacing-6);
+}
+
+/* 다른 여행: 한 장의 면 위에 줄로 나눈 목록 */
+.rows {
+  margin: 0;
+  padding: var(--spacing-1) var(--spacing-5);
+  border-radius: var(--radius-xl);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .sentinel {
@@ -79,11 +152,27 @@
 }
 
 .statusArea {
-  padding-top: var(--spacing-8);
+  padding-top: var(--spacing-7);
+}
+
+.sheetProfile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.sheetName {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
 }
 
 .sheetSection {
   margin: 0 0 var(--spacing-2);
+  padding: 0 var(--spacing-2);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -100,7 +189,7 @@
   gap: var(--spacing-3);
   width: 100%;
   min-height: var(--height-button-lg);
-  padding: 0 var(--spacing-1);
+  padding: 0 var(--spacing-2);
   border: 0;
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -114,7 +203,21 @@
   background: var(--color-surface);
 }
 
+.sheetItemDanger {
+  color: var(--color-danger);
+}
+
+.sheetItemDanger:hover {
+  background: var(--color-danger-soft);
+}
+
 .sheetItem:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .createButton:active {
+    transform: none;
+  }
 }
