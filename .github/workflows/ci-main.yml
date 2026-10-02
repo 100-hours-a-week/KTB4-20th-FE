@@ -59,11 +59,17 @@ jobs:
           echo "::add-mask::$VITE_GOOGLE_MAPS_API_KEY"
           export VITE_GOOGLE_MAPS_API_KEY
 
+          APP_VERSION=$(jq -r '.version' package.json)
+          if [[ -z "$APP_VERSION" || "$APP_VERSION" == "null" ]]; then
+            echo "::error::package.json version is missing."
+            exit 1
+          fi
+
           docker build \
             --platform linux/amd64 \
             --secret id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
             --build-arg SENTRY_UPLOAD_REQUIRED=true \
-            --build-arg SENTRY_RELEASE=planit-frontend@${{ github.sha }} \
+            --build-arg SENTRY_RELEASE="planit-frontend@${APP_VERSION}+${GITHUB_SHA::7}" \
             --build-arg VITE_API_BASE_URL=/api \
             --build-arg VITE_GOOGLE_MAPS_API_KEY \
             -t planit-frontend:ci .
