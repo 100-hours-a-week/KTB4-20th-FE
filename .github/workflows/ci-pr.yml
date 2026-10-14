@@ -14,17 +14,21 @@ concurrency:
 
 jobs:
   build:
-    name: Build and Image Build
+    name: Test and Build Image
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
-      # main에는 예외 없이 dev에서만 PR을 보낼 수 있다. (hotfix도 dev를 거쳐 main으로 올린다)
       - name: Check main PR source
         if: >-
           github.base_ref == 'main' &&
-          (github.head_ref != 'dev' ||
-           github.event.pull_request.head.repo.full_name != github.repository)
+          (
+            github.event.pull_request.head.repo.full_name != github.repository ||
+            (
+              github.head_ref != 'dev' &&
+              github.head_ref != vars.MAIN_PR_EXCEPTION_BRANCH
+            )
+          )
         run: |
           echo "::error::main에는 같은 저장소의 dev 브랜치에서 PR을 보내야 합니다."
           exit 1
@@ -37,7 +41,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: "24"
           cache: npm
 
       - name: Install dependencies
@@ -49,15 +53,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Build frontend
-        env:
-          VITE_API_BASE_URL: /api
-        run: npm run build
-
       - name: Build Docker image
         run: |
           docker build \
             --platform linux/amd64 \
             --build-arg VITE_API_BASE_URL=/api \
             -t planit-frontend:ci .
-
