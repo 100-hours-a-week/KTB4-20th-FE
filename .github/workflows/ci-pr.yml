@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: Test and Build Image
+    name: Build and Image Build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
