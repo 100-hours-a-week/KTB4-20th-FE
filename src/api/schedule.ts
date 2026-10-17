@@ -12,11 +12,20 @@ export interface ScheduleGenerationResult {
   places: unknown[];
 }
 
+/**
+ * 일정 생성 사유. 일정이 이미 있으면 새 일정으로 바꿔요.
+ * GENERAL 재생성은 여행당 5회까지이고, 이상 기후 알림으로 바꾸는 WEATHER는 횟수에서 빠져요.
+ */
+export type ScheduleGenerationReason = 'GENERAL' | 'WEATHER';
+
 /** POST /api/trips/{tripId}/schedule-generation — 방장만 요청할 수 있어요. */
-export async function generateSchedule(tripId: string): Promise<ScheduleGenerationResult> {
+export async function generateSchedule(
+  tripId: string,
+  reason: ScheduleGenerationReason = 'GENERAL',
+): Promise<ScheduleGenerationResult> {
   const response = await apiClient.post<ApiResponse<ScheduleGenerationResult>>(
     `/trips/${encodeURIComponent(tripId)}/schedule-generation`,
-    null,
+    { reason },
     { timeout: SCHEDULE_GENERATION_TIMEOUT_MS },
   );
   return response.data.data;
@@ -27,6 +36,13 @@ export const SCHEDULE_ERROR_CODES = {
   alreadyExists: 'SCHEDULE_ALREADY_EXISTS',
   notReady: 'SCHEDULE_GENERATION_NOT_READY',
   accessDenied: 'ACCESS_DENIED',
+  hostRequired: 'TRIP_HOST_REQUIRED',
+  /** 일반 재생성 5회를 모두 썼을 때 */
+  regenerationLimitExceeded: 'SCHEDULE_REGENERATION_LIMIT_EXCEEDED',
+  /** 여행이 이미 시작돼 일정을 바꿀 수 없을 때 */
+  changeNotAllowed: 'SCHEDULE_CHANGE_NOT_ALLOWED',
+  /** 바꿀 일정이 없거나 이상 기후 알림을 받은 여행이 아닐 때 */
+  weatherReplanNotAvailable: 'WEATHER_REPLAN_NOT_AVAILABLE',
   /** 아직 확정된 일정이 없을 때 (일정 생성 전) */
   notFound: 'ACTIVE_SCHEDULE_NOT_FOUND',
 } as const;
@@ -72,6 +88,8 @@ export interface ScheduleDetail {
   editable: boolean;
   totalDistanceMeters: number;
   createdAt: string;
+  /** 날씨 사유를 뺀 일반 재생성 남은 횟수 (0~5) */
+  remainingRegenerations: number;
   days: ScheduleDay[];
 }
 

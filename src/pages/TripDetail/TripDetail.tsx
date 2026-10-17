@@ -27,6 +27,7 @@ import {
 } from '../../api/trips';
 import { useAuth } from '../../auth/AuthContext';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import Avatar from '../../components/Avatar/Avatar';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -48,31 +49,48 @@ const TOAST_DURATION_MS = 2000;
 
 type LoadState =
   | { status: 'loading' }
-  | { status: 'ready'; trip: TripDetailData; summary: SurveySummary; hasSchedule: boolean }
+  | {
+      status: 'ready';
+      trip: TripDetailData;
+      summary: SurveySummary;
+      hasSchedule: boolean;
+      /** 일반 재생성 남은 횟수. 일정이 없으면 null */
+      remainingRegenerations: number | null;
+    }
   | { status: 'invalid' }
   | { status: 'error' };
 
 type Generation = 'idle' | 'generating' | 'failed';
 
-/** 일정이 아직 없는 게 정상 상태라, 일정 조회 404는 실패로 보지 않고 false로 바꾼다. */
-async function checkHasSchedule(tripId: string): Promise<boolean> {
+/** 일정이 아직 없는 게 정상 상태라, 일정 조회 404는 실패로 보지 않고 "일정 없음"으로 바꾼다. */
+async function checkSchedule(
+  tripId: string,
+): Promise<{ hasSchedule: boolean; remainingRegenerations: number | null }> {
   try {
-    await getSchedule(tripId);
-    return true;
+    const schedule = await getSchedule(tripId);
+    return { hasSchedule: true, remainingRegenerations: schedule.remainingRegenerations };
   } catch (error) {
-    if (getApiErrorCode(error) === SCHEDULE_ERROR_CODES.notFound) return false;
+    if (getApiErrorCode(error) === SCHEDULE_ERROR_CODES.notFound) {
+      return { hasSchedule: false, remainingRegenerations: null };
+    }
     throw error;
   }
 }
 
 async function loadTrip(tripId: string) {
-  const [trip, summary, hasSchedule] = await Promise.all([
+  const [trip, summary, schedule] = await Promise.all([
     getTripDetail(tripId),
     fetchSurveySummary(tripId),
-    checkHasSchedule(tripId),
+    checkSchedule(tripId),
   ]);
-  return { trip, summary, hasSchedule };
+  return { trip, summary, ...schedule };
 }
+
+/** 일정 재생성 요청을 거절할 때 백엔드가 보내는 오류 코드 */
+const REGENERATION_REJECTED_CODES: string[] = [
+  SCHEDULE_ERROR_CODES.regenerationLimitExceeded,
+  SCHEDULE_ERROR_CODES.changeNotAllowed,
+];
 
 function toLoadFailure(error: unknown): LoadState {
   const code = getApiErrorCode(error);
@@ -89,6 +107,7 @@ export default function TripDetail() {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [generation, setGeneration] = useState<Generation>('idle');
   const [notice, setNotice] = useState<{ title: string; description?: string } | null>(null);
+  const [isRegenerateConfirmOpen, setIsRegenerateConfirmOpen] = useState(false);
   const generatingRef = useRef(false);
 
   const refresh = useCallback(
@@ -142,6 +161,10 @@ export default function TripDetail() {
         markScheduleExists();
         setGeneration('idle');
         setNotice({ title: '이미 만든 일정이 있어요', description: getApiErrorMessage(error) });
+      } else if (code && REGENERATION_REJECTED_CODES.includes(code)) {
+        setGeneration('idle');
+        setNotice({ title: '일정을 다시 만들 수 없어요', description: getApiErrorMessage(error) });
+        void refresh();
       } else if (
         code === SCHEDULE_ERROR_CODES.notReady ||
         code === SCHEDULE_ERROR_CODES.accessDenied
@@ -186,10 +209,18 @@ export default function TripDetail() {
     );
   }
 
-  const { trip, summary, hasSchedule } = state;
+  const { trip, summary, hasSchedule, remainingRegenerations } = state;
 
   if (generation === 'generating') {
-    return <ScheduleProgress memberCount={summary.submittedCount} />;
+    return (
+      <ScheduleProgress
+        steps={[
+          `${summary.submittedCount}명의 취향을 종합했어요`,
+          '후보 장소를 찾았어요',
+          '최적 동선을 계산하는 중',
+        ]}
+      />
+    );
   }
 
   if (generation === 'failed') {
@@ -240,6 +271,14 @@ export default function TripDetail() {
     (a, b) => b.preferencePercent - a.preferencePercent,
   );
   const surveyPath = `/trips/${encodeURIComponent(trip.tripId)}/survey`;
+  // 일반 재생성은 여행 시작 전까지, 남은 횟수가 있을 때만 할 수 있어요.
+  const tripStarted = getToday() >= trip.startDate;
+  const canRegenerate = !tripStarted && (remainingRegenerations ?? 0) > 0;
+  const regenerationCaption = tripStarted
+    ? '여행이 시작되어 일정을 다시 만들 수 없어요'
+    : canRegenerate
+      ? `일정은 ${remainingRegenerations}번 더 다시 만들 수 있어요`
+      : '일정을 다시 만들 수 있는 횟수를 모두 썼어요';
 
   return (
     <main className={styles.container}>
@@ -398,28 +437,29 @@ export default function TripDetail() {
         </div>
 
         {hasSchedule ? (
-          <div className={styles.scheduleButtons}>
-            <Button
-              size="lg"
-              className="h-13 flex-1 text-base font-semibold"
-              onClick={goToSchedule}
-            >
-              <SparklesIcon className="size-4" aria-hidden="true" />
-              AI 일정 보기
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-13 flex-1 text-base font-semibold"
-              onClick={() =>
-                setNotice({
-                  title: '아직 일정을 다시 만들 수 없어요',
-                  description: '지금은 한 번 만든 일정을 다시 만들 수 없어요.',
-                })
-              }
-            >
-              AI 일정 재생성하기
-            </Button>
+          <div className={styles.actionGroup}>
+            <div className={styles.scheduleButtons}>
+              <Button
+                size="lg"
+                className="h-13 flex-1 text-base font-semibold"
+                onClick={goToSchedule}
+              >
+                <SparklesIcon className="size-4" aria-hidden="true" />
+                AI 일정 보기
+              </Button>
+              {isHost && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-13 flex-1 text-base font-semibold"
+                  disabled={!canRegenerate}
+                  onClick={() => setIsRegenerateConfirmOpen(true)}
+                >
+                  AI 일정 재생성하기
+                </Button>
+              )}
+            </div>
+            {isHost && <p className={styles.caption}>{regenerationCaption}</p>}
           </div>
         ) : isHost ? (
           <div className={styles.actionGroup}>
@@ -438,6 +478,21 @@ export default function TripDetail() {
           <p className={styles.caption}>AI 일정 생성은 방장만 가능해요</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={isRegenerateConfirmOpen}
+        title="일정을 다시 만들까요?"
+        description={`지금 일정은 새 일정으로 바뀌어요. 남은 재생성 ${remainingRegenerations ?? 0}회 중 1회를 써요.`}
+        cancelAction={{ label: '취소', onClick: () => setIsRegenerateConfirmOpen(false) }}
+        confirmAction={{
+          label: '다시 만들기',
+          onClick: () => {
+            setIsRegenerateConfirmOpen(false);
+            void startGeneration();
+          },
+        }}
+        onClose={() => setIsRegenerateConfirmOpen(false)}
+      />
 
       <AlertDialog
         open={notice !== null}
