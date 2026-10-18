@@ -13,6 +13,10 @@ interface ConfirmDialogProps {
   open: boolean;
   /** 제목 위에 둘 아이콘 (선택) */
   icon?: ReactNode;
+  /** 제목 위에 둘 큰 내용. 지울 사진 미리보기처럼 아이콘 칸보다 큰 것을 넣어요. (선택) */
+  media?: ReactNode;
+  /** danger면 확인 버튼을 위험 색으로 칠해요. (삭제처럼 되돌릴 수 없는 동작) */
+  confirmTone?: 'default' | 'danger';
   title: string;
   description?: string;
   confirmAction: DialogAction;
@@ -24,6 +28,8 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog({
   open,
   icon,
+  media,
+  confirmTone = 'default',
   title,
   description,
   confirmAction,
@@ -34,6 +40,7 @@ export default function ConfirmDialog({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent showCloseButton={false} className="gap-5 p-5 text-center sm:max-w-xs">
         <DialogHeader className="items-center gap-2">
+          {media}
           {icon && (
             <span
               className="mb-1 flex size-9 items-center justify-center rounded-full bg-accent text-muted-foreground"
@@ -44,7 +51,9 @@ export default function ConfirmDialog({
           )}
           <DialogTitle className="leading-snug font-semibold">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="text-xs break-keep">{description}</DialogDescription>
+            <DialogDescription className="text-xs break-keep whitespace-pre-line">
+              {description}
+            </DialogDescription>
           )}
         </DialogHeader>
         <div className="flex gap-2">
@@ -59,7 +68,11 @@ export default function ConfirmDialog({
           </Button>
           <Button
             size="lg"
-            className="h-11 flex-1"
+            className={
+              confirmTone === 'danger'
+                ? 'h-11 flex-1 bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-dark)]'
+                : 'h-11 flex-1'
+            }
             onClick={confirmAction.onClick}
             disabled={confirmAction.disabled}
           >

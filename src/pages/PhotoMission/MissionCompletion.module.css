@@ -1,0 +1,185 @@
+/* 완주 화면. 숲 초록 체크 원(여행 종료는 옅은 숲 초록 앨범 원), 통계 3칸, 사진 미리보기 */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-7) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+  text-align: center;
+}
+
+.iconDone,
+.iconAlbum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: var(--spacing-5);
+  border-radius: var(--radius-full);
+  animation: pop 0.45s var(--ease-out) both;
+}
+
+.iconDone {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+
+.iconAlbum {
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+}
+
+.tripChip {
+  margin: 0 0 var(--spacing-3);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: var(--color-surface-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.description {
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: var(--spacing-4) 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+}
+
+.stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.stats > div + div {
+  border-left: 1px solid var(--color-border-soft);
+}
+
+.stats dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.stats dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.previews {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previews li {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-strong);
+}
+
+.previews img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previews .more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.notice {
+  display: flex;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-background);
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-muted);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: auto;
+  padding-top: var(--spacing-3);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iconDone,
+  .iconAlbum {
+    animation: none;
+  }
+}

@@ -6,6 +6,12 @@ import InvitationJoin from '../pages/InvitationJoin/InvitationJoin';
 import Login from '../pages/Login/Login';
 import NotFound from '../pages/NotFound/NotFound';
 import OpenChat from '../pages/OpenChat/OpenChat';
+import MissionAlbum from '../pages/PhotoMission/MissionAlbum';
+import MissionCompletion from '../pages/PhotoMission/MissionCompletion';
+import MissionDetail from '../pages/PhotoMission/MissionDetail';
+import MissionPhotoViewer from '../pages/PhotoMission/MissionPhotoViewer';
+import MissionResult from '../pages/PhotoMission/MissionResult';
+import PhotoMission from '../pages/PhotoMission/PhotoMission';
 import Survey from '../pages/Survey/Survey';
 import TripCreate from '../pages/TripCreate/TripCreate';
 import TripDetail from '../pages/TripDetail/TripDetail';
@@ -29,6 +35,12 @@ export default function AppRoutes() {
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<Home />} />
+        <Route path="/photo-missions" element={<PhotoMission />} />
+        <Route path="/photo-missions/missions/:missionId" element={<MissionDetail />} />
+        <Route path="/photo-missions/missions/:missionId/result" element={<MissionResult />} />
+        <Route path="/photo-missions/missions/:missionId/photos" element={<MissionPhotoViewer />} />
+        <Route path="/photo-missions/album" element={<MissionAlbum />} />
+        <Route path="/photo-missions/completion" element={<MissionCompletion />} />
         <Route path="/open-chat" element={<OpenChat />} />
         <Route path="/open-chat/rooms/:roomId" element={<ChatRoom />} />
         <Route path="/community" element={<Community />} />

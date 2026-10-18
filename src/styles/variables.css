@@ -153,6 +153,10 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
+  /* 사진 상세보기(차콜 바탕) 위 보조 글자(9.6:1)와 삭제 글자(8.3:1) */
+  --color-viewer-muted: #c9ccc6;
+  --color-viewer-danger: #ffb4a8;
+
   --height-button-md: 48px;
   --height-button-lg: 52px;
   --height-tab-bar: 64px;
