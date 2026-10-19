@@ -5,7 +5,7 @@ import type {
   NotificationType,
   WeatherCondition,
 } from '../api/notifications';
-import { getAccessToken } from '../auth/tokenStore';
+import { getValidAccessToken, refreshAccessTokenOnce } from '../auth/authSession';
 
 // NOTIFICATION_API_SPEC.md 8장 — 로그인 후 서비스에 들어오면 연결하고 /user/queue/notifications를 구독한다.
 const HEARTBEAT_MS = 10_000;
@@ -54,14 +54,26 @@ export function connectNotificationSocket({
   onNotification,
   onSubscribed,
 }: NotificationSocketHandlers): () => void {
+  // 서버가 인증 오류로 연결을 거절하면 다음 재연결 때 만료 시각과 관계없이 토큰을 다시 받는다.
+  let forceTokenRefresh = false;
+
   const client = new Client({
     brokerURL: wsUrl(),
     heartbeatIncoming: HEARTBEAT_MS,
     heartbeatOutgoing: HEARTBEAT_MS,
     reconnectDelay: RECONNECT_DELAY_MS,
-    // 재연결할 때 그 사이 재발급된 Access Token을 쓰도록 연결 직전에 헤더를 채운다.
-    beforeConnect: (stompClient) => {
-      stompClient.connectHeaders = { Authorization: `Bearer ${getAccessToken() ?? ''}` };
+    // 서버는 만료된 Access Token으로 CONNECT·SUBSCRIBE하면 거절한다(유효시간 15분).
+    // 화면에서 API 요청 없이 오래 머문 뒤 연결이 끊기면 만료된 토큰으로 계속 재시도하게 되므로,
+    // 연결 직전에 토큰 만료를 확인하고 필요하면 재발급한다.
+    beforeConnect: async (stompClient) => {
+      const token = forceTokenRefresh
+        ? await refreshAccessTokenOnce()
+        : await getValidAccessToken();
+      forceTokenRefresh = false;
+      stompClient.connectHeaders = { Authorization: `Bearer ${token ?? ''}` };
+    },
+    onStompError: () => {
+      forceTokenRefresh = true;
     },
     onConnect: () => {
       const receiptId = `notifications-${Date.now()}`;
