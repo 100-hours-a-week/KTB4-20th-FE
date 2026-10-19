@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import ChatRoom from '../pages/ChatRoom/ChatRoom';
+import CourseDetail from '../pages/TripCourse/CourseDetail';
+import CourseRecommend from '../pages/TripCourse/CourseRecommend';
 import Community from '../pages/Community/Community';
 import Home from '../pages/Home/Home';
 import InvitationJoin from '../pages/InvitationJoin/InvitationJoin';
@@ -43,6 +45,8 @@ export default function AppRoutes() {
         </Route>
         <Route path="/trips/:tripId" element={<TripDetail />} />
         <Route path="/trips/:tripId/schedule" element={<TripSchedule />} />
+        <Route path="/trips/:tripId/courses" element={<CourseRecommend />} />
+        <Route path="/trips/:tripId/courses/:courseId" element={<CourseDetail />} />
         <Route path="/trips/:tripId/weather-replan" element={<WeatherReplan />} />
         <Route path="/trips/:tripId/survey" element={<Survey />} />
       </Route>

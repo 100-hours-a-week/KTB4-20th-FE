@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
+import { COURSE_ERROR_CODES, getScheduleCandidates } from '../../api/courses';
 import { generateSchedule, getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
 import { fetchSurveySummary, type SurveySummary } from '../../api/survey';
 import {
@@ -53,8 +54,11 @@ type LoadState =
       status: 'ready';
       trip: TripDetailData;
       summary: SurveySummary;
+      /** 확정된 일정이 있는지 */
       hasSchedule: boolean;
-      /** 일반 재생성 남은 횟수. 일정이 없으면 null */
+      /** 확정 전 코스 후보 3개가 있는지 (방장이 코스를 골라야 하는 상태) */
+      hasCandidates: boolean;
+      /** 일반 재생성 남은 횟수. 확정 일정이 없으면 null */
       remainingRegenerations: number | null;
     }
   | { status: 'invalid' }
@@ -62,16 +66,40 @@ type LoadState =
 
 type Generation = 'idle' | 'generating' | 'failed';
 
-/** 일정이 아직 없는 게 정상 상태라, 일정 조회 404는 실패로 보지 않고 "일정 없음"으로 바꾼다. */
-async function checkSchedule(
-  tripId: string,
-): Promise<{ hasSchedule: boolean; remainingRegenerations: number | null }> {
+/** 후보가 아직 없는 게 정상 상태라, 후보 조회 404는 실패로 보지 않고 "후보 없음"으로 바꾼다. */
+async function checkCandidates(tripId: string): Promise<boolean> {
+  try {
+    await getScheduleCandidates(tripId);
+    return true;
+  } catch (error) {
+    if (getApiErrorCode(error) === COURSE_ERROR_CODES.candidatesNotFound) return false;
+    throw error;
+  }
+}
+
+/**
+ * 일정이 아직 없는 게 정상 상태라, 일정 조회 404는 실패로 보지 않고 "일정 없음"으로 바꾼다.
+ * 확정 일정이 없으면 방장이 고를 코스 후보가 있는지도 확인한다.
+ */
+async function checkSchedule(tripId: string): Promise<{
+  hasSchedule: boolean;
+  hasCandidates: boolean;
+  remainingRegenerations: number | null;
+}> {
   try {
     const schedule = await getSchedule(tripId);
-    return { hasSchedule: true, remainingRegenerations: schedule.remainingRegenerations };
+    return {
+      hasSchedule: true,
+      hasCandidates: false,
+      remainingRegenerations: schedule.remainingRegenerations,
+    };
   } catch (error) {
     if (getApiErrorCode(error) === SCHEDULE_ERROR_CODES.notFound) {
-      return { hasSchedule: false, remainingRegenerations: null };
+      return {
+        hasSchedule: false,
+        hasCandidates: await checkCandidates(tripId),
+        remainingRegenerations: null,
+      };
     }
     throw error;
   }
@@ -123,9 +151,12 @@ export default function TripDetail() {
     [tripId],
   );
 
-  const markScheduleExists = () =>
+  // 생성이 끝나면 확정 일정은 지워지고 후보 3개가 새로 생겨요.
+  const markCandidatesCreated = () =>
     setState((previous) =>
-      previous.status === 'ready' ? { ...previous, hasSchedule: true } : previous,
+      previous.status === 'ready'
+        ? { ...previous, hasSchedule: false, hasCandidates: true, remainingRegenerations: null }
+        : previous,
     );
 
   useEffect(() => {
@@ -145,6 +176,11 @@ export default function TripDetail() {
     [navigate, tripId],
   );
 
+  const goToCourses = useCallback(
+    () => navigate(`/trips/${encodeURIComponent(tripId)}/courses`),
+    [navigate, tripId],
+  );
+
   const startGeneration = async () => {
     if (generatingRef.current) return;
     generatingRef.current = true;
@@ -152,14 +188,19 @@ export default function TripDetail() {
 
     try {
       await generateSchedule(tripId);
-      markScheduleExists();
-      // 생성이 끝나면 생성된 여행 일정 화면으로 자동 이동합니다. (설계서 10번)
-      goToSchedule();
+      markCandidatesCreated();
+      // 생성이 끝나면 코스 3가지를 고르는 화면으로 자동 이동합니다.
+      goToCourses();
     } catch (error) {
       const code = getApiErrorCode(error);
-      if (code === SCHEDULE_ERROR_CODES.alreadyExists) {
-        markScheduleExists();
+      if (code === SCHEDULE_ERROR_CODES.candidatesPending) {
+        // 다른 기기나 중복 요청으로 이미 후보가 만들어진 경우예요. 새로 만들지 않고 후보 화면으로 보내요.
         setGeneration('idle');
+        markCandidatesCreated();
+        goToCourses();
+      } else if (code === SCHEDULE_ERROR_CODES.alreadyExists) {
+        setGeneration('idle');
+        void refresh();
         setNotice({ title: '이미 만든 일정이 있어요', description: getApiErrorMessage(error) });
       } else if (code && REGENERATION_REJECTED_CODES.includes(code)) {
         setGeneration('idle');
@@ -209,7 +250,7 @@ export default function TripDetail() {
     );
   }
 
-  const { trip, summary, hasSchedule, remainingRegenerations } = state;
+  const { trip, summary, hasSchedule, hasCandidates, remainingRegenerations } = state;
 
   if (generation === 'generating') {
     return (
@@ -461,6 +502,22 @@ export default function TripDetail() {
             </div>
             {isHost && <p className={styles.caption}>{regenerationCaption}</p>}
           </div>
+        ) : hasCandidates ? (
+          <div className={styles.actionGroup}>
+            <Button
+              size="lg"
+              className="h-13 w-full text-base font-semibold"
+              onClick={goToCourses}
+            >
+              <SparklesIcon className="size-4" aria-hidden="true" />
+              {isHost ? 'AI 코스 고르기' : 'AI 코스 보기'}
+            </Button>
+            <p className={styles.caption}>
+              {isHost
+                ? '여행 전날 23:50까지 코스를 정하지 않으면 여행방이 삭제돼요'
+                : '방장이 코스를 정하면 여행 일정을 볼 수 있어요'}
+            </p>
+          </div>
         ) : isHost ? (
           <div className={styles.actionGroup}>
             <Button
@@ -482,7 +539,7 @@ export default function TripDetail() {
       <ConfirmDialog
         open={isRegenerateConfirmOpen}
         title="일정을 다시 만들까요?"
-        description={`지금 일정은 새 일정으로 바뀌어요. 남은 재생성 ${remainingRegenerations ?? 0}회 중 1회를 써요.`}
+        description={`지금 일정은 지워지고 새 코스 3가지 중에서 다시 골라야 해요. 남은 재생성 ${remainingRegenerations ?? 0}회 중 1회를 써요.`}
         cancelAction={{ label: '취소', onClick: () => setIsRegenerateConfirmOpen(false) }}
         confirmAction={{
           label: '다시 만들기',

@@ -22,7 +22,7 @@ const UNAVAILABLE_CODES: string[] = [
 
 /**
  * 이상 기후 알림에서 방장이 "일정 변경하기"를 고르면 오는 화면.
- * 일반 생성과 같은 요청을 사유 WEATHER로 다시 보내고(날씨 반영은 AI가 맡음), 끝나면 새 일정 화면으로 간다.
+ * 일반 생성과 같은 요청을 사유 WEATHER로 다시 보내고(날씨 반영은 AI가 맡음), 끝나면 새 코스를 고르는 화면으로 간다.
  */
 export default function WeatherReplan() {
   const { tripId = '' } = useParams();
@@ -36,8 +36,9 @@ export default function WeatherReplan() {
     requestingRef.current = true;
     try {
       await generateSchedule(tripId, 'WEATHER');
-      toast.success('날씨를 반영한 일정으로 바꿨어요.');
-      navigate(`${tripPath}/schedule`, { replace: true });
+      // 날씨 재생성도 기존 확정 일정을 지우고 새 코스 3가지를 만들어요. 방장이 다시 골라야 해요.
+      toast.success('날씨를 반영한 코스를 새로 만들었어요.');
+      navigate(`${tripPath}/courses`, { replace: true });
     } catch (error) {
       const code = getApiErrorCode(error);
       if (code && UNAVAILABLE_CODES.includes(code)) {
