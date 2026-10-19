@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from '../api/types';
-import { setAccessToken } from './tokenStore';
+import { getAccessToken, setAccessToken } from './tokenStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -40,6 +40,38 @@ export function refreshAccessTokenOnce(): Promise<string | null> {
       });
   }
   return refreshPromise;
+}
+
+/** 만료까지 이 시간보다 적게 남은 Access Token은 미리 재발급한다. */
+const ACCESS_TOKEN_REFRESH_MARGIN_MS = 30_000;
+
+/** JWT payload의 exp(초)를 밀리초로 돌려준다. 읽을 수 없으면 null */
+function getAccessTokenExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const { exp } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as {
+      exp?: unknown;
+    };
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 곧 만료되거나 없는 Access Token이면 재발급해서 돌려준다.
+ * API 요청은 401 응답 때 재발급하지만, WebSocket 연결처럼 직접 토큰을 실어 보내는 곳은 이 함수로 미리 확인한다.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  const token = getAccessToken();
+  if (token) {
+    const expiresAt = getAccessTokenExpiry(token);
+    if (expiresAt === null || expiresAt - Date.now() > ACCESS_TOKEN_REFRESH_MARGIN_MS) {
+      return token;
+    }
+  }
+  return refreshAccessTokenOnce();
 }
 
 /** POST /api/auth/logout — 현재 Refresh Token을 폐기하고 메모리의 Access Token을 제거한다. */
