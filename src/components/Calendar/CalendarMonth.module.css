@@ -65,3 +65,40 @@
   color: var(--color-background);
   background: var(--color-primary);
 }
+
+/* 기간 선택: 출발일부터 마지막 날까지 하나의 띠로 잇는다 */
+.cell {
+  display: flex;
+  justify-content: center;
+}
+
+.bandMiddle {
+  background: var(--color-point-range);
+}
+
+.bandStart {
+  background: linear-gradient(to right, transparent 50%, var(--color-point-range) 50%);
+}
+
+.bandEnd {
+  background: linear-gradient(to left, transparent 50%, var(--color-point-range) 50%);
+}
+
+.bandRowStart {
+  border-top-left-radius: var(--radius-full);
+  border-bottom-left-radius: var(--radius-full);
+}
+
+.bandRowEnd {
+  border-top-right-radius: var(--radius-full);
+  border-bottom-right-radius: var(--radius-full);
+}
+
+.inRange {
+  color: var(--color-point-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.inRange:not(:disabled):hover {
+  background: var(--color-surface-strong);
+}

@@ -1,20 +1,26 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
-import { createTrip, TRIP_DATE_CONFLICT } from '../../api/trips';
+import { toast } from 'sonner';
+import { getApiErrorCode } from '../../api/errors';
+import {
+  createTrip,
+  getActiveTrips,
+  getTripConflict,
+  isDateRangeOverlapping,
+  leaveTrip,
+  MAX_TRIP_DAYS,
+  TRIP_LEAVE_NOT_ALLOWED,
+  type TripConflict,
+  type TripSummary,
+} from '../../api/trips';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import { Button } from '@/components/ui/button';
 import CalendarMonth from '../../components/Calendar/CalendarMonth';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MapPinIcon,
-  MinusIcon,
-  PlusIcon,
-} from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, MapPinIcon, MinusIcon, PlusIcon } from 'lucide-react';
 import PageHeader from '../../components/PageHeader/PageHeader';
+import TripConflictDialog from '../../components/TripConflictDialog/TripConflictDialog';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
+import { addDays, formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
 import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { DEADLINE_OPTIONS, isValidDeadline, resolveDeadline } from './deadline';
 import {
@@ -43,6 +49,40 @@ function isValidName(name: string): boolean {
   );
 }
 
+/** 출발일~마지막 날을 "10월 12일 ~ 10월 14일 · 2박 3일"처럼 보여줍니다. */
+function formatTripRange(startDate: string, endDate: string): string {
+  const { year, monthIndex, day } = parseIsoDate(startDate);
+  const end = parseIsoDate(endDate);
+  const nights = Math.round(
+    (Date.UTC(end.year, end.monthIndex, end.day) - Date.UTC(year, monthIndex, day)) / 86_400_000,
+  );
+  if (nights === 0) return `${formatTripDate(startDate, true)} · 당일`;
+  return `${formatMonthDay(startDate)} ~ ${formatMonthDay(endDate)} · ${nights}박 ${nights + 1}일`;
+}
+
+/** 기간 안에서 아직 나가기로 하지 않은, 날짜가 겹치는 첫 여행방을 찾습니다. */
+function findConflict(
+  trips: TripSummary[],
+  range: { startDate: string; endDate: string },
+  leaveTrips: TripConflict[],
+  today: string,
+): TripConflict | null {
+  const trip = trips.find(
+    (candidate) =>
+      isDateRangeOverlapping(candidate, range) &&
+      !leaveTrips.some((leave) => leave.tripId === candidate.tripId),
+  );
+  if (!trip) return null;
+  return {
+    tripId: trip.tripId,
+    name: trip.name,
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+    // 백엔드와 같은 기준: 출발일 전이면 나갈 수 있어요.
+    canLeave: today < trip.startDate,
+  };
+}
+
 interface FieldErrors {
   region?: string;
   startDate?: string;
@@ -58,6 +98,13 @@ export default function TripCreate() {
   const [isDeadlineCalendarOpen, setIsDeadlineCalendarOpen] = useState(false);
   const dateLabelId = useId();
   const [notice, setNotice] = useState<string | null>(null);
+  /** 날짜가 겹치는 기존 여행방. 날짜를 고를 때(from: 'select')나 만들 때 백엔드가 알려줄 때(from: 'submit') 띄워요. */
+  const [conflict, setConflict] = useState<{
+    trip: TripConflict;
+    from: 'select' | 'submit';
+  } | null>(null);
+  /** 날짜를 고르자마자 겹치는지 보려고 불러둔, 끝나지 않은 내 여행방들. 못 불러오면 만들 때 백엔드가 알려줘요. */
+  const [activeTrips, setActiveTrips] = useState<TripSummary[]>([]);
   const submittingRef = useRef(false);
   const nameInputId = useId();
   const nameHelperId = useId();
@@ -66,6 +113,60 @@ export default function TripCreate() {
 
   const today = getToday();
   const deadline = resolveDeadline(form.deadlineOption, today, form.startDate, form.customDeadline);
+
+  useEffect(() => {
+    let active = true;
+    getActiveTrips().then(
+      (trips) => active && setActiveTrips(trips),
+      () => undefined,
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /** 나가기로 한 여행방 가운데 지금 고른 날짜와 여전히 겹치는 것만 남깁니다. */
+  const keepOverlapping = (leaveTrips: TripConflict[], startDate: string, endDate: string) =>
+    leaveTrips.filter((trip) => isDateRangeOverlapping(trip, { startDate, endDate }));
+
+  const selectTripDate = (iso: string) => {
+    // 출발일을 한 번 더 누르면 고른 날짜를 모두 지웁니다.
+    if (iso === form.startDate) {
+      updateForm({ startDate: null, endDate: null, leaveTrips: [] });
+      return;
+    }
+    // 출발일만 고른 상태(하루)에서 최대 일수 안의 날을 누르면 마지막 날로, 아니면 새 출발일로 정합니다.
+    const isPickingEnd =
+      form.startDate !== null && form.startDate === form.endDate && iso > form.startDate;
+    const isChoosingEnd =
+      isPickingEnd && form.startDate !== null && iso <= addDays(form.startDate, MAX_TRIP_DAYS - 1);
+    if (isPickingEnd && !isChoosingEnd) {
+      // 말없이 출발일이 바뀌면 왜 기간이 안 잡히는지 알기 어려워서 알려줘요.
+      toast(`최대 ${MAX_TRIP_DAYS}일까지예요. 고른 날을 출발일로 바꿨어요`);
+    }
+    const startDate = isChoosingEnd && form.startDate ? form.startDate : iso;
+    const endDate = iso;
+
+    // 날짜가 바뀌어 기존 설문 마감일이 맞지 않게 되면 기본값(여행 전날)으로 되돌립니다.
+    const nextDeadline = resolveDeadline(
+      form.deadlineOption,
+      today,
+      startDate,
+      form.customDeadline,
+    );
+    const keepDeadline = nextDeadline !== null && isValidDeadline(nextDeadline, today, startDate);
+    const leaveTrips = keepOverlapping(form.leaveTrips, startDate, endDate);
+    updateForm({
+      startDate,
+      endDate,
+      leaveTrips,
+      ...(keepDeadline ? {} : { deadlineOption: 'dayBefore', customDeadline: null }),
+    });
+    setErrors((prev) => ({ ...prev, startDate: undefined }));
+
+    const found = findConflict(activeTrips, { startDate, endDate }, leaveTrips, today);
+    if (found) setConflict({ trip: found, from: 'select' });
+  };
 
   const isOptionDisabled = (option: DeadlineOption): boolean => {
     // 여행 날짜를 고르기 전에도 마감일은 고를 수 있다. 날짜를 고른 뒤 맞지 않으면 여행 전날로 되돌린다.
@@ -86,9 +187,15 @@ export default function TripCreate() {
   const validate = (): FieldErrors => {
     const nextErrors: FieldErrors = {};
     if (!form.region) nextErrors.region = '여행지를 선택해 주세요.';
-    if (!form.startDate) nextErrors.startDate = '여행 날짜를 선택해 주세요.';
+    if (!form.startDate || !form.endDate) nextErrors.startDate = '여행 날짜를 선택해 주세요.';
     // 날짜를 고른 뒤 자정이 지나 오늘이 되었을 수도 있어서 다시 확인합니다.
-    else if (form.startDate <= today) nextErrors.startDate = '여행 날짜를 다시 선택해 주세요.';
+    else if (
+      form.startDate <= today ||
+      form.endDate < form.startDate ||
+      form.endDate > addDays(form.startDate, MAX_TRIP_DAYS - 1)
+    ) {
+      nextErrors.startDate = '여행 날짜를 다시 선택해 주세요.';
+    }
     if (!isValidName(form.name)) nextErrors.name = NAME_ERROR;
     if (form.startDate && (!deadline || !isValidDeadline(deadline, today, form.startDate))) {
       nextErrors.deadline = '설문 마감일을 다시 선택해 주세요.';
@@ -96,21 +203,44 @@ export default function TripCreate() {
     return nextErrors;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (leaveTrips: TripConflict[] = form.leaveTrips) => {
     if (submittingRef.current) return;
     const nextErrors = validate();
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !form.region || !form.startDate) return;
+    if (Object.keys(nextErrors).length > 0 || !form.region || !form.startDate || !form.endDate) {
+      return;
+    }
 
     submittingRef.current = true;
     setIsSubmitting(true);
     const name = form.name.trim();
+    const { startDate, endDate } = form;
 
     try {
+      // 날짜가 겹쳐 나가기로 한 기존 여행방에서 먼저 나갑니다.
+      // 나간 방은 바로 목록에서 지워서, 만들기가 실패해 다시 눌러도 또 나가지 않게 해요.
+      for (const trip of keepOverlapping(leaveTrips, startDate, endDate)) {
+        try {
+          await leaveTrip(trip.tripId);
+        } catch (error) {
+          updateForm({ leaveTrips: leaveTrips.filter((leave) => leave.tripId !== trip.tripId) });
+          setNotice(
+            getApiErrorCode(error) === TRIP_LEAVE_NOT_ALLOWED
+              ? `'${trip.name}'은 이미 시작해서 나갈 수 없어요`
+              : '기존 여행방에서 나가지 못했어요. 다시 시도해 주세요',
+          );
+          return;
+        }
+        leaveTrips = leaveTrips.filter((leave) => leave.tripId !== trip.tripId);
+        updateForm({ leaveTrips });
+        setActiveTrips((trips) => trips.filter((active) => active.tripId !== trip.tripId));
+      }
+
       const result = await createTrip({
         name,
         regionId: form.region.regionId,
-        startDate: form.startDate,
+        startDate,
+        endDate,
         capacity: form.capacity,
         surveyDeadlineDate: deadline ?? undefined,
       });
@@ -118,20 +248,64 @@ export default function TripCreate() {
         ...result,
         name,
         regionLabel: form.region.label,
-        startDate: form.startDate,
+        startDate,
+        endDate,
         capacity: form.capacity,
       });
       navigate('/trips/new/done', { replace: true });
     } catch (error) {
-      setNotice(
-        getApiErrorCode(error) === TRIP_DATE_CONFLICT
-          ? (getApiErrorMessage(error) ?? '해당 날짜에 참여 중인 여행이 있습니다.')
-          : '여행방을 만들지 못했어요. 잠시 후 다시 시도해 주세요.',
-      );
+      const serverConflict = getTripConflict(error);
+      if (serverConflict) {
+        // 날짜를 고를 때 몰랐던 겹치는 여행방이 있으면 같은 팝업으로 물어봐요.
+        setConflict({ trip: serverConflict, from: 'submit' });
+      } else {
+        setNotice('여행방을 만들지 못했어요. 잠시 후 다시 시도해 주세요.');
+      }
     } finally {
       submittingRef.current = false;
       setIsSubmitting(false);
     }
+  };
+
+  const continueWithConflict = () => {
+    if (!conflict || !form.startDate || !form.endDate) return;
+    const leaveTrips = [...form.leaveTrips, conflict.trip];
+    updateForm({ leaveTrips });
+    setConflict(null);
+
+    if (conflict.from === 'submit') {
+      void handleSubmit(leaveTrips);
+      return;
+    }
+    // 고른 기간에 겹치는 여행방이 더 있으면 이어서 물어봐요.
+    const next = findConflict(
+      activeTrips,
+      { startDate: form.startDate, endDate: form.endDate },
+      leaveTrips,
+      today,
+    );
+    if (next) setConflict({ trip: next, from: 'select' });
+  };
+
+  /**
+   * 기존 여행방을 유지합니다. 날짜는 막지 않고, 겹치는 선택만 되돌려요.
+   * 출발일이 겹치지 않으면 출발일만 남기고(다시 마지막 날을 고르게), 겹치면 선택을 지워요.
+   */
+  const keepConflictTrip = () => {
+    if (!conflict) return;
+    const kept = conflict.trip;
+    setConflict(null);
+    const startDate = form.startDate;
+    const startStillOpen =
+      startDate !== null && !isDateRangeOverlapping(kept, { startDate, endDate: startDate });
+    updateForm({
+      ...(startStillOpen && startDate
+        ? {
+            endDate: startDate,
+            leaveTrips: keepOverlapping(form.leaveTrips, startDate, startDate),
+          }
+        : { startDate: null, endDate: null, leaveTrips: [] }),
+    });
   };
 
   return (
@@ -161,8 +335,8 @@ export default function TripCreate() {
               여행 날짜
             </span>
             <span className={form.startDate ? styles.dateValue : styles.datePlaceholder}>
-              {form.startDate
-                ? `${formatTripDate(form.startDate, true)} 출발`
+              {form.startDate && form.endDate
+                ? formatTripRange(form.startDate, form.endDate)
                 : '출발할 날을 골라주세요'}
             </span>
           </div>
@@ -172,24 +346,18 @@ export default function TripCreate() {
             invalid={Boolean(errors.startDate)}
             today={today}
             selected={form.startDate}
-            onSelect={(iso) => {
-              // 날짜가 바뀌어 기존 설문 마감일이 맞지 않게 되면 기본값(여행 전날)으로 되돌립니다.
-              const nextDeadline = resolveDeadline(
-                form.deadlineOption,
-                today,
-                iso,
-                form.customDeadline,
-              );
-              const keepDeadline =
-                nextDeadline !== null && isValidDeadline(nextDeadline, today, iso);
-              updateForm({
-                startDate: iso,
-                ...(keepDeadline ? {} : { deadlineOption: 'dayBefore', customDeadline: null }),
-              });
-              setErrors((prev) => ({ ...prev, startDate: undefined }));
-            }}
+            rangeEnd={form.endDate}
+            onSelect={selectTripDate}
           />
-          {errors.startDate && <p className={styles.error}>{errors.startDate}</p>}
+          {errors.startDate ? (
+            <p className={styles.error}>{errors.startDate}</p>
+          ) : (
+            <p className={styles.helper}>
+              {form.startDate && form.startDate === form.endDate
+                ? `돌아오는 날을 골라주세요. 당일치기라면 이대로 두면 돼요 (최대 ${MAX_TRIP_DAYS}일)`
+                : `출발일과 마지막 날을 차례로 눌러주세요 (최대 ${MAX_TRIP_DAYS}일)`}
+            </p>
+          )}
         </div>
 
         <div className={styles.field}>
@@ -312,7 +480,7 @@ export default function TripCreate() {
         <Button
           size="lg"
           className="h-13 w-full rounded-full text-base font-semibold"
-          onClick={handleSubmit}
+          onClick={() => void handleSubmit()}
           disabled={isSubmitting}
         >
           {isSubmitting ? '만드는 중...' : '여행방 만들기'}
@@ -331,6 +499,13 @@ export default function TripCreate() {
         onClose={() => setIsDeadlineCalendarOpen(false)}
       />
 
+      <TripConflictDialog
+        conflict={conflict?.trip ?? null}
+        mode="create"
+        onContinue={continueWithConflict}
+        onCancel={keepConflictTrip}
+      />
+
       <AlertDialog
         open={notice !== null}
         title="여행방을 만들지 못했어요"
@@ -343,7 +518,7 @@ export default function TripCreate() {
 }
 
 /**
- * 여행방 만들기 화면에 펼쳐 둔 여행 날짜 달력입니다.
+ * 여행방 만들기 화면에 펼쳐 둔 여행 날짜 달력입니다. 출발일과 마지막 날을 차례로 눌러 기간을 골라요.
  * 여행은 내일부터 시작할 수 있어서 오늘과 그 이전 날짜는 고를 수 없어요.
  */
 function StartDateCalendar({
@@ -351,12 +526,14 @@ function StartDateCalendar({
   invalid,
   today,
   selected,
+  rangeEnd,
   onSelect,
 }: {
   labelledBy: string;
   invalid: boolean;
   today: string;
   selected: string | null;
+  rangeEnd: string | null;
   onSelect: (iso: string) => void;
 }) {
   const initial = parseIsoDate(selected ?? today);
@@ -407,6 +584,7 @@ function StartDateCalendar({
         year={view.year}
         monthIndex={view.monthIndex}
         selected={selected}
+        rangeEnd={rangeEnd}
         showMonthName={false}
         isDisabled={(iso) => iso <= today}
         onSelect={onSelect}

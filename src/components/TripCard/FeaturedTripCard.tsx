@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
-import { getTripDetail, type TripSummary } from '../../api/trips';
+import { getTripDetail, type TripStatus, type TripSummary } from '../../api/trips';
 import { fetchSurveySummary } from '../../api/survey';
 import { AvatarGroup } from '../Avatar/Avatar';
 import RegionIllustration from '../RegionIllustration/RegionIllustration';
 import { Skeleton } from '@/components/ui/skeleton';
 import { truncateTripName } from './tripFormat';
 import { formatTripDate, getDaysUntil } from './tripDisplay';
+import { getToday } from '../../utils/date';
 import styles from './FeaturedTripCard.module.css';
 
 interface FeaturedTripCardProps {
@@ -28,6 +29,18 @@ interface Extra {
  * 목록 API에는 지역·설문 현황이 없어서 이 카드 하나만 상세 API와 설문 현황 API를 더 불러옵니다.
  * 더 불러오지 못해도 카드는 그대로 보이고, 풍경 그림과 제출 수만 빠집니다.
  */
+/**
+ * 하루 여행은 "10월 12일 월요일 출발", 여러 날 여행은 "10월 12일 ~ 10월 14일",
+ * 여행 중이면 몇째 날인지 붙여요("10월 12일 ~ 10월 14일 · Day 2").
+ */
+function formatTripPeriod(startDate: string, endDate: string, status: TripStatus): string {
+  if (startDate === endDate) return `${formatTripDate(startDate, true)} 출발`;
+  const period = `${formatTripDate(startDate)} ~ ${formatTripDate(endDate)}`;
+  if (status !== 'TRIP_IN_PROGRESS') return period;
+  const dayNumber = Math.round((Date.parse(getToday()) - Date.parse(startDate)) / 86_400_000) + 1;
+  return `${period} · Day ${dayNumber}`;
+}
+
 export default function FeaturedTripCard({ trip, onLeave }: FeaturedTripCardProps) {
   const [extra, setExtra] = useState<Extra | null>(null);
   const [extraFailed, setExtraFailed] = useState(false);
@@ -61,7 +74,7 @@ export default function FeaturedTripCard({ trip, onLeave }: FeaturedTripCardProp
         : '설문 모으는 중'
       : trip.status === 'SCHEDULE_COMPLETED'
         ? '일정이 완성됐어요'
-        : null; // 출발 당일은 D-DAY로 충분해서 상태 문구를 두지 않는다
+        : null; // 여행 중에는 오른쪽 "여행 중"으로 충분해서 상태 문구를 두지 않는다
 
   return (
     <article className={styles.card}>
@@ -97,13 +110,20 @@ export default function FeaturedTripCard({ trip, onLeave }: FeaturedTripCardProp
               {truncateTripName(trip.name)}
             </Link>
           </h3>
-          <span className={styles.dDay}>
-            {daysUntil === null || daysUntil === 0 ? 'D-DAY' : `D-${daysUntil}`}
-          </span>
+          {/* 여러 날 여행은 출발일이 지나도 마지막 날까지 여행 중이라 D-DAY 대신 "여행 중"을 보여줘요. */}
+          {trip.status === 'TRIP_IN_PROGRESS' ? (
+            <span className={`${styles.dDay} ${styles.traveling}`}>여행 중</span>
+          ) : (
+            <span className={styles.dDay}>
+              {daysUntil === null || daysUntil === 0 ? 'D-DAY' : `D-${daysUntil}`}
+            </span>
+          )}
         </div>
         <div className={styles.footer}>
           <div className={styles.info}>
-            <p className={styles.meta}>{formatTripDate(trip.startDate, true)} 출발</p>
+            <p className={styles.meta}>
+              {formatTripPeriod(trip.startDate, trip.endDate, trip.status)}
+            </p>
             {statusText && (
               <span className={styles.status}>
                 <span className={styles.statusDot} aria-hidden="true" />

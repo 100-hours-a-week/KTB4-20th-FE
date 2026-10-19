@@ -11,7 +11,6 @@ import TripCreate from '../pages/TripCreate/TripCreate';
 import TripDetail from '../pages/TripDetail/TripDetail';
 import TripCreated from '../pages/TripCreate/TripCreated';
 import TripCreateLayout from '../pages/TripCreate/TripCreateLayout';
-import TripDate from '../pages/TripCreate/TripDate';
 import TripPlace from '../pages/TripCreate/TripPlace';
 import TripSchedule from '../pages/TripSchedule/TripSchedule';
 import GuestOnly from './GuestOnly';
@@ -35,7 +34,6 @@ export default function AppRoutes() {
         <Route path="/trips/new" element={<TripCreateLayout />}>
           <Route index element={<TripCreate />} />
           <Route path="place" element={<TripPlace />} />
-          <Route path="date" element={<TripDate />} />
           <Route path="done" element={<TripCreated />} />
         </Route>
         <Route path="/trips/:tripId" element={<TripDetail />} />

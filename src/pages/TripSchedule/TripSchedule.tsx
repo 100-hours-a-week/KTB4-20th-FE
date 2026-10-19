@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
-import { formatDotDate, formatSlashDateWithWeekday } from '../../utils/date';
+import { formatDotDate, formatSlashDateWithWeekday, getToday } from '../../utils/date';
 import RouteMap from './RouteMap';
 import styles from './TripSchedule.module.css';
 
@@ -33,6 +33,7 @@ export default function TripSchedule() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null);
 
   useEffect(() => {
     if (!tripId) {
@@ -77,7 +78,10 @@ export default function TripSchedule() {
 
   if (state.status !== 'ready') {
     const copy = {
-      invalid: { title: '여행방을 찾을 수 없어요', description: '여행방 멤버만 일정을 볼 수 있어요' },
+      invalid: {
+        title: '여행방을 찾을 수 없어요',
+        description: '여행방 멤버만 일정을 볼 수 있어요',
+      },
       notFound: {
         title: '아직 만든 일정이 없어요',
         description: '여행방에서 AI 일정을 먼저 만들어 주세요',
@@ -87,7 +91,11 @@ export default function TripSchedule() {
 
     return (
       <main className={styles.centerScreen}>
-        <StatusMessage icon={<MapIcon size={20} strokeWidth={1.6} />} title={copy.title} description={copy.description}>
+        <StatusMessage
+          icon={<MapIcon size={20} strokeWidth={1.6} />}
+          title={copy.title}
+          description={copy.description}
+        >
           <Button size="lg" className="h-13 w-full" onClick={goBack}>
             여행방으로 돌아가기
           </Button>
@@ -97,7 +105,10 @@ export default function TripSchedule() {
   }
 
   const { trip, schedule } = state;
-  const day = schedule.days[0];
+  // 다일 여행은 Day마다 일정이 따로 와요. 처음에는 여행 중이면 오늘, 아니면 Day 1을 보여줘요.
+  const today = getToday();
+  const defaultDay = schedule.days.find((item) => item.date === today) ?? schedule.days[0] ?? null;
+  const day = schedule.days.find((item) => item.dayNumber === selectedDayNumber) ?? defaultDay;
 
   const handleShare = async () => {
     try {
@@ -115,14 +126,41 @@ export default function TripSchedule() {
 
   return (
     <main className={styles.container}>
-      <PageHeader title={trip.name} subtitle={formatDotDate(trip.startDate)} onBack={goBack} />
+      <PageHeader
+        title={trip.name}
+        subtitle={
+          trip.endDate === trip.startDate
+            ? formatDotDate(trip.startDate)
+            : `${formatDotDate(trip.startDate)} ~ ${formatDotDate(trip.endDate)}`
+        }
+        onBack={goBack}
+      />
 
       {day ? (
         <>
+          {schedule.days.length > 1 && (
+            <div className={styles.dayTabs} role="tablist" aria-label="여행 날짜">
+              {schedule.days.map((item) => (
+                <button
+                  key={item.dayId}
+                  type="button"
+                  role="tab"
+                  aria-selected={item.dayNumber === day.dayNumber}
+                  className={styles.dayTab}
+                  onClick={() => setSelectedDayNumber(item.dayNumber)}
+                >
+                  Day {item.dayNumber}
+                </button>
+              ))}
+            </div>
+          )}
+
           <RouteMap stops={day.stops} />
 
           <h2 className={styles.dayHeader}>
             Day {day.dayNumber} · {formatSlashDateWithWeekday(day.date)}
+            {day.stops.length > 0 && ` · ${day.stops.length}곳`}
+            {day.totalDistanceMeters > 0 && ` · ${formatDistance(day.totalDistanceMeters)}`}
           </h2>
 
           <ol className={styles.stopList}>

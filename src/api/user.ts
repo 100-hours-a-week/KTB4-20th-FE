@@ -5,7 +5,7 @@ import type { ApiResponse } from './types';
 export interface CurrentUser {
   publicId: string;
   userName: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUser> {

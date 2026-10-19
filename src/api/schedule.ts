@@ -68,7 +68,7 @@ export interface ScheduleDetail {
   scheduleId: string;
   strategy: string;
   status: string;
-  /** V1은 일정을 수정할 수 없어서 항상 false예요. */
+  /** 여행 시작 전이면 장소를 바꿀 수 있어요. */
   editable: boolean;
   totalDistanceMeters: number;
   createdAt: string;

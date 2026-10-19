@@ -504,10 +504,10 @@ function InviteSection({ tripId }: { tripId: string }) {
 
 /** 상세 화면에는 여행 상태가 따로 오지 않아 날짜와 일정 유무로 단계를 정합니다. */
 function getTripStatus(trip: TripDetailData, hasSchedule: boolean): TripStatus {
-  // 백엔드 목록과 같은 규칙: 출발일 당일만 여행 중, 출발일이 지나면 여행 완료
+  // 백엔드 TripProgressStatus와 같은 규칙: 출발일부터 마지막 날까지 여행 중, 마지막 날이 지나면 여행 완료
   const today = getToday();
-  if (trip.startDate < today) return 'TRIP_COMPLETED';
-  if (trip.startDate === today) return 'TRIP_IN_PROGRESS';
+  if (trip.endDate < today) return 'TRIP_COMPLETED';
+  if (trip.startDate <= today) return 'TRIP_IN_PROGRESS';
   return hasSchedule ? 'SCHEDULE_COMPLETED' : 'SURVEY_IN_PROGRESS';
 }
 
@@ -535,7 +535,10 @@ function TripHero({ trip, hasSchedule }: { trip: TripDetailData; hasSchedule: bo
             <span className={styles.heroCount}>{trip.memberCount}명</span>
           </p>
           <p className={styles.heroDate}>
-            {trip.region.regionName} · {formatTripDate(trip.startDate, true)} 출발
+            {trip.region.regionName} ·{' '}
+            {trip.endDate === trip.startDate
+              ? `${formatTripDate(trip.startDate, true)} 출발`
+              : `${formatTripDate(trip.startDate)} ~ ${formatTripDate(trip.endDate)}`}
           </p>
           <div className={styles.heroProgress}>
             <TripProgress status={status} />

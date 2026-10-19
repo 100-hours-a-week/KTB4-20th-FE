@@ -30,6 +30,8 @@
   --color-point-soft: #e3eee5;
   --color-point-text: #33583c;
   --color-on-point: #ffffff;
+  /* 달력에서 고른 기간(출발일~마지막 날)을 잇는 띠. 옅은 면보다 한 단계 진하고, 위 글자는 --color-point-text(5.4:1) */
+  --color-point-range: #c6dacb;
   /* 사람과 지금을 뜻하는 색: 제목, 방장, 여행 중 칸. 위 글자는 크림(8.3:1) */
   --color-accent-brown: var(--palette-brown);
   --color-accent-brown-soft: #f2e7de;

@@ -44,7 +44,9 @@ export default function ConfirmDialog({
           )}
           <DialogTitle className="leading-snug font-semibold">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="text-xs break-keep">{description}</DialogDescription>
+            <DialogDescription className="text-xs break-keep whitespace-pre-line">
+              {description}
+            </DialogDescription>
           )}
         </DialogHeader>
         <div className="flex gap-2">
