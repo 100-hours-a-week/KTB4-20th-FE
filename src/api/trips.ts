@@ -14,6 +14,8 @@ export interface TripSummary {
   name: string;
   /** YYYY-MM-DD */
   startDate: string;
+  /** YYYY-MM-DD. 하루 여행이면 출발일과 같아요. */
+  endDate: string;
   status: TripStatus;
   memberCount: number;
   members: TripMemberSummary[];
