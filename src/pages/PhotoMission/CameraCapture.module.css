@@ -1,0 +1,103 @@
+/* 화면 안 카메라. 다른 화면처럼 밝은 바탕 + 뒤로 가기 머리글, 촬영 칸만 차콜 */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  margin: 0 auto;
+  padding: var(--spacing-2) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
+  outline: none;
+}
+
+.viewfinder {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-text);
+}
+
+.media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.message {
+  position: absolute;
+  margin: 0;
+  color: var(--color-viewer-muted);
+  font-size: var(--font-size-sm);
+}
+
+.statusBody {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+}
+
+.shutter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  background: var(--color-background);
+  cursor: pointer;
+}
+
+.shutter span {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.shutter:active span {
+  transform: scale(0.92);
+}
+
+.shutter:disabled {
+  border-color: var(--color-border);
+  cursor: default;
+}
+
+.shutter:disabled span {
+  background: var(--color-surface-strong);
+}
+
+.shutter:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.confirmRow {
+  display: flex;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shutter span {
+    transition: none;
+  }
+}

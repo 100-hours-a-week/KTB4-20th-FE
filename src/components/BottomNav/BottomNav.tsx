@@ -1,9 +1,10 @@
-import { Home, MessageCircle, Users } from 'lucide-react';
+import { Camera, Home, MessageCircle, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { to: '/', label: '메인', Icon: Home },
+  { to: '/photo-missions', label: '포토미션', Icon: Camera },
   { to: '/open-chat', label: '오픈 채팅', Icon: MessageCircle },
   { to: '/community', label: '커뮤니티', Icon: Users },
 ];

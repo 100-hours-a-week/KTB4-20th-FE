@@ -1,0 +1,467 @@
+/* 포토미션 화면들. 미션 문구가 제목이고, 완료는 숲 초록, 미완료는 회베이지로 구분한다. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-5) var(--spacing-4)
+    calc(var(--height-tab-bar) + var(--spacing-5) + env(safe-area-inset-bottom));
+  background: var(--background-canvas);
+}
+
+.centerBody {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-5) 0;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+/* 목록 머리글 */
+.listHeader {
+  margin-bottom: var(--spacing-4);
+}
+
+.tripName {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.3;
+}
+
+.tripMeta {
+  margin: var(--spacing-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Day 탭: 넘치면 옆으로 민다 */
+.dayTabs {
+  display: flex;
+  gap: var(--spacing-2);
+  margin: 0 calc(var(--spacing-4) * -1);
+  padding: 0 var(--spacing-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dayTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.dayTab {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-background);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.dayTab[aria-selected='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+
+.dayTab:disabled {
+  border-color: var(--color-border-soft);
+  color: var(--color-text-muted-soft);
+  background: var(--color-surface-strong);
+  cursor: default;
+}
+
+.dayTab:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.dayTab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.dayDate {
+  margin: var(--spacing-3) 0 var(--spacing-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.inlineStatus {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: var(--spacing-6) var(--spacing-2);
+}
+
+/* 그날 미션을 다 끝냈을 때 */
+.doneBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+
+.doneIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  background: var(--color-background);
+}
+
+.doneTitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.doneDescription {
+  margin: var(--spacing-0) 0 0;
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+}
+
+/* 진행 바 */
+.progressBlock {
+  margin-bottom: var(--spacing-5);
+}
+
+.progressRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.progressRow strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-progress);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--spacing-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* 미션 목록: 한 장의 카드 안에서 줄로 나눈다 */
+.missionList {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+}
+
+.missionList li + li {
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.missionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-4);
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.missionRow:active {
+  background: var(--color-surface);
+}
+
+.missionRow:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.missionThumb,
+.missionThumbEmpty {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+}
+
+.missionThumb {
+  object-fit: cover;
+  background: var(--color-surface-strong);
+}
+
+.missionThumbEmpty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed var(--color-border-strong);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.missionBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.missionTitleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+}
+
+.missionTitle {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.scopeBadge {
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 1px var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-semibold);
+}
+
+.missionContext {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.missionProgress {
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusDone,
+.statusTodo {
+  flex-shrink: 0;
+  padding: var(--spacing-0) var(--spacing-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.statusDone {
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+}
+
+.statusTodo {
+  color: var(--color-text-muted);
+  background: var(--color-surface-strong);
+}
+
+.switching {
+  opacity: 0.5;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.listFooter {
+  margin-top: var(--spacing-5);
+}
+
+.footerHint {
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dayTab {
+    transition: none;
+  }
+}
+
+/* 진행 중인 여행이 없을 때의 첫 화면 */
+.homeTitle {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.homeEmpty {
+  /* 남는 높이를 차지해 안내를 화면 가운데쯤에 두고, 여행 카드는 아래로 밀어요(시안 01). */
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-height: 280px;
+  padding: var(--spacing-7) var(--spacing-2);
+}
+
+.homeSection {
+  margin-bottom: var(--spacing-5);
+}
+
+.upcomingCard,
+.albumCard {
+  display: flex;
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: inherit;
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.upcomingCard:active,
+.albumCard:active {
+  transform: scale(0.99);
+}
+
+.upcomingCard:focus-visible,
+.albumCard:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.upcomingCard {
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+}
+
+.upcomingTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.upcomingName,
+.albumName {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.dday {
+  flex-shrink: 0;
+  padding: var(--spacing-0) var(--spacing-2);
+  border-radius: var(--radius-full);
+  color: var(--color-accent-brown);
+  background: var(--color-accent-brown-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.upcomingMeta,
+.albumMeta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.albumList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.albumCard {
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+}
+
+.albumText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.albumChevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.albumSkeleton {
+  margin-top: var(--spacing-2);
+}
+
+.sentinel {
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upcomingCard,
+  .albumCard {
+    transition: none;
+  }
+}
