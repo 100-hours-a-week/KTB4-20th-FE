@@ -369,6 +369,16 @@
   text-align: center;
 }
 
+/* 일정 미확정 여행방 자동 삭제 안내 */
+.deletionWarning {
+  margin: var(--spacing-1) 0 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  word-break: keep-all;
+}
+
 /* AI 일정 생성 중 */
 .generating {
   display: flex;

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
 import { COURSE_ERROR_CODES, getScheduleCandidates } from '../../api/courses';
+import { UNCONFIRMED_TRIP_DELETION_TIME_LABEL } from '../../notifications/notificationDisplay';
 import { generateSchedule, getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
 import { fetchSurveySummary, type SurveySummary } from '../../api/survey';
 import {
@@ -514,7 +515,7 @@ export default function TripDetail() {
             </Button>
             <p className={styles.caption}>
               {isHost
-                ? '여행 전날 23:50까지 코스를 정하지 않으면 여행방이 삭제돼요'
+                ? 'AI가 만든 코스 3가지 중 하나를 골라 일정을 확정해 주세요'
                 : '방장이 코스를 정하면 여행 일정을 볼 수 있어요'}
             </p>
           </div>
@@ -533,6 +534,14 @@ export default function TripDetail() {
           </div>
         ) : (
           <p className={styles.caption}>AI 일정 생성은 방장만 가능해요</p>
+        )}
+
+        {/* 일정을 확정하지 않은 여행방은 여행 전날 밤 자동 삭제되므로, 확정 전까지 모든 멤버에게 알린다. */}
+        {!hasSchedule && !tripStarted && (
+          <p className={styles.deletionWarning} role="note">
+            여행 전날 {UNCONFIRMED_TRIP_DELETION_TIME_LABEL}까지 여행 일정이 확정되지 않으면 여행방이
+            삭제돼요
+          </p>
         )}
       </div>
 
