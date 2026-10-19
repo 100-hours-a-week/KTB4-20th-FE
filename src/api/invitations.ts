@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { TripConflict } from './trips';
 import type { ApiResponse } from './types';
 
 export interface InvitationPreview {
@@ -15,8 +16,8 @@ export interface InvitationPreview {
   inviter: { publicId: string; userName: string; profileImageUrl: string | null };
   members: { userName: string; profileImageUrl: string | null }[];
   alreadyJoined: boolean;
-  /** 같은 날짜에 이미 참여 중인 내 여행방. 없으면 null */
-  conflictingTrip: { tripId: string; name: string } | null;
+  /** 날짜가 겹치는, 이미 참여 중인 여행방. 없으면 null */
+  conflictingTrip: TripConflict | null;
 }
 
 /** 초대 미리보기 API가 보내는 오류 코드 */

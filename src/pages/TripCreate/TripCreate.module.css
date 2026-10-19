@@ -93,8 +93,10 @@
   background: var(--color-surface-strong);
 }
 
+/* 최소·최대 인원에 닿아 누를 수 없을 때는 아이콘과 바탕을 모두 연하게 */
 .stepperButton:disabled {
-  color: var(--color-text-muted-soft);
+  color: var(--color-border-strong);
+  background: var(--color-surface);
   cursor: not-allowed;
 }
 

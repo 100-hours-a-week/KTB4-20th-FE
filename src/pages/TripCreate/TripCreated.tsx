@@ -53,7 +53,10 @@ export default function TripCreated() {
             <p className={styles.region}>{createdTrip.regionLabel}</p>
             <h2 className={styles.roomName}>{createdTrip.name}</h2>
             <p className={styles.meta}>
-              {formatTripDate(createdTrip.startDate, true)} 출발 · 최대 {createdTrip.capacity}명
+              {createdTrip.endDate === createdTrip.startDate
+                ? `${formatTripDate(createdTrip.startDate, true)} 출발`
+                : `${formatTripDate(createdTrip.startDate)} ~ ${formatTripDate(createdTrip.endDate)}`}{' '}
+              · 최대 {createdTrip.capacity}명
             </p>
           </div>
           <span className={styles.ticketStub}>D-{daysUntil ?? 0}</span>

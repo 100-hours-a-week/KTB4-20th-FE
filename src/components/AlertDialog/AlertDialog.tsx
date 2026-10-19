@@ -42,7 +42,9 @@ export default function AlertDialog({
           </span>
           <DialogTitle className="leading-snug">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="break-keep">{description}</DialogDescription>
+            <DialogDescription className="break-keep whitespace-pre-line">
+              {description}
+            </DialogDescription>
           )}
         </DialogHeader>
         <div className="flex flex-col gap-2">

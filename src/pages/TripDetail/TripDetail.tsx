@@ -647,7 +647,10 @@ function TripHero({ trip, hasSchedule }: { trip: TripDetailData; hasSchedule: bo
             <span className={styles.heroCount}>{trip.memberCount}명</span>
           </p>
           <p className={styles.heroDate}>
-            {trip.region.regionName} · {formatTripDate(trip.startDate, true)} 출발
+            {trip.region.regionName} ·{' '}
+            {trip.endDate === trip.startDate
+              ? `${formatTripDate(trip.startDate, true)} 출발`
+              : `${formatTripDate(trip.startDate)} ~ ${formatTripDate(trip.endDate)}`}
           </p>
           <div className={styles.heroProgress}>
             <TripProgress status={status} />

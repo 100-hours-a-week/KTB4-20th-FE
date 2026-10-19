@@ -1,4 +1,6 @@
+import axios from 'axios';
 import apiClient from './client';
+import { getApiErrorCode } from './errors';
 import type { ApiResponse } from './types';
 
 export type TripStatus =
@@ -63,6 +65,8 @@ export interface TripCreateRequest {
   regionId: number;
   /** YYYY-MM-DD */
   startDate: string;
+  /** YYYY-MM-DD. 출발일부터 최대 9일까지예요. */
+  endDate: string;
   capacity: number;
   /** YYYY-MM-DD. 비우면 백엔드가 여행 전날로 정합니다. */
   surveyDeadlineDate?: string;
@@ -92,6 +96,53 @@ export async function getTripInvitationToken(tripId: string): Promise<string> {
 
 /** 이미 같은 날짜에 참여 중인 여행이 있을 때 백엔드가 보내는 오류 코드 */
 export const TRIP_DATE_CONFLICT = 'TRIP_DATE_CONFLICT';
+
+/** 한 여행방에 머무를 수 있는 최대 일수 (출발일 포함) */
+export const MAX_TRIP_DAYS = 9;
+
+/** 날짜가 겹치는, 이미 참여 중인 여행방입니다. */
+export interface TripConflict {
+  tripId: string;
+  name: string;
+  /** YYYY-MM-DD */
+  startDate: string;
+  endDate: string;
+  /** 아직 출발 전이라 나갈 수 있으면 true. 이미 시작한 여행이면 false예요. */
+  canLeave: boolean;
+}
+
+/**
+ * 여행방 만들기가 날짜 충돌(409)로 실패했을 때 응답에 담긴 겹치는 여행방을 꺼냅니다.
+ * 날짜 충돌이 아니거나 정보가 없으면 null이에요.
+ */
+export function getTripConflict(error: unknown): TripConflict | null {
+  if (getApiErrorCode(error) !== TRIP_DATE_CONFLICT) return null;
+  if (!axios.isAxiosError<Partial<ApiResponse<TripConflict | null>>>(error)) return null;
+  return error.response?.data?.data ?? null;
+}
+
+/** 두 기간(YYYY-MM-DD, 양 끝 포함)이 하루라도 겹치는지 확인합니다. */
+export function isDateRangeOverlapping(
+  a: { startDate: string; endDate: string },
+  b: { startDate: string; endDate: string },
+): boolean {
+  return a.startDate <= b.endDate && a.endDate >= b.startDate;
+}
+
+/** 출발 전이거나 여행 중인, 아직 끝나지 않은 여행방을 모두 불러옵니다. */
+export async function getActiveTrips(): Promise<TripSummary[]> {
+  const activeTrips: TripSummary[] = [];
+  let cursor: string | undefined;
+  // 목록은 진행 중·다가오는 여행이 먼저 와서, 끝난 여행이 나오면 더 볼 필요가 없어요.
+  for (;;) {
+    const page = await getTrips({ cursor, size: 10 });
+    const active = page.trips.filter((trip) => trip.status !== 'TRIP_COMPLETED');
+    activeTrips.push(...active);
+    if (!page.hasNext || !page.nextCursor || active.length < page.trips.length) break;
+    cursor = page.nextCursor;
+  }
+  return activeTrips;
+}
 
 /** 초대 링크 주소를 만듭니다. 백엔드는 `/invitations/{토큰}` 경로를 초대 링크로 인식합니다. */
 export function getInvitationUrl(invitationToken: string): string {
