@@ -95,8 +95,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     const handleIncoming = (notification: IncomingNotification) => {
       // 이미 띄운 알림은 다시 띄우지 않지만, 이전 ACK 실패를 복구하기 위해 ACK는 다시 보낸다.
-      if (!wasDelivered(userPublicId, notification.notificationId)) {
-        markDelivered(userPublicId, notification.notificationId);
+      if (!wasDelivered(userPublicId, notification)) {
+        markDelivered(userPublicId, notification);
         enqueue(notification);
         void refreshUnreadCount();
       }
