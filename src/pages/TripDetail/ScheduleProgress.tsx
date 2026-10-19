@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { CheckIcon } from 'lucide-react';
 import styles from './TripDetail.module.css';
 
@@ -10,12 +10,23 @@ import styles from './TripDetail.module.css';
 const STEP_DELAYS_MS = [0, 1500, 3000];
 
 interface ScheduleProgressProps {
-  /** 취향을 종합한 인원 수 */
-  memberCount: number;
+  /** 가운데 큰 제목. 기본은 취향 분석 문구 */
+  title?: ReactNode;
+  /** 시간에 맞춰 넘어가는 세 단계. 마지막 단계는 응답이 올 때까지 진행 중으로 둡니다. */
+  steps: [string, string, string];
 }
 
 /** AI 일정 생성 중 화면 (설계서 10번). 뒤로가기 버튼은 두지 않습니다. */
-export default function ScheduleProgress({ memberCount }: ScheduleProgressProps) {
+export default function ScheduleProgress({
+  title = (
+    <>
+      취향을 분석해서
+      <br />
+      최적 동선을 만드는 중이에요
+    </>
+  ),
+  steps,
+}: ScheduleProgressProps) {
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -25,21 +36,11 @@ export default function ScheduleProgress({ memberCount }: ScheduleProgressProps)
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, []);
 
-  const steps = [
-    `${memberCount}명의 취향을 종합했어요`,
-    '후보 장소를 찾았어요',
-    '최적 동선을 계산하는 중',
-  ];
-
   return (
     <main className={styles.centerScreen}>
       <section className={styles.generating} role="status" aria-live="polite">
         <span className={styles.spinner} aria-hidden="true" />
-        <h1 className={styles.generatingTitle}>
-          취향을 분석해서
-          <br />
-          최적 동선을 만드는 중이에요
-        </h1>
+        <h1 className={styles.generatingTitle}>{title}</h1>
         <p className={styles.generatingDescription}>잠시만 기다려주세요!</p>
         <ol className={styles.steps}>
           {steps.map((label, index) => {

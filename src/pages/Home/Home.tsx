@@ -7,6 +7,7 @@ import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import Avatar from '../../components/Avatar/Avatar';
 import BottomSheet from '../../components/BottomSheet/BottomSheet';
 import BottomNav from '../../components/BottomNav/BottomNav';
+import NotificationBell from '../../components/NotificationBell/NotificationBell';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import {
@@ -109,15 +110,18 @@ export default function Home() {
               <img src={planitSymbol} alt="" width={24} height={24} />
               PlanIt
             </span>
-            <button
-              type="button"
-              className={styles.profileButton}
-              onClick={() => setIsProfileOpen(true)}
-              aria-label="프로필 관리 열기"
-              aria-haspopup="dialog"
-            >
-              <Avatar name={user?.userName ?? ''} imageUrl={user?.profileImageUrl} />
-            </button>
+            <div className={styles.topActions}>
+              <NotificationBell />
+              <button
+                type="button"
+                className={styles.profileButton}
+                onClick={() => setIsProfileOpen(true)}
+                aria-label="프로필 관리 열기"
+                aria-haspopup="dialog"
+              >
+                <Avatar name={user?.userName ?? ''} imageUrl={user?.profileImageUrl} />
+              </button>
+            </div>
           </div>
 
           <h1 className={styles.headline}>
