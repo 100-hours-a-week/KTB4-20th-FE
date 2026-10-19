@@ -1,10 +1,13 @@
 import { Route, Routes } from 'react-router-dom';
 import ChatRoom from '../pages/ChatRoom/ChatRoom';
+import CourseDetail from '../pages/TripCourse/CourseDetail';
+import CourseRecommend from '../pages/TripCourse/CourseRecommend';
 import Community from '../pages/Community/Community';
 import Home from '../pages/Home/Home';
 import InvitationJoin from '../pages/InvitationJoin/InvitationJoin';
 import Login from '../pages/Login/Login';
 import NotFound from '../pages/NotFound/NotFound';
+import Notifications from '../pages/Notifications/Notifications';
 import OpenChat from '../pages/OpenChat/OpenChat';
 import Survey from '../pages/Survey/Survey';
 import TripCreate from '../pages/TripCreate/TripCreate';
@@ -13,6 +16,7 @@ import TripCreated from '../pages/TripCreate/TripCreated';
 import TripCreateLayout from '../pages/TripCreate/TripCreateLayout';
 import TripPlace from '../pages/TripCreate/TripPlace';
 import TripSchedule from '../pages/TripSchedule/TripSchedule';
+import WeatherReplan from '../pages/WeatherReplan/WeatherReplan';
 import GuestOnly from './GuestOnly';
 import RequireAuth from './RequireAuth';
 
@@ -31,6 +35,7 @@ export default function AppRoutes() {
         <Route path="/open-chat" element={<OpenChat />} />
         <Route path="/open-chat/rooms/:roomId" element={<ChatRoom />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/trips/new" element={<TripCreateLayout />}>
           <Route index element={<TripCreate />} />
           <Route path="place" element={<TripPlace />} />
@@ -38,6 +43,9 @@ export default function AppRoutes() {
         </Route>
         <Route path="/trips/:tripId" element={<TripDetail />} />
         <Route path="/trips/:tripId/schedule" element={<TripSchedule />} />
+        <Route path="/trips/:tripId/courses" element={<CourseRecommend />} />
+        <Route path="/trips/:tripId/courses/:courseId" element={<CourseDetail />} />
+        <Route path="/trips/:tripId/weather-replan" element={<WeatherReplan />} />
         <Route path="/trips/:tripId/survey" element={<Survey />} />
       </Route>
 

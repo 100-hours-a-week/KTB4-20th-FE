@@ -58,3 +58,9 @@
   transform: translateX(-50%);
   white-space: nowrap;
 }
+
+.action {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
