@@ -1,0 +1,178 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+  max-width: var(--max-width-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-6);
+  background: var(--background-canvas);
+}
+
+.readAllButton {
+  min-height: 40px;
+  padding: 0 var(--spacing-1);
+  border: 0;
+  color: var(--color-point-text);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.readAllButton:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.readAllButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* 한 장의 면 위에 줄로 나눈 목록 */
+.list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-4);
+  border: 0;
+  color: var(--color-text);
+  background: var(--color-background);
+  text-align: left;
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.item:active {
+  background: var(--color-surface);
+}
+
+/* 읽었거나 더 이상 응답할 수 없는 알림은 회색 면 + 한 톤 낮춘 글자 */
+.itemMuted {
+  background: var(--color-surface);
+}
+
+.itemMuted .itemIcon {
+  color: var(--color-text-muted);
+  background: var(--color-surface-strong);
+}
+
+.itemMuted .itemTitle,
+.itemMuted .itemBody {
+  color: var(--color-text-muted);
+}
+
+.itemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.itemTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.unreadDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-brown);
+}
+
+.itemBody {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.itemTime {
+  margin-top: var(--spacing-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* 빈 상태: 점선 원 안 종 아이콘 + 짧은 안내 */
+.empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  padding-bottom: var(--spacing-8);
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-full);
+  color: var(--color-point);
+}
+
+.emptyText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.statusArea {
+  padding-top: var(--spacing-7);
+}
+
+.retryButton {
+  padding: var(--spacing-3);
+  border: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font-size: var(--font-size-xs);
+  text-decoration: underline;
+}
+
+.sentinel {
+  height: 1px;
+}

@@ -22,6 +22,8 @@ interface ConfirmDialogProps {
   confirmAction: DialogAction;
   cancelAction: DialogAction;
   onClose: () => void;
+  /** 설명과 버튼 사이에 둘 내용 (선택) */
+  children?: ReactNode;
 }
 
 /** 가운데 정렬된 제목·설명과 가로로 나란한 취소/확인 버튼을 가진 확인 팝업입니다. (shadcn Dialog 기반) */
@@ -35,6 +37,7 @@ export default function ConfirmDialog({
   confirmAction,
   cancelAction,
   onClose,
+  children,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -56,6 +59,7 @@ export default function ConfirmDialog({
             </DialogDescription>
           )}
         </DialogHeader>
+        {children}
         <div className="flex gap-2">
           <Button
             size="lg"

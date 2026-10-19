@@ -28,6 +28,12 @@
   letter-spacing: var(--letter-spacing-tight);
 }
 
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
 .profileButton {
   display: inline-flex;
   padding: 0;
