@@ -16,9 +16,10 @@ type TripState =
   | { status: 'home'; trips: TripSummary[] }
   | { status: 'error' };
 
-const TRIP_PAGE_SIZE = 20;
+/** 백엔드 여행 목록 API가 한 번에 최대 10개까지만 받아요. 넘으면 400이에요. */
+const TRIP_PAGE_SIZE = 10;
 /** 여행 목록을 이만큼만 넘겨 봐요. (한 사람이 참여한 여행 수는 많지 않아요) */
-const MAX_TRIP_PAGES = 10;
+const MAX_TRIP_PAGES = 20;
 
 /** 참여한 여행을 모두 불러와요. 목록은 다가오는·진행 중 여행이 먼저, 지난 여행이 뒤에 와요. */
 async function getAllTrips(): Promise<TripSummary[]> {
