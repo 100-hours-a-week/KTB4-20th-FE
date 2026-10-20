@@ -67,3 +67,9 @@ export function isResponseClosed(createdAt: string): boolean {
 }
 
 export const RESPONSE_CLOSED_MESSAGE = '여행이 시작되어 더 이상 응답할 수 없어요.';
+
+/** 알림 대상 여행방이 삭제됐을 때 (목록 응답의 target.status가 EXPIRED) */
+export const TRIP_DELETED_MESSAGE = '여행방이 삭제되어 더 이상 확인할 수 없어요.';
+
+/** 일정을 확정하지 않은 여행방은 여행 전날 이 시각에 자동으로 삭제된다. (백엔드 UnconfirmedTripDeletionScheduler) */
+export const UNCONFIRMED_TRIP_DELETION_TIME_LABEL = '오후 11시 50분';

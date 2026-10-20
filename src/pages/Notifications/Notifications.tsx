@@ -16,6 +16,7 @@ import {
   isResponseClosed,
   NotificationTypeIcon,
   RESPONSE_CLOSED_MESSAGE,
+  TRIP_DELETED_MESSAGE,
 } from '../../notifications/notificationDisplay';
 import { formatRelativeTime } from '../../utils/relativeTime';
 import styles from './Notifications.module.css';
@@ -24,11 +25,26 @@ type LoadStatus = 'loading' | 'success' | 'error';
 
 const EXPIRED_TARGET_MESSAGE = '더 이상 확인할 수 없는 항목이에요.';
 
-/** 이동 대상이 없어졌거나, 이상 기후 알림의 응답 기한(여행 시작)이 지난 알림 (BR-NOTI-06) */
-function isClosed(item: NotificationListItem): boolean {
-  if (item.target?.status === 'EXPIRED') return true;
-  return item.type === 'TRIP_WEATHER_ALERT' && isResponseClosed(item.createdAt);
+type ClosedReason = 'TRIP_DELETED' | 'TRIP_STARTED' | 'NO_TARGET';
+
+/**
+ * 더 이상 이동할 수 없는 알림과 그 이유 (BR-NOTI-06)
+ * - TRIP_DELETED: 여행방이 삭제됨. 백엔드는 삭제된 여행방만 target.status를 EXPIRED로 보낸다.
+ * - TRIP_STARTED: 이상 기후 알림의 응답 기한(여행 시작)이 지남. 여행방은 남아 있다.
+ * 삭제 여부를 먼저 본다. 이미 시작된 여행방이 삭제됐다면 삭제 안내가 더 정확하다.
+ */
+function getClosedReason(item: NotificationListItem): ClosedReason | null {
+  if (!item.target) return 'NO_TARGET';
+  if (item.target.status === 'EXPIRED') return 'TRIP_DELETED';
+  if (item.type === 'TRIP_WEATHER_ALERT' && isResponseClosed(item.createdAt)) return 'TRIP_STARTED';
+  return null;
 }
+
+const CLOSED_MESSAGES: Record<ClosedReason, string> = {
+  TRIP_DELETED: TRIP_DELETED_MESSAGE,
+  TRIP_STARTED: RESPONSE_CLOSED_MESSAGE,
+  NO_TARGET: EXPIRED_TARGET_MESSAGE,
+};
 
 /** 알림 목록 화면. 최신순으로 처음 20개, 마지막에 닿으면 10개씩 더 불러옵니다. (BR-NOTI-04) */
 export default function Notifications() {
@@ -113,8 +129,9 @@ export default function Notifications() {
         });
     }
 
-    if (!item.target || isClosed(item)) {
-      toast(EXPIRED_TARGET_MESSAGE);
+    const closedReason = getClosedReason(item);
+    if (closedReason || !item.target) {
+      toast(CLOSED_MESSAGES[closedReason ?? 'NO_TARGET']);
       return;
     }
     if (item.type === 'TRIP_WEATHER_ALERT') {
@@ -222,10 +239,13 @@ function NotificationItem({
   item: NotificationListItem;
   onSelect: () => void;
 }) {
-  const closed = isClosed(item);
-  // 응답 기한이 지난 이상 기후 알림은 일정 변경 질문 대신 기한 안내를 보여준다.
-  const body = closed && item.type === 'TRIP_WEATHER_ALERT' ? RESPONSE_CLOSED_MESSAGE : item.body;
-  const muted = item.read || closed;
+  const closedReason = getClosedReason(item);
+  // 여행방이 삭제된 알림은 삭제 안내를, 응답 기한이 지난 이상 기후 알림은 기한 안내를 본문 대신 보여준다.
+  const body =
+    closedReason === 'TRIP_DELETED' || closedReason === 'TRIP_STARTED'
+      ? CLOSED_MESSAGES[closedReason]
+      : item.body;
+  const muted = item.read || closedReason !== null;
 
   return (
     <button
