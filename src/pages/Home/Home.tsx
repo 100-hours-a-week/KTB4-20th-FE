@@ -193,9 +193,11 @@ export default function Home() {
         }
         description={
           leavingTrip
-            ? leavingTrip.memberCount <= 2
-              ? `나가면 남은 인원이 1명이 되어, '${leavingTrip.name}' 여행방이 삭제되고 복구할 수 없어요.`
-              : `'${leavingTrip.name}' 여행방이 목록에서 사라져요.`
+            ? leavingTrip.memberCount <= 1
+              ? `혼자 있는 여행방이라 나가면 '${leavingTrip.name}' 여행방이 삭제되고 복구할 수 없어요.`
+              : leavingTrip.memberCount === 2
+                ? `나가면 남은 인원이 1명이 되어, '${leavingTrip.name}' 여행방이 삭제되고 복구할 수 없어요.`
+                : `'${leavingTrip.name}' 여행방이 목록에서 사라져요.`
             : undefined
         }
         cancelAction={{ label: '취소', onClick: () => setLeavingTrip(null) }}
