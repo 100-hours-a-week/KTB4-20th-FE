@@ -39,7 +39,7 @@ import RegionIllustration from '../../components/RegionIllustration/RegionIllust
 import TicketStub from '../../components/TripCard/TicketStub';
 import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { formatExclusionName, SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
-import { getToday } from '../../utils/date';
+import { getToday, isBeforeScheduleChangeDeadline } from '../../utils/date';
 import { getScheduleButtonState } from './scheduleButtonState';
 import ScheduleProgress from './ScheduleProgress';
 import styles from './TripDetail.module.css';
@@ -313,12 +313,16 @@ export default function TripDetail() {
     (a, b) => b.preferencePercent - a.preferencePercent,
   );
   const surveyPath = `/trips/${encodeURIComponent(trip.tripId)}/survey`;
-  // 일반 재생성은 여행 시작 전까지, 남은 횟수가 있을 때만 할 수 있어요.
   const tripStarted = getToday() >= trip.startDate;
-  const canRegenerate = !tripStarted && (remainingRegenerations ?? 0) > 0;
+  // 재생성하면 지금 일정이 지워지고, 새 코스는 전날 23:50까지만 확정할 수 있어요.
+  // 그 뒤에 재생성하면 확정 일정 없이 여행이 시작되므로 마감 전까지만, 남은 횟수가 있을 때만 열어요.
+  const regenerationClosed = !isBeforeScheduleChangeDeadline(trip.startDate);
+  const canRegenerate = !regenerationClosed && (remainingRegenerations ?? 0) > 0;
   const regenerationCaption = tripStarted
     ? '여행이 시작되어 일정을 다시 만들 수 없어요'
-    : canRegenerate
+    : regenerationClosed
+      ? `여행 전날 ${UNCONFIRMED_TRIP_DELETION_TIME_LABEL}이 지나 일정을 다시 만들 수 없어요`
+      : canRegenerate
       ? `일정은 ${remainingRegenerations}번 더 다시 만들 수 있어요`
       : '일정을 다시 만들 수 있는 횟수를 모두 썼어요';
 
@@ -548,12 +552,20 @@ export default function TripDetail() {
       <ConfirmDialog
         open={isRegenerateConfirmOpen}
         title="일정을 다시 만들까요?"
-        description={`지금 일정은 지워지고 새 코스 3가지 중에서 다시 골라야 해요. 남은 재생성 ${remainingRegenerations ?? 0}회 중 1회를 써요.`}
+        description={`지금 일정은 지워지고 새 코스 3가지 중에서 다시 골라야 해요. 남은 재생성 ${remainingRegenerations ?? 0}회 중 1회를 써요.\n여행 전날 ${UNCONFIRMED_TRIP_DELETION_TIME_LABEL}까지 코스를 고르지 않으면 여행방이 삭제돼요.`}
         cancelAction={{ label: '취소', onClick: () => setIsRegenerateConfirmOpen(false) }}
         confirmAction={{
           label: '다시 만들기',
           onClick: () => {
             setIsRegenerateConfirmOpen(false);
+            // 확인 창을 띄워 둔 사이에 마감이 지났으면 지금 일정을 지우지 않아요.
+            if (!isBeforeScheduleChangeDeadline(trip.startDate)) {
+              setNotice({
+                title: '일정을 다시 만들 수 없어요',
+                description: `여행 전날 ${UNCONFIRMED_TRIP_DELETION_TIME_LABEL}이 지나 코스를 새로 고를 수 없어요.`,
+              });
+              return;
+            }
             void startGeneration();
           },
         }}

@@ -5,7 +5,10 @@ import { CircleAlertIcon, MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
 import { generateSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { getTripDetail } from '../../api/trips';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
+import { UNCONFIRMED_TRIP_DELETION_TIME_LABEL } from '../../notifications/notificationDisplay';
+import { isBeforeScheduleChangeDeadline } from '../../utils/date';
 import ScheduleProgress from '../TripDetail/ScheduleProgress';
 import styles from '../TripDetail/TripDetail.module.css';
 
@@ -35,6 +38,16 @@ export default function WeatherReplan() {
     if (requestingRef.current) return;
     requestingRef.current = true;
     try {
+      // 날씨 재생성도 지금 일정을 지우고 새 코스를 고르게 해요. 코스는 전날 23:50까지만 확정할 수 있어서
+      // 그 뒤에 요청하면 확정 일정 없이 여행이 시작되므로, 마감이 지났으면 요청하지 않아요.
+      const trip = await getTripDetail(tripId);
+      if (!isBeforeScheduleChangeDeadline(trip.startDate)) {
+        setState({
+          status: 'unavailable',
+          description: `여행 전날 ${UNCONFIRMED_TRIP_DELETION_TIME_LABEL}이 지나 일정을 바꿀 수 없어요.\n기존 일정은 그대로 남아 있어요.`,
+        });
+        return;
+      }
       await generateSchedule(tripId, 'WEATHER');
       // 날씨 재생성도 기존 확정 일정을 지우고 새 코스 3가지를 만들어요. 방장이 다시 골라야 해요.
       toast.success('날씨를 반영한 코스를 새로 만들었어요.');
