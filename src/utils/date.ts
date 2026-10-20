@@ -15,6 +15,15 @@ export function getToday(): string {
   return seoulDateFormatter.format(new Date());
 }
 
+/** 코스 확정·일정 변경은 여행 시작 10분 전(서울 기준 전날 23:50)까지만 할 수 있어요. */
+const SCHEDULE_CHANGE_DEADLINE_MINUTES = 10;
+
+/** 서울 기준으로 지금이 출발일의 일정 변경 마감(전날 23:50)보다 앞서면 true */
+export function isBeforeScheduleChangeDeadline(startDate: string): boolean {
+  const tripStartTime = Date.parse(`${startDate}T00:00:00+09:00`);
+  return Date.now() < tripStartTime - SCHEDULE_CHANGE_DEADLINE_MINUTES * 60_000;
+}
+
 export function toIsoDate(year: number, monthIndex: number, day: number): string {
   const date = new Date(Date.UTC(year, monthIndex, day));
   return date.toISOString().slice(0, 10);
