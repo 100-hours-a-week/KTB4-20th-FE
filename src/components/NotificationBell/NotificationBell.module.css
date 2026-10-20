@@ -1,0 +1,43 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-background);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.button:active {
+  transform: scale(0.94);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* 읽지 않은 알림 수: 사람과 시간을 뜻하는 브라운 알약 + 크림 글자 */
+.badge {
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 2px solid var(--color-canvas-glow);
+  border-radius: var(--radius-full);
+  color: var(--color-on-accent-brown);
+  background: var(--color-accent-brown);
+  font-size: var(--font-size-badge);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: center;
+}

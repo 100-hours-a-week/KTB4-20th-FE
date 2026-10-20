@@ -17,10 +17,8 @@ import {
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
 import Avatar, { AvatarGroup } from '../../components/Avatar/Avatar';
 import { Button } from '@/components/ui/button';
-import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import {
   CircleAlertIcon as AlertIcon,
-  CalendarIcon,
   XIcon as CloseIcon,
   LockIcon,
   InfoIcon,
@@ -28,6 +26,7 @@ import {
 } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
+import TripConflictDialog from '../../components/TripConflictDialog/TripConflictDialog';
 import { truncateTripName } from '../../components/TripCard/tripFormat';
 import { formatTripDate, getDaysUntil } from '../../components/TripCard/tripDisplay';
 import RegionIllustration from '../../components/RegionIllustration/RegionIllustration';
@@ -241,7 +240,7 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
           setIsJoining(false);
           setNotice({
             title: '기존 여행방에서 나가지 못했어요',
-            description: '잠시 후 다시 시도해 주세요.',
+            description: '다시 시도해 주세요',
           });
           return;
         }
@@ -261,10 +260,19 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
       if (code === TRIP_JOIN_ERROR_CODES.alreadyJoined) {
         navigate(`/trips/${encodeURIComponent(trip.tripId)}`, { replace: true });
       } else if (code === TRIP_JOIN_ERROR_CODES.dateConflict) {
-        setNotice({
-          title: '같은 날짜에 이미 여행이 있어요',
-          description: getApiErrorMessage(error),
-        });
+        // 날짜가 겹치는 여행방이 더 남아 있으면 미리보기를 다시 받아 같은 팝업으로 물어봐요.
+        const refreshed = await getInvitationPreview(invitationToken, { withAuth: true }).catch(
+          () => null,
+        );
+        if (refreshed?.conflictingTrip) {
+          setPreview(refreshed);
+          setIsConflictDismissed(false);
+        } else {
+          setNotice({
+            title: '날짜가 겹치는 여행이 있어요',
+            description: getApiErrorMessage(error),
+          });
+        }
       } else {
         setErrorKind(toErrorKind(error));
       }
@@ -305,7 +313,11 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
         <div className={styles.ticketBody}>
           <div className={styles.ticketMain}>
             <p className={styles.region}>{trip.region.regionName}</p>
-            <p className={styles.date}>{formatTripDate(trip.startDate, true)} 출발</p>
+            <p className={styles.date}>
+              {trip.endDate === trip.startDate
+                ? `${formatTripDate(trip.startDate, true)} 출발`
+                : `${formatTripDate(trip.startDate)} ~ ${formatTripDate(trip.endDate)}`}
+            </p>
           </div>
           {daysUntil !== null && (
             <span className={styles.ticketStub}>
@@ -351,25 +363,15 @@ function InvitationDetail({ invitationToken }: { invitationToken: string }) {
         </button>
       </div>
 
-      <ConfirmDialog
-        open={conflictingTrip !== null && !isConflictDismissed}
-        icon={<CalendarIcon size={18} />}
-        title="같은 날짜에 이미 여행이 있어요"
-        description={
-          conflictingTrip
-            ? `이 여행에 참여하면 기존 여행방 '${conflictingTrip.name}'에서 나가져요`
-            : undefined
-        }
-        // 취소하면 새 여행에는 참여할 수 없어요. (설계서 11-b)
-        cancelAction={{ label: '취소', onClick: goHome }}
-        confirmAction={{
-          label: '계속하기',
-          onClick: () => {
-            setIsConflictDismissed(true);
-            void join({ leaveTripId: conflictingTrip?.tripId });
-          },
+      {/* 들어오자마자 겹치는 여행방을 알려줘요. 취소하면 새 여행에는 참여할 수 없어요. (설계서 11-b) */}
+      <TripConflictDialog
+        conflict={isConflictDismissed ? null : conflictingTrip}
+        mode="join"
+        onContinue={() => {
+          setIsConflictDismissed(true);
+          void join({ leaveTripId: conflictingTrip?.tripId });
         }}
-        onClose={goHome}
+        onCancel={goHome}
       />
 
       <AlertDialog

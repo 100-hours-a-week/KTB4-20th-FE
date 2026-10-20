@@ -1,19 +1,28 @@
 import { Route, Routes } from 'react-router-dom';
 import ChatRoom from '../pages/ChatRoom/ChatRoom';
+import CourseDetail from '../pages/TripCourse/CourseDetail';
+import CourseRecommend from '../pages/TripCourse/CourseRecommend';
 import Community from '../pages/Community/Community';
 import Home from '../pages/Home/Home';
 import InvitationJoin from '../pages/InvitationJoin/InvitationJoin';
 import Login from '../pages/Login/Login';
 import NotFound from '../pages/NotFound/NotFound';
+import Notifications from '../pages/Notifications/Notifications';
 import OpenChat from '../pages/OpenChat/OpenChat';
+import MissionAlbum from '../pages/PhotoMission/MissionAlbum';
+import MissionCompletion from '../pages/PhotoMission/MissionCompletion';
+import MissionDetail from '../pages/PhotoMission/MissionDetail';
+import MissionPhotoViewer from '../pages/PhotoMission/MissionPhotoViewer';
+import MissionResult from '../pages/PhotoMission/MissionResult';
+import PhotoMission from '../pages/PhotoMission/PhotoMission';
 import Survey from '../pages/Survey/Survey';
 import TripCreate from '../pages/TripCreate/TripCreate';
 import TripDetail from '../pages/TripDetail/TripDetail';
 import TripCreated from '../pages/TripCreate/TripCreated';
 import TripCreateLayout from '../pages/TripCreate/TripCreateLayout';
-import TripDate from '../pages/TripCreate/TripDate';
 import TripPlace from '../pages/TripCreate/TripPlace';
 import TripSchedule from '../pages/TripSchedule/TripSchedule';
+import WeatherReplan from '../pages/WeatherReplan/WeatherReplan';
 import GuestOnly from './GuestOnly';
 import RequireAuth from './RequireAuth';
 
@@ -29,17 +38,26 @@ export default function AppRoutes() {
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<Home />} />
+        <Route path="/photo-missions" element={<PhotoMission />} />
+        <Route path="/photo-missions/missions/:missionId" element={<MissionDetail />} />
+        <Route path="/photo-missions/missions/:missionId/result" element={<MissionResult />} />
+        <Route path="/photo-missions/missions/:missionId/photos" element={<MissionPhotoViewer />} />
+        <Route path="/photo-missions/album" element={<MissionAlbum />} />
+        <Route path="/photo-missions/completion" element={<MissionCompletion />} />
         <Route path="/open-chat" element={<OpenChat />} />
         <Route path="/open-chat/rooms/:roomId" element={<ChatRoom />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/trips/new" element={<TripCreateLayout />}>
           <Route index element={<TripCreate />} />
           <Route path="place" element={<TripPlace />} />
-          <Route path="date" element={<TripDate />} />
           <Route path="done" element={<TripCreated />} />
         </Route>
         <Route path="/trips/:tripId" element={<TripDetail />} />
         <Route path="/trips/:tripId/schedule" element={<TripSchedule />} />
+        <Route path="/trips/:tripId/courses" element={<CourseRecommend />} />
+        <Route path="/trips/:tripId/courses/:courseId" element={<CourseDetail />} />
+        <Route path="/trips/:tripId/weather-replan" element={<WeatherReplan />} />
         <Route path="/trips/:tripId/survey" element={<Survey />} />
       </Route>
 

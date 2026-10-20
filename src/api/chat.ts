@@ -57,7 +57,7 @@ export async function leaveRegionalChatRoom(roomId: string): Promise<RegionalCha
 export interface ChatMessageSender {
   publicId?: string;
   userName: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface ChatMessageImage {

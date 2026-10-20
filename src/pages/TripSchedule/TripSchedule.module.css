@@ -114,14 +114,111 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.stopBody {
+  flex: 1;
+}
+
 .legRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  justify-content: space-between;
+  min-height: 28px;
   margin: 0;
   padding: var(--spacing-1) 0 var(--spacing-1) 46px;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+}
+
+.legDistance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.iconButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: calc(var(--spacing-1) * -1) calc(var(--spacing-1) * -1) calc(var(--spacing-1) * -1) 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: transparent;
+}
+
+.iconButton:active {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+}
+
+.emptyDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) var(--spacing-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.emptyDay p {
+  margin: 0;
+}
+
+.emptyDayAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-background);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyDayAdd:focus-visible {
+  outline: 2px solid var(--color-primary);
+}
+
+.dayNav {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.placeChip {
+  /* 팝업 본문이 grid라서 justify-self로 글자 너비만큼만 차지하게 해요. */
+  justify-self: center;
+  align-self: center;
+  max-width: 100%;
+  padding: var(--spacing-1) var(--spacing-3);
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-surface-strong);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialogNote {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
 }
 
 .footer {
