@@ -6,6 +6,7 @@ import {
   confirmSchedule,
   COURSE_ERROR_CODES,
   COURSE_TITLES,
+  getCourseMetric,
   getScheduleCandidates,
   type ScheduleCandidateSummary,
 } from '../../api/courses';
@@ -36,6 +37,10 @@ async function hasConfirmedSchedule(tripId: string): Promise<boolean> {
     if (getApiErrorCode(error) === SCHEDULE_ERROR_CODES.notFound) return false;
     throw error;
   }
+}
+
+function formatPercent(percent: number | null): string {
+  return percent !== null ? `${percent}%` : '-';
 }
 
 /** AI가 만든 3가지 코스를 비교하고 방장이 하나를 고르는 화면입니다. 그룹원은 보기만 할 수 있어요. */
@@ -169,8 +174,8 @@ export default function CourseRecommend() {
             <p className={styles.courseDescription}>{course.summary}</p>
             <dl className={styles.metrics}>
               <div>
-                <dt>취향 반영도</dt>
-                <dd>{course.preferenceScore !== null ? `${course.preferenceScore}%` : '-'}</dd>
+                <dt>{getCourseMetric(course).label}</dt>
+                <dd>{formatPercent(getCourseMetric(course).percent)}</dd>
               </div>
               <div>
                 <dt>총 이동거리</dt>
