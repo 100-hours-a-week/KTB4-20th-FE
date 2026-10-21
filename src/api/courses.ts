@@ -3,19 +3,21 @@ import type { ScheduleDay } from './schedule';
 import type { ApiResponse } from './types';
 
 /*
-  AI 일정 생성은 최단거리 · 취향 우선 · 균형 3가지 후보(DRAFT)를 만들고,
+  AI 일정 생성은 최단거리 · 취향 우선 · 다양성 3가지 후보(DRAFT)를 만들고,
   방장이 그중 하나를 확정해야 여행 일정(GET /api/trips/{tripId}/schedule)이 생깁니다.
 */
 
-export type CourseStrategy = 'SHORTEST' | 'PREFERENCE' | 'BALANCED';
+export type CourseStrategy = 'SHORTEST' | 'PREFERENCE' | 'DIVERSITY';
 
 export interface ScheduleCandidateSummary {
   scheduleId: string;
   strategy: CourseStrategy;
   /** 백엔드가 전략별로 정해 주는 한 줄 설명 */
   summary: string;
-  /** 그룹 취향 반영도 (0~100). 계산되지 않았으면 null */
-  preferenceScore: number | null;
+  /** 코스에 담긴 그룹 취향 장소 수. 최단거리 코스는 null */
+  preferenceCount: number | null;
+  /** 코스에 담긴 새로 발견한 장소 수. 최단거리 코스는 null */
+  discoveryCount: number | null;
   totalDistanceMeters: number;
 }
 
@@ -38,8 +40,25 @@ export interface ScheduleConfirmResult {
 export const COURSE_TITLES: Record<CourseStrategy, string> = {
   SHORTEST: '최단거리 코스',
   PREFERENCE: '취향 우선 코스',
-  BALANCED: '균형 코스',
+  DIVERSITY: '다양성 코스',
 };
+
+/**
+ * 코스 카드에 보여 줄 반영도 지표.
+ * 취향 우선 코스는 취향 장소 비율, 다양성 코스는 발견 장소 비율을 백분율로 보여 줘요.
+ * 최단거리 코스처럼 장소 수가 없으면 percent는 null이에요.
+ */
+export function getCourseMetric(
+  course: Pick<ScheduleCandidateSummary, 'strategy' | 'preferenceCount' | 'discoveryCount'>,
+): { label: string; percent: number | null } {
+  const label = course.strategy === 'DIVERSITY' ? '다양성 반영도' : '취향 반영도';
+  const { preferenceCount, discoveryCount } = course;
+  if (preferenceCount === null || discoveryCount === null) return { label, percent: null };
+  const total = preferenceCount + discoveryCount;
+  if (total <= 0) return { label, percent: null };
+  const count = course.strategy === 'DIVERSITY' ? discoveryCount : preferenceCount;
+  return { label, percent: Math.round((count / total) * 100) };
+}
 
 /** 코스 조회·확정에서 백엔드가 보내는 오류 코드 */
 export const COURSE_ERROR_CODES = {
@@ -50,7 +69,7 @@ export const COURSE_ERROR_CODES = {
   candidatesSuperseded: 'SCHEDULE_CANDIDATES_SUPERSEDED',
 } as const;
 
-/** GET /api/trips/{tripId}/schedule-candidates — 여행방 활성 멤버 누구나 볼 수 있어요. 최단거리 · 취향 우선 · 균형 순서로 와요. */
+/** GET /api/trips/{tripId}/schedule-candidates — 여행방 활성 멤버 누구나 볼 수 있어요. 최단거리 · 취향 우선 · 다양성 순서로 와요. */
 export async function getScheduleCandidates(tripId: string): Promise<ScheduleCandidateSummary[]> {
   const response = await apiClient.get<
     ApiResponse<{ tripId: string; candidates: ScheduleCandidateSummary[] }>
