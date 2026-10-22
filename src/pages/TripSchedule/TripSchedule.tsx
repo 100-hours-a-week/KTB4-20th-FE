@@ -9,7 +9,7 @@ import {
   getSchedule,
   SCHEDULE_ERROR_CODES,
   SCHEDULE_MAX_STOPS,
-  SCHEDULE_MIN_STOPS,
+  getScheduleMinStops,
   type ScheduleDay,
   type ScheduleDetail,
   type ScheduleStop,
@@ -48,8 +48,12 @@ const DAY_PARAM = 'day';
 /** 장소 검색 화면이 열려 있을 때 끼워 넣을 방문 순서를 담는 주소 파라미터 */
 const ADD_POSITION_PARAM = 'add';
 
+/** 최소 장소 수는 날마다 달라서(여러 날 여행의 마지막 날은 더 적어요) 문구를 따로 만들어요. */
+function getMinimumStopsMessage(minStops: number): string {
+  return `이 날 일정에는 장소가 ${minStops}개 이상 있어야 해요.`;
+}
+
 const STOP_CHANGE_ERROR_MESSAGES: Record<string, string> = {
-  [SCHEDULE_ERROR_CODES.minimumStopsRequired]: `하루 일정에는 장소가 ${SCHEDULE_MIN_STOPS}개 이상 있어야 해요.`,
   [SCHEDULE_ERROR_CODES.maximumStopsExceeded]: `하루에 장소는 최대 ${SCHEDULE_MAX_STOPS}개까지 넣을 수 있어요.`,
   [SCHEDULE_ERROR_CODES.placeAlreadyExists]: '이미 일정에 있는 장소예요.',
   [SCHEDULE_ERROR_CODES.changeNotAllowed]: '여행이 시작돼서 일정을 바꿀 수 없어요.',
@@ -142,6 +146,7 @@ export default function TripSchedule() {
 
   // 장소 수 제한은 하루 단위예요. 지금 보고 있는 날의 장소만 셉니다.
   const dayStopCount = day?.stops.length ?? 0;
+  const dayMinStops = day ? getScheduleMinStops(day.dayNumber, days.length) : 0;
   // 방장이고 변경 기한(여행 시작 10분 전) 전일 때만 백엔드가 true로 보내요.
   const editable = schedule.editable;
   const searchArea = getPlaceSearchArea(trip.region.regionCode);
@@ -170,6 +175,10 @@ export default function TripSchedule() {
 
   const showStopChangeError = (error: unknown, fallback: string) => {
     const code = getApiErrorCode(error);
+    if (code === SCHEDULE_ERROR_CODES.minimumStopsRequired) {
+      toast.error(getMinimumStopsMessage(dayMinStops));
+      return;
+    }
     toast.error((code && STOP_CHANGE_ERROR_MESSAGES[code]) ?? fallback);
   };
 
@@ -205,8 +214,8 @@ export default function TripSchedule() {
   };
 
   const requestRemove = (stop: ScheduleStop) => {
-    if (dayStopCount <= SCHEDULE_MIN_STOPS) {
-      toast.error(STOP_CHANGE_ERROR_MESSAGES[SCHEDULE_ERROR_CODES.minimumStopsRequired]);
+    if (dayStopCount <= dayMinStops) {
+      toast.error(getMinimumStopsMessage(dayMinStops));
       return;
     }
     setPendingRemove(stop);
