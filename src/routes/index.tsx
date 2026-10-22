@@ -10,7 +10,6 @@ import NotFound from '../pages/NotFound/NotFound';
 import Notifications from '../pages/Notifications/Notifications';
 import OpenChat from '../pages/OpenChat/OpenChat';
 import MissionAlbum from '../pages/PhotoMission/MissionAlbum';
-import MissionCompletion from '../pages/PhotoMission/MissionCompletion';
 import MissionDetail from '../pages/PhotoMission/MissionDetail';
 import MissionPhotoViewer from '../pages/PhotoMission/MissionPhotoViewer';
 import MissionResult from '../pages/PhotoMission/MissionResult';
@@ -43,7 +42,6 @@ export default function AppRoutes() {
         <Route path="/photo-missions/missions/:missionId/result" element={<MissionResult />} />
         <Route path="/photo-missions/missions/:missionId/photos" element={<MissionPhotoViewer />} />
         <Route path="/photo-missions/album" element={<MissionAlbum />} />
-        <Route path="/photo-missions/completion" element={<MissionCompletion />} />
         <Route path="/open-chat" element={<OpenChat />} />
         <Route path="/open-chat/rooms/:roomId" element={<ChatRoom />} />
         <Route path="/community" element={<Community />} />

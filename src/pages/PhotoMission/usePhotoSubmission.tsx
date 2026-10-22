@@ -6,7 +6,6 @@ import { getApiErrorCode } from '../../api/errors';
 import {
   addGroupMissionPhoto,
   completeMissionManuallyWithPhoto,
-  getPhotoMissionCompletion,
   getPhotoMissionDetail,
   PHOTO_MISSION_ERROR_CODES,
   submitMissionPhoto,
@@ -14,12 +13,10 @@ import {
   type PhotoMissionDetail,
   type PhotoVerifyResponse,
 } from '../../api/photoMissions';
-import { getToday } from '../../utils/date';
 import { readExifGps } from '../../utils/exifGps';
 import { prepareUploadImage, UnsupportedImageError } from '../../utils/prepareUploadImage';
 import { generateUuidV7 } from '../../utils/uuidv7';
 import CameraCapture from './CameraCapture';
-import { hasSeenCompletion } from './completionSeen';
 
 /** 판정 화면으로 넘기는 값. 새로고침하면 사라져서 판정 화면은 없으면 미션 상세로 돌아가요. */
 export interface VerdictState {
@@ -80,33 +77,11 @@ function getCurrentPosition(): Promise<PhotoCoordinates | null> {
 }
 
 /**
- * 이 성공으로 그날 미션을 다 끝냈으면 완주 화면 주소를 돌려줘요. (조건마다 한 번만)
- * - 마지막 Day가 아니고 오늘 미션이면 하루 완주, 마지막 Day면 여행 완주
- * - 지난 Day를 뒤늦게 채운 경우는 "내일 미션" 안내가 맞지 않아 판정 화면을 그대로 보여줘요.
- * 여행 전체 완주 여부는 공개된 미션만 세기 때문에 마지막 Day에서만 여행 완주로 봐요.
- */
-async function findCompletionPath(
-  tripId: string,
-  mission: PhotoMissionDetail,
-): Promise<string | null> {
-  const dayResult = await getPhotoMissionCompletion(tripId, mission.dayNumber).catch(() => null);
-  if (!dayResult?.completed) return null;
-  const base = `/photo-missions/completion?tripId=${encodeURIComponent(tripId)}`;
-  if (!dayResult.nextDayExists) {
-    return hasSeenCompletion(tripId, 'trip') ? null : `${base}&kind=trip`;
-  }
-  if (mission.date !== getToday() || hasSeenCompletion(tripId, 'day', mission.dayNumber)) {
-    return null;
-  }
-  return `${base}&kind=day&day=${mission.dayNumber}`;
-}
-
-/**
  * 미션 사진 올리기.
  * - 촬영: 지금 찍은 사진이라 현재 위치를 보내요. (사파리는 촬영 사진의 위치를 항상 지워요)
  * - 앨범: 지난 사진일 수 있어 사진 속 위치(EXIF)만 보내요.
  * - 완료한 그룹 미션은 판정 없이 사진을 더해요.
- * - 판정에 3번 실패한 미션은 판정 없이 그 사진으로 바로 직접 완료해요.
+ * - 판정에 3번 실패한 미션은 판정 없이 그 사진으로 바로 직접 완료해요. 직접 완료한 개인 미션을 다시 찍어도 판정 없이 바꿔요.
  * 파일 고르기는 버튼을 누른 그 순간에 열어야 해서(사파리 제한) 숨은 input을 함께 돌려줘요.
  */
 export function usePhotoSubmission(
@@ -114,9 +89,8 @@ export function usePhotoSubmission(
   options: {
     additional: boolean;
     retake: boolean;
-    /** 판정 3번 실패 뒤라 새 사진으로 바로 직접 완료하는지 */
+    /** 판정 3번 실패 뒤의 직접 완료이거나, 직접 완료한 미션의 사진 바꾸기라 판정 없이 올리는지 */
     manual: boolean;
-    /** 여행방. 있으면 그날·여행의 마지막 미션을 끝냈을 때 판정 대신 완주 화면을 보여줘요. */
     tripId: string | null;
     onChanged: () => void;
   },
@@ -127,6 +101,8 @@ export function usePhotoSubmission(
   const positionRef = useRef<Promise<PhotoCoordinates | null> | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<SubmissionNotice | null>(null);
+  /** 판정 없이 올리는 동안 보여줄 고른 사진 */
+  const [uploadingPreviewUrl, setUploadingPreviewUrl] = useState<string | null>(null);
 
   const [cameraOpen, setCameraOpen] = useState(false);
 
@@ -163,13 +139,10 @@ export function usePhotoSubmission(
       }
 
       if (options.manual) {
+        setUploadingPreviewUrl(URL.createObjectURL(photo));
         await completeMissionManuallyWithPhoto(missionId, photo, coordinates, idempotencyKey);
-        toast.success('미션을 직접 완료했어요.');
-        const mission = await getPhotoMissionDetail(missionId).catch(() => null);
-        const completionPath =
-          options.tripId && mission ? await findCompletionPath(options.tripId, mission) : null;
-        if (completionPath) navigate(completionPath);
-        else options.onChanged();
+        toast.success(options.retake ? '사진을 바꿨어요.' : '미션을 직접 완료했어요.');
+        options.onChanged();
         return;
       }
 
@@ -178,15 +151,6 @@ export function usePhotoSubmission(
       const mission = await getPhotoMissionDetail(missionId).catch(() => null);
       // 판정 화면에서 다시 찍으면 이전 판정을 기록에 남기지 않아요(이전 미리보기는 해제돼서).
       const onResultPage = window.location.pathname.endsWith('/result');
-
-      const completionPath =
-        verdict.result === 'success' && !options.retake && options.tripId && mission
-          ? await findCompletionPath(options.tripId, mission)
-          : null;
-      if (completionPath) {
-        navigate(completionPath, { replace: onResultPage });
-        return;
-      }
 
       const state: VerdictState = { verdict, previewUrl, mission, retake: options.retake };
       const query = options.tripId ? `?tripId=${encodeURIComponent(options.tripId)}` : '';
@@ -200,6 +164,10 @@ export function usePhotoSubmission(
     } finally {
       if (previewUrl) discardPreviewUrl(previewUrl);
       setSubmitting(false);
+      setUploadingPreviewUrl((url) => {
+        if (url) URL.revokeObjectURL(url);
+        return null;
+      });
       positionRef.current = null;
     }
   };
@@ -281,6 +249,7 @@ export function usePhotoSubmission(
     openCamera,
     openLibrary,
     submitting,
+    uploadingPreviewUrl,
     notice,
     clearNotice: () => setNotice(null),
   };
