@@ -48,7 +48,7 @@ export const SCHEDULE_ERROR_CODES = {
   weatherReplanNotAvailable: 'WEATHER_REPLAN_NOT_AVAILABLE',
   /** 아직 확정된 일정이 없을 때 (일정 생성 전) */
   notFound: 'ACTIVE_SCHEDULE_NOT_FOUND',
-  /** 그날 장소가 3개 이하라서 더 지울 수 없을 때 */
+  /** 그날 장소가 최소 개수(getScheduleMinStops)라서 더 지울 수 없을 때 */
   minimumStopsRequired: 'SCHEDULE_MINIMUM_STOPS_REQUIRED',
   /** 그날 장소가 이미 10개일 때 */
   maximumStopsExceeded: 'SCHEDULE_MAXIMUM_STOPS_EXCEEDED',
@@ -58,9 +58,16 @@ export const SCHEDULE_ERROR_CODES = {
   stopNotFound: 'SCHEDULE_STOP_NOT_FOUND',
 } as const;
 
-/** 하루(일차)에 둘 수 있는 장소 수 범위 — 백엔드 ScheduleServiceImpl과 같은 값 */
+/** 하루(일차)에 둘 수 있는 장소 수 범위 — 백엔드 ScheduleDayPlacePolicy · ScheduleServiceImpl과 같은 값 */
 export const SCHEDULE_MIN_STOPS = 3;
+/** 여러 날 여행의 마지막 날은 AI가 장소를 2개만 줄 수 있어서 최소 개수가 더 적어요. */
+export const SCHEDULE_LAST_DAY_MIN_STOPS = 2;
 export const SCHEDULE_MAX_STOPS = 10;
+
+/** 그날 남겨야 하는 최소 장소 수. 여러 날 여행의 마지막 날만 2개, 나머지는 3개예요. */
+export function getScheduleMinStops(dayNumber: number, dayCount: number): number {
+  return dayCount >= 2 && dayNumber === dayCount ? SCHEDULE_LAST_DAY_MIN_STOPS : SCHEDULE_MIN_STOPS;
+}
 
 // GET /api/trips/{tripId}/schedule — SCHEDULE_API_SPEC.md 3장(생성 일정 조회) 계약과 같은 모양입니다.
 export interface ScheduleStop {
