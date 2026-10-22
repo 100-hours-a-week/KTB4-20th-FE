@@ -9,7 +9,7 @@ import type { ApiResponse } from './types';
 
 export type PhotoMissionScope = 'PERSONAL' | 'GROUP';
 /** 개인형은 내 완료 여부, 그룹형은 그룹 완료 여부예요. */
-export type PhotoMissionStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+export type PhotoMissionStatus = 'PENDING' | 'COMPLETED';
 export type PhotoMissionCompletionMethod = 'AI' | 'MANUAL';
 
 export interface PhotoMissionDayTab {
@@ -195,9 +195,27 @@ export async function deleteMissionPhoto(missionId: number, photoId: number): Pr
   await apiClient.delete(`/photomissions/${missionId}/photos/${photoId}`);
 }
 
-/** 판정을 여러 번 실패한 뒤 미션을 직접 완료해요. */
+/** 판정을 여러 번 실패한 뒤 남아 있는 사진으로 미션을 직접 완료해요. */
 export async function completeMissionManually(missionId: number): Promise<void> {
   await apiClient.post(`/photomissions/${missionId}/manual-completion`);
+}
+
+/**
+ * 판정을 여러 번 실패한 뒤 새 사진으로 바로 직접 완료해요. (AI 판정 없음)
+ * 남아 있던 내 사진은 새 사진으로 바뀌고, 그룹 미션은 새 사진이 대표 사진이 돼요.
+ */
+export async function completeMissionManuallyWithPhoto(
+  missionId: number,
+  photo: Blob,
+  coordinates: PhotoCoordinates | null,
+  idempotencyKey: string,
+): Promise<{ photoId: number }> {
+  const response = await apiClient.post<ApiResponse<{ photoId: number }>>(
+    `/photomissions/${missionId}/manual-completion`,
+    photoFormData(photo, coordinates),
+    multipartConfig(idempotencyKey),
+  );
+  return response.data.data;
 }
 
 export interface PhotoMissionAlbumItem {
