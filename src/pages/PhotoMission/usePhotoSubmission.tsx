@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { getApiErrorCode } from '../../api/errors';
 import {
   addGroupMissionPhoto,
+  completeMissionManuallyWithPhoto,
   getPhotoMissionCompletion,
   getPhotoMissionDetail,
   PHOTO_MISSION_ERROR_CODES,
@@ -105,6 +106,7 @@ async function findCompletionPath(
  * - 촬영: 지금 찍은 사진이라 현재 위치를 보내요. (사파리는 촬영 사진의 위치를 항상 지워요)
  * - 앨범: 지난 사진일 수 있어 사진 속 위치(EXIF)만 보내요.
  * - 완료한 그룹 미션은 판정 없이 사진을 더해요.
+ * - 판정에 3번 실패한 미션은 판정 없이 그 사진으로 바로 직접 완료해요.
  * 파일 고르기는 버튼을 누른 그 순간에 열어야 해서(사파리 제한) 숨은 input을 함께 돌려줘요.
  */
 export function usePhotoSubmission(
@@ -112,6 +114,8 @@ export function usePhotoSubmission(
   options: {
     additional: boolean;
     retake: boolean;
+    /** 판정 3번 실패 뒤라 새 사진으로 바로 직접 완료하는지 */
+    manual: boolean;
     /** 여행방. 있으면 그날·여행의 마지막 미션을 끝냈을 때 판정 대신 완주 화면을 보여줘요. */
     tripId: string | null;
     onChanged: () => void;
@@ -158,6 +162,17 @@ export function usePhotoSubmission(
         return;
       }
 
+      if (options.manual) {
+        await completeMissionManuallyWithPhoto(missionId, photo, coordinates, idempotencyKey);
+        toast.success('미션을 직접 완료했어요.');
+        const mission = await getPhotoMissionDetail(missionId).catch(() => null);
+        const completionPath =
+          options.tripId && mission ? await findCompletionPath(options.tripId, mission) : null;
+        if (completionPath) navigate(completionPath);
+        else options.onChanged();
+        return;
+      }
+
       previewUrl = createPreviewUrl(photo);
       const verdict = await submitMissionPhoto(missionId, photo, coordinates, idempotencyKey);
       const mission = await getPhotoMissionDetail(missionId).catch(() => null);
@@ -195,6 +210,11 @@ export function usePhotoSubmission(
       return;
     }
     const code = getApiErrorCode(error);
+    if (code === PHOTO_MISSION_ERROR_CODES.manualCompletionNotAllowed) {
+      toast.error('지금은 직접 완료할 수 없어요.');
+      options.onChanged();
+      return;
+    }
     if (code === PHOTO_MISSION_ERROR_CODES.submissionNotAllowed) {
       toast.error('지금은 이 미션에 사진을 올릴 수 없어요.');
       options.onChanged();
@@ -204,6 +224,14 @@ export function usePhotoSubmission(
     // 결과가 나중에 반영되도록 안내해요. 백엔드가 AI 판정을 자동으로 다시 시도해요.
     const timedOut =
       axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT');
+    if (timedOut && options.manual) {
+      setNotice({
+        title: '완료 처리가 늦어지고 있어요',
+        description: '잠시 후 미션을 다시 확인해 주세요.',
+      });
+      options.onChanged();
+      return;
+    }
     if (timedOut || code === 'SERVICE_UNAVAILABLE') {
       setNotice({
         title: '판정 결과가 늦어지고 있어요',
