@@ -313,3 +313,62 @@
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
+
+/* 판정 없이 사진을 올리는 동안: 고른 사진을 흐리게 보여주고 무엇이 일어나는지 알려준다 */
+.uploading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-2);
+}
+
+.uploadingPhoto {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  background: var(--color-surface-strong);
+  opacity: 0.6;
+}
+
+.uploadingTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.uploadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-surface-strong);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: uploading-spin 0.8s linear infinite;
+}
+
+.uploadingDescription {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  text-align: center;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+@keyframes uploading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uploadingSpinner {
+    animation-duration: 2.4s;
+  }
+}

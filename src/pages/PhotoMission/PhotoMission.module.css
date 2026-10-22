@@ -20,31 +20,15 @@
   padding: var(--spacing-5) 0;
 }
 
-.skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-}
-
 /* 목록 머리글 */
 .listHeader {
   margin-bottom: var(--spacing-4);
 }
 
-.tripName {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 1.375rem;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: 1.3;
-}
-
-.tripMeta {
-  margin: var(--spacing-1) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
 }
 
 /* Day 탭: 넘치면 옆으로 민다 */
@@ -356,6 +340,36 @@
 
 .homeSection {
   margin-bottom: var(--spacing-5);
+}
+
+.currentSection {
+  margin-top: var(--spacing-6);
+}
+
+.liveBadge {
+  flex-shrink: 0;
+  padding: var(--spacing-0) var(--spacing-2);
+  border-radius: var(--radius-full);
+  color: var(--color-point-text);
+  background: var(--color-point-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.currentFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.currentLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: var(--color-point-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .upcomingCard,

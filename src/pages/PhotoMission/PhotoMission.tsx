@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CameraIcon } from 'lucide-react';
 import { getTrips, type TripSummary } from '../../api/trips';
 import BottomNav from '../../components/BottomNav/BottomNav';
@@ -11,10 +11,7 @@ import PhotoMissionList from './PhotoMissionList';
 import styles from './PhotoMission.module.css';
 
 type TripState =
-  | { status: 'loading' }
-  | { status: 'current'; tripId: string }
-  | { status: 'home'; trips: TripSummary[] }
-  | { status: 'error' };
+  { status: 'loading' } | { status: 'home'; trips: TripSummary[] } | { status: 'error' };
 
 /** 백엔드 여행 목록 API가 한 번에 최대 10개까지만 받아요. 넘으면 400이에요. */
 const TRIP_PAGE_SIZE = 10;
@@ -37,38 +34,46 @@ async function getAllTrips(): Promise<TripSummary[]> {
 /**
  * 하단 탭의 포토미션 화면입니다.
  * - 주소에 여행방(tripId)이 있으면 그 여행의 미션 목록
- * - 오늘 진행 중인 여행이 있으면 그 여행의 미션 목록 (날짜가 겹치는 여행에는 참여할 수 없어 최대 1개)
- * - 없으면 가장 가까운 여행과 지난 여행 앨범을 보여주는 첫 화면
+ * - 없으면 첫 화면: 진행 중인 여행 카드(있을 때), 가장 가까운 여행, 지난 여행 앨범
  */
 export default function PhotoMission() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedTripId = searchParams.get('tripId');
-  const [autoTrip, setAutoTrip] = useState<TripState>({ status: 'loading' });
+  const [tripState, setTripState] = useState<TripState>({ status: 'loading' });
   const [reloadKey, setReloadKey] = useState(0);
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
-  const tripState: TripState = requestedTripId
-    ? { status: 'current', tripId: requestedTripId }
-    : autoTrip;
 
   useEffect(() => {
     if (requestedTripId) return;
     let cancelled = false;
     getAllTrips().then(
       (trips) => {
-        if (cancelled) return;
-        const current = trips.find((trip) => trip.status === 'TRIP_IN_PROGRESS');
-        setAutoTrip(
-          current ? { status: 'current', tripId: current.tripId } : { status: 'home', trips },
-        );
+        if (!cancelled) setTripState({ status: 'home', trips });
       },
       () => {
-        if (!cancelled) setAutoTrip({ status: 'error' });
+        if (!cancelled) setTripState({ status: 'error' });
       },
     );
     return () => {
       cancelled = true;
     };
   }, [requestedTripId, reloadKey]);
+
+  if (requestedTripId) {
+    return (
+      <>
+        <main className={styles.page}>
+          <PhotoMissionList
+            key={requestedTripId}
+            tripId={requestedTripId}
+            onBack={() => navigate('/photo-missions')}
+          />
+        </main>
+        <BottomNav />
+      </>
+    );
+  }
 
   if (tripState.status === 'loading') {
     return <LoadingScreen />;
@@ -77,9 +82,7 @@ export default function PhotoMission() {
   return (
     <>
       <main className={styles.page}>
-        {tripState.status === 'current' ? (
-          <PhotoMissionList key={tripState.tripId} tripId={tripState.tripId} />
-        ) : tripState.status === 'home' ? (
+        {tripState.status === 'home' ? (
           <PhotoMissionHome trips={tripState.trips} />
         ) : (
           <div className={styles.centerBody}>

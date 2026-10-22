@@ -43,11 +43,14 @@ export default function MissionDetail() {
   const loadedDone = loaded?.status === 'COMPLETED';
   // 판정에 3번 실패하면 더 판정받을 수 없고, 남은 사진이나 새 사진으로 직접 완료만 할 수 있어요. (백엔드 규칙)
   const loadedManual = loaded?.status === 'PENDING' && loaded.retryCount >= 3;
+  const loadedRetake = loaded?.scope === 'PERSONAL' && loadedDone;
+  // 직접 완료한 개인 미션은 다시 찍어도 판정 없이 바로 바꿔요.
+  const loadedManualRetake = loadedRetake && loaded.completionMethod === 'MANUAL';
   const submission = usePhotoSubmission(missionId, {
-    // 완료한 그룹 미션은 판정 없이 사진을 더하고, 완료한 개인 미션은 다시 찍기(판정 성공 시에만 교체)예요.
+    // 완료한 그룹 미션은 판정 없이 사진을 더하고, AI로 완료한 개인 미션은 다시 찍기(판정 성공 시에만 교체)예요.
     additional: loaded?.scope === 'GROUP' && loadedDone,
-    retake: loaded?.scope === 'PERSONAL' && loadedDone,
-    manual: loadedManual,
+    retake: loadedRetake,
+    manual: loadedManual || loadedManualRetake,
     tripId,
     onChanged: reload,
   });
@@ -74,11 +77,14 @@ export default function MissionDetail() {
     };
   }, [missionId, reloadKey]);
 
-  // 목록에서 들어오면 뒤로 가기로 같은 Day 목록에 돌아가고, 주소로 바로 들어왔으면 포토미션 탭으로 가요.
+  // 목록에서 들어오면 뒤로 가기로 같은 Day 목록에 돌아가고, 주소로 바로 들어왔으면 그 여행의 미션 목록으로 가요.
   const goBack = () => {
     const hasHistory = (window.history.state as { idx?: number } | null)?.idx;
     if (hasHistory) navigate(-1);
-    else navigate('/photo-missions', { replace: true });
+    else
+      navigate(`/photo-missions${tripId ? `?tripId=${encodeURIComponent(tripId)}` : ''}`, {
+        replace: true,
+      });
   };
 
   if (!Number.isInteger(missionId) || missionId <= 0 || state.status === 'notFound') {
@@ -101,10 +107,39 @@ export default function MissionDetail() {
     return <LoadingScreen />;
   }
 
+  if (submission.submitting && (loadedManual || loadedManualRetake)) {
+    return (
+      <main className={styles.page}>
+        <PageHeader title="미션 상세" onBack={goBack} />
+        <section className={styles.uploading} role="status" aria-live="polite">
+          {submission.uploadingPreviewUrl && (
+            <img
+              src={submission.uploadingPreviewUrl}
+              alt="올리고 있는 사진"
+              className={styles.uploadingPhoto}
+            />
+          )}
+          <p className={styles.uploadingTitle}>
+            <span className={styles.uploadingSpinner} aria-hidden="true" />
+            사진을 올리고 있어요
+          </p>
+          <p className={styles.uploadingDescription}>
+            {loadedManualRetake
+              ? '직접 완료한 미션이라 AI 확인 없이 이 사진으로 바로 바뀌어요.\n이전 사진은 앨범에서 빠지고, 완료 상태는 그대로예요.'
+              : 'AI 확인을 3번 모두 써서, 이 사진으로 확인 없이 바로 직접 완료돼요.\n올린 사진은 앨범에 저장되고 멤버들도 완료로 보게 돼요.'}
+          </p>
+        </section>
+        <div className={styles.footer}>
+          <Button size="lg" className="h-13 w-full text-base font-semibold" disabled>
+            사진을 올리는 중…
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
   if (submission.submitting) {
-    return loadedManual ? (
-      <LoadingScreen title="사진을 올리고 있어요" />
-    ) : (
+    return (
       <LoadingScreen
         title="사진을 확인하고 있어요"
         description="미션에 맞는 사진인지 AI가 보고 있어요. 30초쯤 걸릴 수 있어요"

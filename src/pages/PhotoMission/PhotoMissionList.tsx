@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { getApiErrorCode } from '../../api/errors';
 import {
-  getPhotoMissionCompletion,
   getPhotoMissions,
   PHOTO_MISSION_ERROR_CODES,
   type PhotoMissionCard,
@@ -19,6 +18,7 @@ import {
 import { getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { getToday } from '../../utils/date';
 import {
@@ -28,7 +28,6 @@ import {
   SCOPE_LABELS,
   shortenName,
 } from './photoMissionFormat';
-import { hasSeenCompletion } from './completionSeen';
 import styles from './PhotoMission.module.css';
 
 type LoadState =
@@ -43,10 +42,12 @@ type LoadState =
 
 interface PhotoMissionListProps {
   tripId: string;
+  /** 포토미션 첫 화면으로 돌아가요. */
+  onBack: () => void;
 }
 
 /** 진행 중인 여행의 Day별 포토미션 목록입니다. */
-export default function PhotoMissionList({ tripId }: PhotoMissionListProps) {
+export default function PhotoMissionList({ tripId, onBack }: PhotoMissionListProps) {
   const navigate = useNavigate();
   const [day, setDay] = useState<number | undefined>(undefined);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
@@ -59,20 +60,6 @@ export default function PhotoMissionList({ tripId }: PhotoMissionListProps) {
     async function load() {
       try {
         const data = await getPhotoMissions(tripId, day);
-        if (
-          getToday() > data.trip.endDate &&
-          !hasSeenCompletion(tripId, 'ended') &&
-          !hasSeenCompletion(tripId, 'trip')
-        ) {
-          const summary = await getPhotoMissionCompletion(tripId).catch(() => null);
-          if (cancelled) return;
-          // 미션을 다 채우지 못하고 여행이 끝났으면, 끝난 뒤 처음 들어올 때 한 번 여행 회고 화면을 보여줘요.
-          // (여행 완주 화면을 이미 봤거나 완료한 미션이 0개면 보여주지 않아요)
-          if (summary && summary.completedMissionCount > 0 && !summary.completed) {
-            navigate(`/photo-missions/completion?tripId=${encodeURIComponent(tripId)}&kind=ended`);
-            return;
-          }
-        }
         // 미션이 하나도 없으면 일정 없이 시작한 여행인지, 생성에 실패했는지 일정 API로 구분해요.
         let hasSchedule = true;
         if (data.selectedDay.published && data.selectedDay.missions.length === 0) {
@@ -96,7 +83,7 @@ export default function PhotoMissionList({ tripId }: PhotoMissionListProps) {
     return () => {
       cancelled = true;
     };
-  }, [tripId, day, reloadKey, navigate]);
+  }, [tripId, day, reloadKey]);
 
   // 이미 보고 있는 Day를 다시 누르면 아무것도 하지 않아요. 다른 Day는 화면을 지우지 않고 바꿔요.
   const selectDay = (dayNumber: number) => {
@@ -110,23 +97,26 @@ export default function PhotoMissionList({ tripId }: PhotoMissionListProps) {
 
   if (state.status === 'invalid' || state.status === 'error') {
     return (
-      <div className={styles.centerBody}>
-        <StatusMessage
-          icon={<CameraIcon size={20} strokeWidth={1.6} />}
-          title={
-            state.status === 'invalid' ? '여행방을 찾을 수 없어요' : '미션을 불러오지 못했어요'
-          }
-          description={
-            state.status === 'invalid'
-              ? '여행방 멤버만 포토미션을 볼 수 있어요'
-              : '잠시 후 다시 시도해 주세요'
-          }
-        >
-          <Button size="lg" className="h-13 w-full" onClick={reload}>
-            다시 불러오기
-          </Button>
-        </StatusMessage>
-      </div>
+      <>
+        <PageHeader title="포토미션" onBack={onBack} />
+        <div className={styles.centerBody}>
+          <StatusMessage
+            icon={<CameraIcon size={20} strokeWidth={1.6} />}
+            title={
+              state.status === 'invalid' ? '여행방을 찾을 수 없어요' : '미션을 불러오지 못했어요'
+            }
+            description={
+              state.status === 'invalid'
+                ? '여행방 멤버만 포토미션을 볼 수 있어요'
+                : '잠시 후 다시 시도해 주세요'
+            }
+          >
+            <Button size="lg" className="h-13 w-full" onClick={reload}>
+              다시 불러오기
+            </Button>
+          </StatusMessage>
+        </div>
+      </>
     );
   }
 
@@ -161,12 +151,13 @@ export default function PhotoMissionList({ tripId }: PhotoMissionListProps) {
 
   return (
     <>
-      <header className={styles.listHeader}>
-        <h1 className={styles.tripName}>{trip.name}</h1>
-        <p className={styles.tripMeta}>
-          {formatTripRange(trip.startDate, trip.endDate)} · {trip.memberCount}명
-        </p>
-      </header>
+      <div className={styles.listHeader}>
+        <PageHeader
+          title={trip.name}
+          subtitle={`${formatTripRange(trip.startDate, trip.endDate)} · ${trip.memberCount}명`}
+          onBack={onBack}
+        />
+      </div>
 
       {days.length > 1 && (
         <div className={styles.dayTabs} role="tablist" aria-label="여행 날짜">

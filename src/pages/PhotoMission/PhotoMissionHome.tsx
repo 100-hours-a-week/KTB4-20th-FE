@@ -7,7 +7,7 @@ import { AvatarGroup } from '../../components/Avatar/Avatar';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { getDaysUntil } from '../../components/TripCard/tripDisplay';
 import { Skeleton } from '@/components/ui/skeleton';
-import { hasSeenCompletion } from './completionSeen';
+import { getToday } from '../../utils/date';
 import { formatTripRange } from './photoMissionFormat';
 import styles from './PhotoMission.module.css';
 
@@ -21,16 +21,24 @@ interface PastAlbum {
 }
 
 interface PhotoMissionHomeProps {
-  /** 참여한 모든 여행 (진행 중인 여행은 없어요) */
+  /** 참여한 모든 여행 */
   trips: TripSummary[];
 }
 
+/** 오늘이 여행 며칠째인지 (첫날이 1) */
+function getTripDayNumber(startDate: string): number {
+  const days = (Date.parse(getToday()) - Date.parse(startDate)) / 86_400_000;
+  return Math.max(1, Math.round(days) + 1);
+}
+
 /**
- * 진행 중인 여행이 없을 때의 포토미션 첫 화면.
- * 안내 → 가장 가까운 여행 카드(있을 때) → 지난 여행 앨범 목록(끝난 여행 모두, 최신순).
+ * 포토미션 첫 화면.
+ * 진행 중인 여행 카드(있을 때, 없으면 안내) → 가장 가까운 여행 카드(있을 때) → 지난 여행 앨범 목록(끝난 여행 모두, 최신순).
+ * 날짜가 겹치는 여행에는 참여할 수 없어 진행 중인 여행은 최대 1개예요.
  */
 export default function PhotoMissionHome({ trips }: PhotoMissionHomeProps) {
   const navigate = useNavigate();
+  const current = trips.find((trip) => trip.status === 'TRIP_IN_PROGRESS');
   const upcoming = trips
     .filter((trip) => trip.status === 'SURVEY_IN_PROGRESS' || trip.status === 'SCHEDULE_COMPLETED')
     .reduce<TripSummary | null>(
@@ -80,36 +88,57 @@ export default function PhotoMissionHome({ trips }: PhotoMissionHomeProps) {
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
-  // 미션을 다 채우지 못하고 끝난 가장 최근 여행은, 끝난 뒤 처음 들어왔을 때 회고 화면을 한 번 보여줘요.
-  const latest = ended[0];
-  const latestAlbum = albums.find((album) => album.trip.tripId === latest?.tripId);
-  useEffect(() => {
-    if (!latestAlbum) return;
-    const { trip, summary } = latestAlbum;
-    if (
-      summary &&
-      summary.completedMissionCount > 0 &&
-      !summary.completed &&
-      !hasSeenCompletion(trip.tripId, 'ended') &&
-      !hasSeenCompletion(trip.tripId, 'trip')
-    ) {
-      navigate(`/photo-missions/completion?tripId=${encodeURIComponent(trip.tripId)}&kind=ended`);
-    }
-  }, [latestAlbum, navigate]);
-
   const daysUntil = upcoming ? getDaysUntil(upcoming.startDate, upcoming.status) : null;
 
   return (
     <>
       <h1 className={styles.homeTitle}>포토미션</h1>
 
-      <div className={styles.homeEmpty}>
-        <StatusMessage
-          icon={<CameraIcon size={22} strokeWidth={1.6} />}
-          title="진행 중인 여행이 없어요"
-          description={'여행 당일이 되면\nAI가 사진 미션을 만들어드려요'}
-        />
-      </div>
+      {current ? (
+        <section
+          aria-labelledby="current-title"
+          className={`${styles.homeSection} ${styles.currentSection}`}
+        >
+          <h2 id="current-title" className={styles.sectionTitle}>
+            진행 중인 여행
+          </h2>
+          <button
+            type="button"
+            className={styles.upcomingCard}
+            onClick={() => navigate(`/photo-missions?tripId=${encodeURIComponent(current.tripId)}`)}
+          >
+            <span className={styles.upcomingTop}>
+              <span className={styles.upcomingName}>{current.name}</span>
+              <span className={styles.liveBadge}>Day {getTripDayNumber(current.startDate)}</span>
+            </span>
+            <span className={styles.upcomingMeta}>
+              {formatTripRange(current.startDate, current.endDate)} · {current.memberCount}명
+            </span>
+            <span className={styles.currentFooter}>
+              <AvatarGroup
+                members={current.members.map((member) => ({
+                  name: member.userName,
+                  imageUrl: member.profileImageUrl,
+                }))}
+                max={5}
+                size="xs"
+              />
+              <span className={styles.currentLink}>
+                오늘의 미션 보기
+                <ChevronRightIcon size={16} aria-hidden="true" />
+              </span>
+            </span>
+          </button>
+        </section>
+      ) : (
+        <div className={styles.homeEmpty}>
+          <StatusMessage
+            icon={<CameraIcon size={22} strokeWidth={1.6} />}
+            title="진행 중인 여행이 없어요"
+            description={'여행 당일이 되면\nAI가 사진 미션을 만들어드려요'}
+          />
+        </div>
+      )}
 
       {upcoming && (
         <section aria-labelledby="upcoming-title" className={styles.homeSection}>
