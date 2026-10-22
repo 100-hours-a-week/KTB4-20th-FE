@@ -32,6 +32,7 @@ export default function MissionResult() {
   const submission = usePhotoSubmission(missionId, {
     additional: false,
     retake: result?.retake ?? false,
+    manual: false,
     tripId,
     onChanged: () => navigate(detailPath, { replace: true }),
   });

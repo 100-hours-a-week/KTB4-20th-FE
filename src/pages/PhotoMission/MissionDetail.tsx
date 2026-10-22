@@ -11,6 +11,7 @@ import {
 } from '../../api/photoMissions';
 import { Button } from '@/components/ui/button';
 import AlertDialog from '../../components/AlertDialog/AlertDialog';
+import BottomSheet from '../../components/BottomSheet/BottomSheet';
 import Avatar from '../../components/Avatar/Avatar';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -36,13 +37,17 @@ export default function MissionDetail() {
   const [reloadKey, setReloadKey] = useState(0);
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
   const [completing, setCompleting] = useState(false);
+  const [photoSourceOpen, setPhotoSourceOpen] = useState(false);
 
   const loaded = state.status === 'ready' ? state.mission : null;
   const loadedDone = loaded?.status === 'COMPLETED';
+  // 판정에 3번 실패하면 더 판정받을 수 없고, 남은 사진이나 새 사진으로 직접 완료만 할 수 있어요. (백엔드 규칙)
+  const loadedManual = loaded?.status === 'PENDING' && loaded.retryCount >= 3;
   const submission = usePhotoSubmission(missionId, {
     // 완료한 그룹 미션은 판정 없이 사진을 더하고, 완료한 개인 미션은 다시 찍기(판정 성공 시에만 교체)예요.
     additional: loaded?.scope === 'GROUP' && loadedDone,
     retake: loaded?.scope === 'PERSONAL' && loadedDone,
+    manual: loadedManual,
     tripId,
     onChanged: reload,
   });
@@ -97,7 +102,9 @@ export default function MissionDetail() {
   }
 
   if (submission.submitting) {
-    return (
+    return loadedManual ? (
+      <LoadingScreen title="사진을 올리고 있어요" />
+    ) : (
       <LoadingScreen
         title="사진을 확인하고 있어요"
         description="미션에 맞는 사진인지 AI가 보고 있어요. 30초쯤 걸릴 수 있어요"
@@ -136,10 +143,13 @@ export default function MissionDetail() {
   const representative = mission.photos.find((photo) => photo.representative);
   const completerName = representative?.submittedByUsername ?? groupCompleter?.username;
 
-  // 판정에 3번 실패하면 더 올릴 수 없고, 마지막 사진으로 직접 완료만 할 수 있어요. (백엔드 규칙)
-  const canCompleteManually = mission.status === 'PENDING' && mission.retryCount >= 3;
-  // 직접 완료한 사진이나 3번 실패한 뒤의 사진을 지우면 미션을 다시 할 수 없어요(FAILED).
-  const closed = mission.status === 'FAILED';
+  // 직접 완료한 사진을 지웠으면 남은 사진이 없어서, 새 사진을 올려야 직접 완료할 수 있어요.
+  const hasRemainingPhoto = isGroup ? mission.photos.length > 0 : myPhoto !== undefined;
+
+  const choosePhotoSource = (open: () => void) => {
+    setPhotoSourceOpen(false);
+    open();
+  };
 
   const completeManually = async () => {
     setCompleting(true);
@@ -286,12 +296,7 @@ export default function MissionDetail() {
             <InfoIcon size={16} aria-hidden="true" />
             여행이 끝나 이 미션에는 더 사진을 올릴 수 없어요.
           </p>
-        ) : closed ? (
-          <p className={styles.tip}>
-            <InfoIcon size={16} aria-hidden="true" />
-            올린 사진을 지워서 이 미션은 더 진행할 수 없어요.
-          </p>
-        ) : canCompleteManually ? (
+        ) : loadedManual && hasRemainingPhoto ? (
           <>
             <div className={styles.manualBox}>
               <p className={styles.manualTitle}>
@@ -300,7 +305,7 @@ export default function MissionDetail() {
               </p>
               <p className={styles.manualDescription}>
                 {mission.retryCount}번 시도했지만 AI가 알아보지 못했어요. 마지막에 올린 사진이
-                미션에 맞다고 생각되면 직접 완료로 표시하세요. 앨범에는 그대로 저장돼요.
+                미션에 맞다고 생각되면 직접 완료로 표시하세요. 다른 사진을 올려도 바로 완료돼요.
               </p>
             </div>
             <Button
@@ -310,6 +315,45 @@ export default function MissionDetail() {
               onClick={completeManually}
             >
               직접 완료 처리하기
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-13 w-full text-base font-semibold"
+              disabled={completing}
+              onClick={() => setPhotoSourceOpen(true)}
+            >
+              <ImageIcon className="size-4" aria-hidden="true" />
+              다른 사진으로 완료하기
+            </Button>
+          </>
+        ) : loadedManual ? (
+          <>
+            <div className={styles.manualBox}>
+              <p className={styles.manualTitle}>
+                <CheckIcon size={16} aria-hidden="true" />
+                사진을 올리면 바로 완료돼요
+              </p>
+              <p className={styles.manualDescription}>
+                AI 확인을 {mission.retryCount}번 모두 써서, 이번에는 확인 없이 직접 완료로 처리돼요.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              className="h-13 w-full text-base font-semibold"
+              onClick={submission.openCamera}
+            >
+              <CameraIcon className="size-4" aria-hidden="true" />
+              사진 촬영하기
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-13 w-full text-base font-semibold"
+              onClick={submission.openLibrary}
+            >
+              <ImageIcon className="size-4" aria-hidden="true" />
+              앨범에서 선택
             </Button>
           </>
         ) : !done ? (
@@ -361,6 +405,34 @@ export default function MissionDetail() {
         )}
       </div>
 
+      <BottomSheet
+        open={photoSourceOpen}
+        label="완료할 사진 고르기"
+        onClose={() => setPhotoSourceOpen(false)}
+      >
+        <ul className={styles.sheetMenu}>
+          <li>
+            <button
+              type="button"
+              className={styles.sheetItem}
+              onClick={() => choosePhotoSource(submission.openCamera)}
+            >
+              <CameraIcon size={18} aria-hidden="true" />
+              사진 촬영하기
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className={styles.sheetItem}
+              onClick={() => choosePhotoSource(submission.openLibrary)}
+            >
+              <ImageIcon size={18} aria-hidden="true" />
+              앨범에서 선택
+            </button>
+          </li>
+        </ul>
+      </BottomSheet>
       <AlertDialog
         open={submission.notice !== null}
         title={submission.notice?.title ?? ''}
