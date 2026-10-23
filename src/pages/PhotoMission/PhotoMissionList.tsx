@@ -179,7 +179,7 @@ export default function PhotoMissionList({ tripId, onBack }: PhotoMissionListPro
         </div>
       )}
       {days.some((tab) => !tab.selectable) && (
-        <p className={styles.dayLockedHint}>잠긴 Day는 그날 0시 30분에 열려요</p>
+        <p className={styles.dayLockedHint}>잠긴 Day는 당일 0시 30분에 열려요</p>
       )}
       <p className={styles.dayDate}>
         {isToday ? '오늘 · ' : ''}
