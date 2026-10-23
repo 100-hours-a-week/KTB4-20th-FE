@@ -76,6 +76,14 @@ const FEATURE_SLIDES: FeatureSlide[] = [
     description: '지역 오픈 채팅에서 여행 정보를 나눠요',
   },
   {
+    region: '제주',
+    stub: '알림',
+    lead: '출발 전날과 궂은 날씨엔',
+    before: '',
+    highlight: '미리 알려드려요',
+    description: '이상 기후가 오면 일정을 다시 짤 수 있어요',
+  },
+  {
     region: '전주',
     stub: '미션',
     lead: '여행하는 날마다',
@@ -147,7 +155,7 @@ function FeatureSlides() {
         <div className={styles.slideTrack} style={{ transform: `translateX(-${index * 100}%)` }}>
           {FEATURE_SLIDES.map((slide, slideIndex) => (
             <div
-              key={slide.region}
+              key={slide.stub}
               className={styles.slide}
               role="group"
               aria-roledescription="slide"
@@ -178,7 +186,7 @@ function FeatureSlides() {
       <div className={styles.dots}>
         {FEATURE_SLIDES.map((slide, slideIndex) => (
           <button
-            key={slide.region}
+            key={slide.stub}
             type="button"
             className={`${styles.dot} ${slideIndex === index ? styles.dotActive : ''}`}
             onClick={() => goTo(slideIndex)}
