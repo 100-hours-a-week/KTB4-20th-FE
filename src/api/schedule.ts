@@ -4,8 +4,9 @@ import type { ApiResponse } from './types';
 /**
  * AI 일정 생성은 AI 장소 선정과 동선 계산이 끝날 때까지 응답이 오지 않습니다.
  * 기본 요청 제한 시간(10초)보다 넉넉하게 기다리고, 넘으면 처리 시간 초과로 봅니다.
+ * 백엔드의 AI 읽기 제한(120초)과 그 앞뒤 처리 시간보다 길게 잡아, 백엔드보다 먼저 끊지 않게 합니다.
  */
-const SCHEDULE_GENERATION_TIMEOUT_MS = 120_000;
+const SCHEDULE_GENERATION_TIMEOUT_MS = 130_000;
 
 /** 생성 결과는 후보 3개로 저장돼요. 화면은 응답 대신 GET /schedule-candidates로 후보를 다시 불러와요. */
 export interface ScheduleGenerationResult {
