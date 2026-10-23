@@ -75,6 +75,14 @@ const FEATURE_SLIDES: FeatureSlide[] = [
     highlight: '사람들과 이야기해요',
     description: '지역 오픈 채팅에서 여행 정보를 나눠요',
   },
+  {
+    region: '전주',
+    stub: '미션',
+    lead: '여행하는 날마다',
+    before: '',
+    highlight: '사진 미션을 깨요',
+    description: '미션 사진은 여행이 끝나면 앨범으로 모여요',
+  },
 ];
 
 function prefersReducedMotion(): boolean {
