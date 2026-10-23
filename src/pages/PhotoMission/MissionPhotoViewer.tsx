@@ -4,7 +4,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DownloadIcon,
+  ImageOffIcon,
   MapPinIcon,
+  RotateCwIcon,
   ShareIcon,
   Trash2Icon,
   XIcon,
@@ -58,6 +60,9 @@ export default function MissionPhotoViewer() {
   const [mission, setMission] = useState<PhotoMissionDetail | null | 'error'>(null);
   // 상세를 못 받은 사진은 null로 남겨 다시 부르지 않아요.
   const [details, setDetails] = useState<Record<number, PhotoMissionPhotoDetail | null>>({});
+  // 사진 주소는 몇 분 뒤 만료돼요. 못 불러온 사진은 안내를 보여주고, 다시 불러오면 새 주소를 받아요.
+  const [brokenImages, setBrokenImages] = useState<Record<string, true>>({});
+  const [reloadCount, setReloadCount] = useState(0);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -74,16 +79,20 @@ export default function MissionPhotoViewer() {
       (data) => {
         if (cancelled) return;
         setMission(data);
+        setBrokenImages({});
         warmPhotoFiles(data.photos.map((photo) => photo.imageUrl));
       },
       () => {
-        if (!cancelled) setMission('error');
+        if (cancelled) return;
+        // 다시 불러오기에 실패하면 보던 화면은 그대로 두고 알려줘요.
+        if (reloadCount > 0) toast.error('사진을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+        else setMission('error');
       },
     );
     return () => {
       cancelled = true;
     };
-  }, [missionId]);
+  }, [missionId, reloadCount]);
 
   const photos = useMemo(() => {
     if (!mission || mission === 'error') return [];
@@ -163,8 +172,13 @@ export default function MissionPhotoViewer() {
   const isMine = !!me && photo.submittedByUserId === me.userId;
   const isGroup = mission.scope === 'GROUP';
   const placeName = detail?.place?.placeName ?? mission.placeName;
-  // 앨범에서 열어 사진을 걸러 보여줘도, 삭제 결과는 미션의 전체 사진으로 판단해요.
-  const deleteRevertsMission = !isGroup || mission.photos.length <= 1;
+  const imageBroken = Boolean(brokenImages[photo.imageUrl]);
+  // 백엔드 규칙과 같아요: 그룹 미션은 대표 사진을 지울 때만 미완료로 돌아가요.
+  // AI로 완료했으면 대신할 판정 성공 사진이 없어서, 직접 완료했으면 남은 사진이 없을 때 돌아가요.
+  const deleteRevertsMission =
+    !isGroup ||
+    (photo.representative &&
+      (mission.completionMethod !== 'MANUAL' || mission.photos.length <= 1));
   const deleteClosesMission =
     deleteRevertsMission && (mission.completionMethod === 'MANUAL' || mission.retryCount >= 3);
 
@@ -205,11 +219,29 @@ export default function MissionPhotoViewer() {
       </div>
 
       <section className={styles.stage} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <img
-          src={photo.imageUrl}
-          alt={`${photo.submittedByUsername}님이 올린 '${mission.description}' 사진`}
-          className={styles.photo}
-        />
+        {imageBroken ? (
+          <div className={styles.photoFallback}>
+            <ImageOffIcon size={32} aria-hidden="true" />
+            <p className={styles.photoFallbackText}>사진을 불러오지 못했어요</p>
+            <button
+              type="button"
+              className={styles.photoFallbackButton}
+              onClick={() => setReloadCount((count) => count + 1)}
+            >
+              <RotateCwIcon size={16} aria-hidden="true" />
+              다시 불러오기
+            </button>
+          </div>
+        ) : (
+          <img
+            src={photo.imageUrl}
+            alt={`${photo.submittedByUsername}님이 올린 '${mission.description}' 사진`}
+            className={styles.photo}
+            onError={() =>
+              setBrokenImages((previous) => ({ ...previous, [photo.imageUrl]: true }))
+            }
+          />
+        )}
         {photos.length > 1 && (
           <>
             <button
@@ -272,6 +304,7 @@ export default function MissionPhotoViewer() {
           type="button"
           className={styles.action}
           onClick={() => void savePhotos([photo.imageUrl])}
+          disabled={imageBroken}
         >
           <DownloadIcon size={18} aria-hidden="true" />
           저장
@@ -279,6 +312,7 @@ export default function MissionPhotoViewer() {
         <button
           type="button"
           className={styles.action}
+          disabled={imageBroken}
           onClick={() =>
             void sharePhotos(
               [photo.imageUrl],
