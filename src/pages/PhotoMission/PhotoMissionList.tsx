@@ -6,6 +6,7 @@ import {
   CheckIcon,
   ClockIcon,
   ImagesIcon,
+  LockIcon,
   PlusIcon,
 } from 'lucide-react';
 import { getApiErrorCode } from '../../api/errors';
@@ -171,10 +172,14 @@ export default function PhotoMissionList({ tripId, onBack }: PhotoMissionListPro
               disabled={!tab.selectable}
               onClick={() => selectDay(tab.dayNumber)}
             >
+              {!tab.selectable && <LockIcon size={12} aria-hidden="true" />}
               Day {tab.dayNumber}
             </button>
           ))}
         </div>
+      )}
+      {days.some((tab) => !tab.selectable) && (
+        <p className={styles.dayLockedHint}>잠긴 Day는 그날 0시 30분에 열려요</p>
       )}
       <p className={styles.dayDate}>
         {isToday ? '오늘 · ' : ''}
