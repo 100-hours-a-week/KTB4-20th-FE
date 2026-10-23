@@ -154,7 +154,7 @@ export default function MissionAlbum() {
   const imageUrls = items.map((item) => item.thumbnailUrl);
   const openPhoto = (item: PhotoMissionAlbumItem) =>
     navigate(
-      `/photo-missions/missions/${item.missionId}/photos?tripId=${encodeURIComponent(tripId)}`,
+      `/photo-missions/missions/${item.missionId}/photos?from=album&tripId=${encodeURIComponent(tripId)}`,
     );
 
   return (
