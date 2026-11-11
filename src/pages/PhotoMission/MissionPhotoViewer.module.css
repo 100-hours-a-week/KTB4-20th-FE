@@ -47,6 +47,7 @@
 
 .iconButton:focus-visible,
 .navButton:focus-visible,
+.photoFallbackButton:focus-visible,
 .action:focus-visible {
   outline: 2px solid var(--viewer-text);
   outline-offset: 2px;
@@ -67,6 +68,39 @@
   border-radius: var(--radius-lg);
   object-fit: contain;
   background: rgb(0 0 0 / 20%);
+}
+
+.photoFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 56dvh;
+  border-radius: var(--radius-lg);
+  color: var(--viewer-muted);
+  background: var(--viewer-surface);
+}
+
+.photoFallbackText {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.photoFallbackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--viewer-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
 }
 
 .navButton {
@@ -228,6 +262,11 @@
 
 .danger {
   color: var(--color-viewer-danger);
+}
+
+.action:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .emptyText {

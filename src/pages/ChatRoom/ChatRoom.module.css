@@ -164,6 +164,7 @@
   justify-content: center;
   gap: var(--spacing-3);
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }

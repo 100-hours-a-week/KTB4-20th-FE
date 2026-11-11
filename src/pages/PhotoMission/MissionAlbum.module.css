@@ -150,8 +150,9 @@
   justify-content: center;
   min-height: 280px;
   padding: var(--spacing-6) var(--spacing-4);
-  border: 1.5px dashed var(--color-border-strong);
   border-radius: var(--radius-lg);
+  background: var(--color-background);
+  box-shadow: var(--shadow-card);
   text-align: center;
 }
 
