@@ -1,5 +1,6 @@
 import apiClient from './client';
 import type { ApiResponse } from './types';
+import { generateUuidV7 } from '../utils/uuidv7';
 
 /**
  * AI 일정 생성은 AI 장소 선정과 동선 계산이 끝날 때까지 응답이 오지 않습니다.
@@ -19,17 +20,43 @@ export interface ScheduleGenerationResult {
  */
 export type ScheduleGenerationReason = 'GENERAL' | 'WEATHER';
 
-/** POST /api/trips/{tripId}/schedule-generation — 방장만 요청할 수 있어요. 성공하면 후보 3개(DRAFT)가 생겨요. */
+/** 메시지 큐로 접수한 AI 작업. 결과는 알림으로 와요. */
+export interface AcceptedAiJob {
+  jobType: 'SCHEDULE_GENERATE';
+  /** 숫자 정밀도를 잃지 않도록 문자열로 와요. */
+  jobId: string;
+  status: 'QUEUED';
+}
+
+/**
+ * 일정 생성 요청 결과. 서버의 전환 플래그에 따라 둘 중 하나로 와요.
+ * completed는 기존처럼 AI가 끝날 때까지 기다린 응답(200)이고, 후보 3개가 이미 만들어져 있어요.
+ * accepted는 작업만 접수된 응답(202)이고, 완료·실패는 알림으로 받아요.
+ */
+export type ScheduleGenerationOutcome =
+  | { kind: 'completed'; result: ScheduleGenerationResult }
+  | { kind: 'accepted'; job: AcceptedAiJob };
+
+/**
+ * POST /api/trips/{tripId}/schedule-generation — 방장만 요청할 수 있어요.
+ * 같은 요청을 다시 보내도 작업이 한 번만 접수되도록 요청마다 Idempotency-Key를 붙여요.
+ */
 export async function generateSchedule(
   tripId: string,
   reason: ScheduleGenerationReason = 'GENERAL',
-): Promise<ScheduleGenerationResult> {
-  const response = await apiClient.post<ApiResponse<ScheduleGenerationResult>>(
+): Promise<ScheduleGenerationOutcome> {
+  const response = await apiClient.post<ApiResponse<ScheduleGenerationResult | AcceptedAiJob>>(
     `/trips/${encodeURIComponent(tripId)}/schedule-generation`,
     { reason },
-    { timeout: SCHEDULE_GENERATION_TIMEOUT_MS },
+    {
+      timeout: SCHEDULE_GENERATION_TIMEOUT_MS,
+      headers: { 'Idempotency-Key': generateUuidV7() },
+    },
   );
-  return response.data.data;
+  if (response.status === 202) {
+    return { kind: 'accepted', job: response.data.data as AcceptedAiJob };
+  }
+  return { kind: 'completed', result: response.data.data as ScheduleGenerationResult };
 }
 
 /** AI 일정 생성에서 백엔드가 보내는 오류 코드 */
@@ -56,6 +83,10 @@ export const SCHEDULE_ERROR_CODES = {
   placeAlreadyExists: 'SCHEDULE_PLACE_ALREADY_EXISTS',
   dayNotFound: 'SCHEDULE_DAY_NOT_FOUND',
   stopNotFound: 'SCHEDULE_STOP_NOT_FOUND',
+  /** 요청이 몰려 작업을 받지 않았을 때(503). 작업은 만들어지지 않았어요. */
+  temporarilyUnavailable: 'AI_JOB_TEMPORARILY_UNAVAILABLE',
+  /** 같은 여행에 진행 중인 AI 일정 생성이 있을 때 */
+  alreadyInProgress: 'AI_JOB_ALREADY_IN_PROGRESS',
 } as const;
 
 /** 하루(일차)에 둘 수 있는 장소 수 범위 — 백엔드 ScheduleDayPlacePolicy · ScheduleServiceImpl과 같은 값 */

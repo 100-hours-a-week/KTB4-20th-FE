@@ -1,0 +1,150 @@
+/* 기존 Toast와 같은 자리(하단 내비게이션 위)에 뜬다. */
+.wrapper {
+  position: fixed;
+  left: 50%;
+  bottom: calc(64px + var(--spacing-3));
+  transform: translateX(-50%);
+  width: min(100% - (var(--spacing-3) * 2), var(--max-width-mobile));
+  z-index: 40;
+}
+
+.card {
+  --progress-color: var(--color-primary);
+  --progress-soft: var(--color-point-range);
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
+  background: var(--color-background);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+}
+
+.card[data-failed] {
+  --progress-color: var(--color-danger);
+  --progress-soft: var(--color-danger-soft);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.description {
+  margin: 2px 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 단계 위치: 왼쪽 끝(요청 전송), 가운데(AI 작업 중), 오른쪽 끝(완료) */
+.track {
+  --fill: 6%;
+  position: relative;
+  height: 8px;
+  margin: var(--spacing-4) 2px 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-strong);
+}
+
+.track[data-position='1'] {
+  --fill: 52%;
+}
+
+.track[data-position='2'] {
+  --fill: 100%;
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill);
+  border-radius: inherit;
+  background: var(--progress-color);
+}
+
+.dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+}
+
+.dot[data-index='0'] {
+  left: 3%;
+}
+
+.dot[data-index='1'] {
+  left: 50%;
+}
+
+.dot[data-index='2'] {
+  left: 97%;
+}
+
+.dot[data-reached] {
+  background: var(--progress-soft);
+}
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--spacing-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.steps li[data-reached] {
+  color: var(--progress-color);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.action {
+  flex: 1;
+  width: 100%;
+  height: 40px;
+  margin-top: var(--spacing-3);
+  font-weight: 600;
+}

@@ -147,7 +147,9 @@ export default function Notifications() {
       });
       return;
     }
-    navigate(`/trips/${encodeURIComponent(item.target.id)}`);
+    // 일정 생성 완료 알림은 만들어진 코스 후보 화면으로, 나머지는 여행방으로 간다.
+    const suffix = item.type === 'SCHEDULE_GENERATION_SUCCEEDED' ? '/courses' : '';
+    navigate(`/trips/${encodeURIComponent(item.target.id)}${suffix}`);
   };
 
   const hasUnread = (unreadCount ?? 0) > 0 || items.some((item) => !item.read);
