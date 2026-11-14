@@ -124,8 +124,6 @@ export interface PhotoVerifyResponse {
   reason: string | null;
   match_score: number;
   detected_labels: { name: string; matched: boolean }[];
-  /** 장소를 알아본 신뢰도. 기준보다 낮으면 null이에요. */
-  landmark_confidence: number | null;
   /** RETRY일 때만 와요. */
   retry_hint: string | null;
 }
