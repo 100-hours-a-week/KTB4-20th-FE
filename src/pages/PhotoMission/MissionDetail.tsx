@@ -75,7 +75,7 @@ export default function MissionDetail() {
     return () => {
       cancelled = true;
     };
-  }, [missionId, reloadKey]);
+  }, [missionId, reloadKey, submission.evaluationOutcome]);
 
   // 목록에서 들어오면 뒤로 가기로 같은 Day 목록에 돌아가고, 주소로 바로 들어왔으면 그 여행의 미션 목록으로 가요.
   const goBack = () => {
@@ -141,8 +141,8 @@ export default function MissionDetail() {
   if (submission.submitting) {
     return (
       <LoadingScreen
-        title="사진을 확인하고 있어요"
-        description="미션에 맞는 사진인지 AI가 보고 있어요. 30초쯤 걸릴 수 있어요"
+        title="사진을 보내고 있어요"
+        description="업로드와 판정 작업 접수가 끝날 때까지 잠시만 기다려 주세요"
       />
     );
   }
@@ -331,6 +331,16 @@ export default function MissionDetail() {
             <InfoIcon size={16} aria-hidden="true" />
             여행이 끝나 이 미션에는 더 사진을 올릴 수 없어요.
           </p>
+        ) : submission.evaluationRunning ? (
+          <>
+            <p className={styles.tip} role="status">
+              <InfoIcon size={16} aria-hidden="true" />
+              AI가 사진을 판정하고 있어요. 완료되면 알림으로 알려드려요.
+            </p>
+            <Button size="lg" className="h-13 w-full text-base font-semibold" disabled>
+              사진 판정 중
+            </Button>
+          </>
         ) : loadedManual && hasRemainingPhoto ? (
           <>
             <div className={styles.manualBox}>

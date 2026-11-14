@@ -25,23 +25,27 @@ type LoadStatus = 'loading' | 'success' | 'error';
 
 const EXPIRED_TARGET_MESSAGE = '더 이상 확인할 수 없는 항목이에요.';
 
-type ClosedReason = 'TRIP_DELETED' | 'TRIP_STARTED' | 'NO_TARGET';
+type ClosedReason = 'TRIP_DELETED' | 'PHOTO_MISSION_EXPIRED' | 'TRIP_STARTED' | 'NO_TARGET';
 
 /**
  * 더 이상 이동할 수 없는 알림과 그 이유 (BR-NOTI-06)
- * - TRIP_DELETED: 여행방이 삭제됨. 백엔드는 삭제된 여행방만 target.status를 EXPIRED로 보낸다.
+ * - TRIP_DELETED: 여행방이 삭제됨.
+ * - PHOTO_MISSION_EXPIRED: 포토미션 대상이 삭제되거나 접근할 수 없음.
  * - TRIP_STARTED: 이상 기후 알림의 응답 기한(여행 시작)이 지남. 여행방은 남아 있다.
  * 삭제 여부를 먼저 본다. 이미 시작된 여행방이 삭제됐다면 삭제 안내가 더 정확하다.
  */
 function getClosedReason(item: NotificationListItem): ClosedReason | null {
   if (!item.target) return 'NO_TARGET';
-  if (item.target.status === 'EXPIRED') return 'TRIP_DELETED';
+  if (item.target.status === 'EXPIRED') {
+    return item.target.type === 'PHOTO_MISSION' ? 'PHOTO_MISSION_EXPIRED' : 'TRIP_DELETED';
+  }
   if (item.type === 'TRIP_WEATHER_ALERT' && isResponseClosed(item.createdAt)) return 'TRIP_STARTED';
   return null;
 }
 
 const CLOSED_MESSAGES: Record<ClosedReason, string> = {
   TRIP_DELETED: TRIP_DELETED_MESSAGE,
+  PHOTO_MISSION_EXPIRED: '미션을 더 이상 확인할 수 없어요.',
   TRIP_STARTED: RESPONSE_CLOSED_MESSAGE,
   NO_TARGET: EXPIRED_TARGET_MESSAGE,
 };
@@ -145,6 +149,10 @@ export default function Notifications() {
         target: { type: item.target.type, id: item.target.id },
         createdAt: item.createdAt,
       });
+      return;
+    }
+    if (item.target.type === 'PHOTO_MISSION') {
+      navigate(`/photo-missions/missions/${encodeURIComponent(item.target.id)}`);
       return;
     }
     // 일정 생성 완료 알림은 만들어진 코스 후보 화면으로, 나머지는 여행방으로 간다.
