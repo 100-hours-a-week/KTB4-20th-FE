@@ -45,6 +45,11 @@ function tripPath(notification: IncomingNotification, suffix = ''): string | nul
   return `/trips/${encodeURIComponent(notification.target.id)}${suffix}`;
 }
 
+function photoMissionPath(notification: IncomingNotification): string | null {
+  if (notification.target?.type !== 'PHOTO_MISSION') return null;
+  return `/photo-missions/missions/${encodeURIComponent(notification.target.id)}`;
+}
+
 /** 알림 종류별 팝업 이동 버튼. 이상 기후 알림의 방장 선택은 호출하는 쪽에서 따로 정한다. */
 function primaryActionOf(
   notification: IncomingNotification,
@@ -55,6 +60,10 @@ function primaryActionOf(
       return { label: '코스 보러가기', onClick: () => goTo(tripPath(notification, '/courses')) };
     case 'SCHEDULE_GENERATION_FAILED':
       return { label: '여행방으로 가기', onClick: () => goTo(tripPath(notification)) };
+    case 'PHOTO_MISSION_EVALUATION_SUCCEEDED':
+      return { label: '결과 확인하기', onClick: () => goTo(photoMissionPath(notification)) };
+    case 'PHOTO_MISSION_EVALUATION_FAILED':
+      return { label: '다시 시도하기', onClick: () => goTo(photoMissionPath(notification)) };
     default:
       return { label: '일정 확인하기', onClick: () => goTo(tripPath(notification, '/schedule')) };
   }
@@ -153,7 +162,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         ),
       );
     };
-    if (!target) {
+    if (!target || target.type !== 'TRIP') {
       setRole('MEMBER');
       return;
     }
