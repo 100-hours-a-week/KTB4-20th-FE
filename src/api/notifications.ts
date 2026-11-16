@@ -3,7 +3,13 @@ import type { ApiResponse } from './types';
 
 // NOTIFICATION_API_SPEC.md 계약과 같은 모양입니다.
 
-export type NotificationType = 'TRIP_D1' | 'TRIP_WEATHER_ALERT';
+export type NotificationType =
+  | 'TRIP_D1'
+  | 'TRIP_WEATHER_ALERT'
+  /** AI 일정 생성이 끝났을 때 여행방 멤버 전원에게 와요. */
+  | 'SCHEDULE_GENERATION_SUCCEEDED'
+  /** AI 일정 생성을 끝내지 못했을 때 여행방 멤버 전원에게 와요. */
+  | 'SCHEDULE_GENERATION_FAILED';
 
 /** 이상 기후 알림의 대표 날씨. 백엔드가 알 수 없는 날씨면 null이 와요. (명세 10절) */
 export type WeatherCondition =

@@ -17,6 +17,7 @@ import {
   type IncomingNotification,
 } from '../api/notifications';
 import { getTripDetail, type TripMemberRole } from '../api/trips';
+import { useAiJobs } from '../aiJobs/AiJobContext';
 import { useAuth } from '../auth/AuthContext';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import { connectNotificationSocket } from '../realtime/notificationSocket';
@@ -44,6 +45,21 @@ function tripPath(notification: IncomingNotification, suffix = ''): string | nul
   return `/trips/${encodeURIComponent(notification.target.id)}${suffix}`;
 }
 
+/** 알림 종류별 팝업 이동 버튼. 이상 기후 알림의 방장 선택은 호출하는 쪽에서 따로 정한다. */
+function primaryActionOf(
+  notification: IncomingNotification,
+  goTo: (path: string | null) => void,
+): { label: string; onClick: () => void } {
+  switch (notification.type) {
+    case 'SCHEDULE_GENERATION_SUCCEEDED':
+      return { label: '코스 보러가기', onClick: () => goTo(tripPath(notification, '/courses')) };
+    case 'SCHEDULE_GENERATION_FAILED':
+      return { label: '여행방으로 가기', onClick: () => goTo(tripPath(notification)) };
+    default:
+      return { label: '일정 확인하기', onClick: () => goTo(tripPath(notification, '/schedule')) };
+  }
+}
+
 /** "D-1, 경주 지역에 폭우가 예보되었어요. 일정을 변경할까요?"처럼 두 문장이면 줄을 나눈다. */
 function toPopupDescription(body: string): string {
   return body.replace(/([.!?]) (?=\S)/g, '$1\n');
@@ -58,6 +74,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState<number | null>(null);
   const [queue, setQueue] = useState<PopupEntry[]>([]);
+  const { consumeNotification } = useAiJobs();
   const userPublicId = status === 'authenticated' ? (user?.publicId ?? null) : null;
 
   // 로그아웃하거나 다른 계정으로 바뀌면 이전 사용자의 미읽음 수와 팝업을 비운다.
@@ -97,7 +114,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       // 이미 띄운 알림은 다시 띄우지 않지만, 이전 ACK 실패를 복구하기 위해 ACK는 다시 보낸다.
       if (!wasDelivered(userPublicId, notification)) {
         markDelivered(userPublicId, notification);
-        enqueue(notification);
+        // 내가 요청한 AI 작업의 결과를 진행 카드가 보여줬으면 같은 내용의 팝업은 띄우지 않는다.
+        if (!consumeNotification(notification)) enqueue(notification);
         void refreshUnreadCount();
       }
       void acknowledgeNotificationDelivery(notification.notificationId).catch(() => {
@@ -117,7 +135,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           });
       },
     });
-  }, [userPublicId, enqueue, refreshUnreadCount]);
+  }, [userPublicId, enqueue, refreshUnreadCount, consumeNotification]);
 
   const current = queue[0];
 
@@ -211,7 +229,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                   label: '일정 변경하기',
                   onClick: () => goTo(tripPath(notification, '/weather-replan')),
                 }
-              : { label: '일정 확인하기', onClick: () => goTo(tripPath(notification, '/schedule')) }
+              : primaryActionOf(notification, goTo)
           }
           onClose={closeCurrent}
         />
