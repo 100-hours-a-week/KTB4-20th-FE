@@ -2,6 +2,8 @@ import { createElement } from 'react';
 import {
   CalendarCheckIcon,
   CalendarXIcon,
+  CameraIcon,
+  CameraOffIcon,
   CloudLightningIcon,
   CloudRainIcon,
   CloudRainWindIcon,
@@ -41,6 +43,10 @@ export function getNotificationIcon(
       return CalendarCheckIcon;
     case 'SCHEDULE_GENERATION_FAILED':
       return CalendarXIcon;
+    case 'PHOTO_MISSION_EVALUATION_SUCCEEDED':
+      return CameraIcon;
+    case 'PHOTO_MISSION_EVALUATION_FAILED':
+      return CameraOffIcon;
     default:
       return LuggageIcon;
   }

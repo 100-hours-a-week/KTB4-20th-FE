@@ -9,14 +9,16 @@ export type NotificationType =
   /** AI 일정 생성이 끝났을 때 여행방 멤버 전원에게 와요. */
   | 'SCHEDULE_GENERATION_SUCCEEDED'
   /** AI 일정 생성을 끝내지 못했을 때 여행방 멤버 전원에게 와요. */
-  | 'SCHEDULE_GENERATION_FAILED';
+  | 'SCHEDULE_GENERATION_FAILED'
+  | 'PHOTO_MISSION_EVALUATION_SUCCEEDED'
+  | 'PHOTO_MISSION_EVALUATION_FAILED';
 
 /** 이상 기후 알림의 대표 날씨. 백엔드가 알 수 없는 날씨면 null이 와요. (명세 10절) */
 export type WeatherCondition =
   'TYPHOON' | 'HEAVY_RAIN' | 'HEAVY_SNOW' | 'HEAT' | 'COLD' | 'RAIN' | 'YELLOW_DUST' | 'FINE_DUST';
 
 export interface NotificationTarget {
-  type: 'TRIP';
+  type: 'TRIP' | 'PHOTO_MISSION';
   id: string;
 }
 

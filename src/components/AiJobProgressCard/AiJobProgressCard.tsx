@@ -1,7 +1,12 @@
 import { XIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import type { ScheduleJob, ScheduleJobStage } from '../../aiJobs/AiJobContext';
+import type {
+  PhotoEvaluationJob,
+  PhotoEvaluationJobStage,
+  ScheduleJob,
+  ScheduleJobStage,
+} from '../../aiJobs/AiJobContext';
 import styles from './AiJobProgressCard.module.css';
 
 interface StageCopy {
@@ -12,7 +17,7 @@ interface StageCopy {
   failed: boolean;
 }
 
-const COPY: Record<ScheduleJobStage, StageCopy> = {
+const SCHEDULE_COPY: Record<ScheduleJobStage, StageCopy> = {
   sending: {
     title: '일정을 요청하고 있어요',
     description: '잠시만 기다려 주세요',
@@ -45,7 +50,35 @@ const COPY: Record<ScheduleJobStage, StageCopy> = {
   },
 };
 
+const PHOTO_COPY: Record<PhotoEvaluationJobStage, StageCopy> = {
+  sending: {
+    title: '사진을 보내고 있어요',
+    description: '잠시만 기다려 주세요',
+    position: 0,
+    failed: false,
+  },
+  running: {
+    title: 'AI가 사진을 판정하고 있어요',
+    description: '다른 화면으로 이동해도 완료되면 알려드려요',
+    position: 1,
+    failed: false,
+  },
+  succeeded: {
+    title: '포토미션 판정이 끝났어요',
+    description: '미션 결과를 확인해 보세요',
+    position: 2,
+    failed: false,
+  },
+  failed: {
+    title: '사진을 판정하지 못했어요',
+    description: '사진을 확인하고 다시 시도해 주세요',
+    position: 1,
+    failed: true,
+  },
+};
+
 const STEP_LABELS = ['요청 전송', 'AI 작업 중', '완료'] as const;
+const PHOTO_STEP_LABELS = ['사진 전송', 'AI 판정 중', '완료'] as const;
 
 function stepLabel(stage: ScheduleJobStage, index: number): string {
   if (stage === 'rejected' && index === 0) return '요청 실패';
@@ -54,9 +87,9 @@ function stepLabel(stage: ScheduleJobStage, index: number): string {
 }
 
 interface AiJobProgressCardProps {
-  job: ScheduleJob;
+  job: ScheduleJob | PhotoEvaluationJob;
   onClose: () => void;
-  onRetry: () => void;
+  onRetry?: () => void;
 }
 
 /**
@@ -65,12 +98,22 @@ interface AiJobProgressCardProps {
  */
 export default function AiJobProgressCard({ job, onClose, onRetry }: AiJobProgressCardProps) {
   const navigate = useNavigate();
-  const copy = COPY[job.stage];
+  const photoEvaluation = job.kind === 'photoEvaluation';
+  const copy = photoEvaluation ? PHOTO_COPY[job.stage] : SCHEDULE_COPY[job.stage];
   const closable = job.stage !== 'sending';
 
-  const goToCourses = () => {
+  const goToResult = () => {
     onClose();
-    navigate(`/trips/${encodeURIComponent(job.tripId)}/courses`);
+    navigate(
+      photoEvaluation
+        ? `/photo-missions/missions/${encodeURIComponent(job.missionId)}`
+        : `/trips/${encodeURIComponent(job.tripId)}/courses`,
+    );
+  };
+
+  const retry = () => {
+    if (photoEvaluation) goToResult();
+    else onRetry?.();
   };
 
   return (
@@ -80,7 +123,7 @@ export default function AiJobProgressCard({ job, onClose, onRetry }: AiJobProgre
         data-failed={copy.failed || undefined}
         role="status"
         aria-live="polite"
-        aria-label="AI 일정 생성 진행 상황"
+        aria-label={photoEvaluation ? '포토미션 AI 판정 진행 상황' : 'AI 일정 생성 진행 상황'}
       >
         <div className={styles.header}>
           <div className={styles.text}>
@@ -96,7 +139,7 @@ export default function AiJobProgressCard({ job, onClose, onRetry }: AiJobProgre
 
         <div className={styles.track} data-position={copy.position} aria-hidden="true">
           <span className={styles.fill} />
-          {STEP_LABELS.map((label, index) => (
+          {(photoEvaluation ? PHOTO_STEP_LABELS : STEP_LABELS).map((label, index) => (
             <span
               key={label}
               className={styles.dot}
@@ -106,20 +149,20 @@ export default function AiJobProgressCard({ job, onClose, onRetry }: AiJobProgre
           ))}
         </div>
         <ol className={styles.steps}>
-          {STEP_LABELS.map((label, index) => (
+          {(photoEvaluation ? PHOTO_STEP_LABELS : STEP_LABELS).map((label, index) => (
             <li
               key={label}
               data-reached={index <= copy.position || undefined}
               aria-current={index === copy.position ? 'step' : undefined}
             >
-              {stepLabel(job.stage, index)}
+              {photoEvaluation ? label : stepLabel(job.stage, index)}
             </li>
           ))}
         </ol>
 
         {job.stage === 'succeeded' && (
-          <Button className={styles.action} onClick={goToCourses}>
-            코스 보러가기
+          <Button className={styles.action} onClick={goToResult}>
+            {photoEvaluation ? '결과 확인하기' : '코스 보러가기'}
           </Button>
         )}
         {job.stage === 'failed' && (
@@ -127,7 +170,7 @@ export default function AiJobProgressCard({ job, onClose, onRetry }: AiJobProgre
             <Button variant="secondary" className={styles.action} onClick={onClose}>
               닫기
             </Button>
-            <Button className={styles.action} onClick={onRetry}>
+            <Button className={styles.action} onClick={retry}>
               다시 시도하기
             </Button>
           </div>

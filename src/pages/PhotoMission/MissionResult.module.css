@@ -150,42 +150,6 @@
   margin-top: 1px;
 }
 
-.landmark {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-md);
-  color: var(--color-point-text);
-  background: var(--color-background);
-  box-shadow: var(--shadow-card);
-}
-
-.landmarkLabel {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-badge);
-}
-
-.landmarkName {
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.landmarkMissing {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin: 0;
-  padding: var(--spacing-2) var(--spacing-3);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
 .manualBox {
   padding: var(--spacing-4);
   border-radius: var(--radius-md);
