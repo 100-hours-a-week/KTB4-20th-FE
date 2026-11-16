@@ -41,6 +41,7 @@ import TicketStub from '../../components/TripCard/TicketStub';
 import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { formatExclusionName, SURVEY_CATEGORY_LABELS } from '../../constants/surveyCategories';
 import { getToday, isBeforeScheduleChangeDeadline } from '../../utils/date';
+import { isValidNumericRouteId } from '../../utils/routeParams';
 import { getScheduleButtonState } from './scheduleButtonState';
 import ScheduleProgress from './ScheduleProgress';
 import styles from './TripDetail.module.css';
@@ -126,7 +127,9 @@ function toLoadFailure(error: unknown): LoadState {
   const code = getApiErrorCode(error);
   // 방 참여자가 아닌 사람이 링크로 들어왔거나 없는 방이면 "잘못된 링크" 화면을 보여줍니다.
   const isInvalid =
-    code === TRIP_DETAIL_ERROR_CODES.memberRequired || code === TRIP_DETAIL_ERROR_CODES.notFound;
+    code === 'INVALID_REQUEST' ||
+    code === TRIP_DETAIL_ERROR_CODES.memberRequired ||
+    code === TRIP_DETAIL_ERROR_CODES.notFound;
   return isInvalid ? { status: 'invalid' } : { status: 'error' };
 }
 
@@ -146,15 +149,19 @@ export default function TripDetail() {
   const waitingSyncResponse = myJob?.stage === 'sending' && myJob.waitingSyncResponse;
 
   const refresh = useCallback(
-    () =>
-      loadTrip(tripId).then(
+    () => {
+      if (!isValidNumericRouteId(tripId)) {
+        return Promise.resolve().then(() => setState({ status: 'invalid' }));
+      }
+      return loadTrip(tripId).then(
         (data) => setState({ status: 'ready', ...data }),
         (error: unknown) =>
           setState((previous) =>
             // 한 번 불러온 뒤의 주기적 갱신이 실패하면 기존 화면을 유지합니다.
             previous.status === 'ready' ? previous : toLoadFailure(error),
           ),
-      ),
+      );
+    },
     [tripId],
   );
 

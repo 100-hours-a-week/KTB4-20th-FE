@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, LogOut, Plus, SendHorizontal, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,11 +28,17 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  createChatRoomEffectLifetime,
+  createChatRoomEntry,
+  isChatRoomEntryConfirmed,
+  resolveChatRoomAccess,
+} from './chatRoomAccess';
 import styles from './ChatRoom.module.css';
 
 type RoomSummary = Pick<
   RegionalChatRoomItem,
-  'roomId' | 'name' | 'memberCount' | 'activeUserCount'
+  'roomId' | 'name' | 'memberCount' | 'activeUserCount' | 'joined'
 >;
 type DisplayMessage = ChatMessageItem & { status?: 'sending' | 'failed' };
 
@@ -111,7 +117,8 @@ export default function ChatRoom() {
   const [room, setRoom] = useState<RoomSummary | null>(
     (location.state as { room?: RoomSummary } | null)?.room ?? null,
   );
-  const [roomLoadError, setRoomLoadError] = useState(false);
+  const [roomLoadErrorFor, setRoomLoadErrorFor] = useState<string | null>(null);
+  const [confirmedEntryToken, setConfirmedEntryToken] = useState<symbol | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [historyState, setHistoryState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [olderCursor, setOlderCursor] = useState<string | null>(null);
@@ -126,48 +133,63 @@ export default function ChatRoom() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
+  const roomEntry = useMemo(() => createChatRoomEntry(roomId), [roomId]);
+  const membershipConfirmed = isChatRoomEntryConfirmed(confirmedEntryToken, roomEntry);
+  const roomLoadError = roomLoadErrorFor === roomId;
 
-  // 방 요약 정보가 없으면(직접 진입·새로고침) 목록에서 다시 찾는다 — 방 단건 조회 API는 아직 없다.
+  const returnToRoomList = useCallback(() => {
+    toast.info('채팅방 참여가 필요해요. 목록에서 입장해 주세요.');
+    navigate('/open-chat', { replace: true });
+  }, [navigate]);
+
+  // 화면 이동 state는 퇴장 뒤 뒤로가기로 오래될 수 있어, 항상 최신 목록의 참여 여부를 먼저 확인한다.
   useEffect(() => {
-    if (room) return;
     let cancelled = false;
     fetchRegionalChatRooms()
       .then((data) => {
         if (cancelled) return;
-        const found = data.items.find((item) => item.roomId === roomId);
-        if (found) {
-          setRoom(found);
-        } else {
-          setRoomLoadError(true);
+        const access = resolveChatRoomAccess(data.items, roomId);
+        if (access.status === 'joined') {
+          setRoom(access.room);
+          setConfirmedEntryToken(roomEntry.token);
+          return;
         }
+        if (access.status === 'membership-required') returnToRoomList();
+        else setRoomLoadErrorFor(roomId);
       })
       .catch(() => {
-        if (!cancelled) setRoomLoadError(true);
+        if (!cancelled) setRoomLoadErrorFor(roomId);
       });
     return () => {
       cancelled = true;
     };
-  }, [room, roomId]);
+  }, [returnToRoomList, roomEntry, roomId]);
 
   // 접속 중인 인원 수는 실시간 이벤트로 오지 않아서, 방에 머무는 동안 주기적으로 다시 조회한다.
   useEffect(() => {
+    if (!membershipConfirmed) return;
+    const lifetime = createChatRoomEffectLifetime();
     const interval = window.setInterval(() => {
       fetchRegionalChatRooms()
         .then((data) => {
-          const found = data.items.find((item) => item.roomId === roomId);
-          if (found) {
-            setRoom((prev) => (prev ? { ...prev, ...found } : found));
-          }
+          if (!lifetime.isActive()) return;
+          const access = resolveChatRoomAccess(data.items, roomId);
+          if (access.status === 'joined') setRoom(access.room);
+          else if (access.status === 'membership-required') returnToRoomList();
         })
         .catch(() => {
           // 조회 실패는 조용히 넘어가고 다음 주기에 다시 시도한다.
         });
     }, ACTIVE_USER_COUNT_POLL_MS);
-    return () => window.clearInterval(interval);
-  }, [roomId]);
+    return () => {
+      lifetime.cancel();
+      window.clearInterval(interval);
+    };
+  }, [membershipConfirmed, returnToRoomList, roomId]);
 
   // 메시지 이력 최초 조회
   useEffect(() => {
+    if (!membershipConfirmed) return;
     let cancelled = false;
     setHistoryState('loading');
     fetchChatMessages(roomId)
@@ -178,13 +200,18 @@ export default function ChatRoom() {
         setHasOlder(data.page.hasNext);
         setHistoryState('ready');
       })
-      .catch(() => {
-        if (!cancelled) setHistoryState('error');
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        if (getApiErrorCode(error) === 'REGIONAL_CHAT_MEMBER_REQUIRED') {
+          returnToRoomList();
+          return;
+        }
+        setHistoryState('error');
       });
     return () => {
       cancelled = true;
     };
-  }, [roomId]);
+  }, [membershipConfirmed, returnToRoomList, roomId]);
 
   const handleMessageCreated = useCallback((event: ChatMessageCreatedEvent) => {
     setMessages((prev) => {
@@ -238,6 +265,7 @@ export default function ChatRoom() {
 
   // WebSocket 연결과 방 구독 — 채팅방 화면 진입 시 연결, 벗어나면 종료한다.
   useEffect(() => {
+    if (!membershipConfirmed) return;
     const accessToken = getAccessToken();
     if (!accessToken) {
       setConnectionStatus('error');
@@ -265,7 +293,7 @@ export default function ChatRoom() {
       unsubscribeRoom();
       void disconnectChatSocket();
     };
-  }, [roomId, handleMessageCreated, handleUserEvent]);
+  }, [membershipConfirmed, roomId, handleMessageCreated, handleUserEvent]);
 
   useEffect(() => {
     if (shouldAutoScroll.current) {
@@ -364,6 +392,14 @@ export default function ChatRoom() {
       );
       setLeaving(false);
     }
+  }
+
+  if (!membershipConfirmed && !roomLoadError) {
+    return (
+      <div className={styles.centerStatus}>
+        <p>채팅방 입장 정보를 확인하는 중이에요.</p>
+      </div>
+    );
   }
 
   if (roomLoadError) {

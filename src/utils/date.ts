@@ -39,6 +39,11 @@ export function addDays(iso: string, days: number): string {
   return toIsoDate(year, monthIndex, day + days);
 }
 
+/** 0부터 시작하는 월을 "2026년 10월" 형식으로 표시합니다. */
+export function formatKoreanYearMonth(year: number, monthIndex: number): string {
+  return `${year}년 ${monthIndex + 1}월`;
+}
+
 /** "2026-01-31" → "2026. 01. 31" */
 export function formatDotDate(iso: string): string {
   return iso.replaceAll('-', '. ');
