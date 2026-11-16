@@ -266,7 +266,6 @@ export interface PhotoMissionCompletion {
   totalMissionCount: number;
   incompleteMissionCount: number;
   totalPhotoCount: number;
-  landmarkCount: number;
   completed: boolean;
   tripEnded: boolean;
   nextDayExists: boolean;
