@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
+    "test": "node --test --experimental-strip-types tests/*.test.ts",
     "lint": "oxlint",
     "test:bottom-nav": "node scripts/test-bottom-nav.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",

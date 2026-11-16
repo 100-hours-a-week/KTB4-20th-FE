@@ -17,6 +17,7 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import PageHeader from '../../components/PageHeader/PageHeader';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { getToday } from '../../utils/date';
+import { isValidNumericRouteId } from '../../utils/routeParams';
 import { formatMonthDayWeekday, formatTripRange } from './photoMissionFormat';
 import { savePhotos, sharePhotos, warmPhotoFiles } from './photoShare';
 import styles from './MissionAlbum.module.css';
@@ -37,6 +38,7 @@ type LoadState =
   | { status: 'error' };
 
 const FORBIDDEN_CODES: (string | undefined)[] = [
+  'INVALID_REQUEST',
   PHOTO_MISSION_ERROR_CODES.tripNotFound,
   PHOTO_MISSION_ERROR_CODES.memberRequired,
   PHOTO_MISSION_ERROR_CODES.notFound,
@@ -70,12 +72,13 @@ export default function MissionAlbum() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tripId = searchParams.get('tripId') ?? '';
+  const hasValidTripId = isValidNumericRouteId(tripId);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [reloadKey, setReloadKey] = useState(0);
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
-    if (!tripId) return;
+    if (!hasValidTripId) return;
     let cancelled = false;
     void loadAlbum(tripId).then((next) => {
       if (cancelled) return;
@@ -87,7 +90,7 @@ export default function MissionAlbum() {
     return () => {
       cancelled = true;
     };
-  }, [tripId, reloadKey]);
+  }, [hasValidTripId, tripId, reloadKey]);
 
   const listPath = `/photo-missions?tripId=${encodeURIComponent(tripId)}`;
 
@@ -106,7 +109,7 @@ export default function MissionAlbum() {
     else navigate(listPath, { replace: true });
   };
 
-  if (!tripId || state.status === 'forbidden') {
+  if (!hasValidTripId || state.status === 'forbidden') {
     return (
       <main className={styles.centerScreen}>
         <StatusMessage
