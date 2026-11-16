@@ -93,6 +93,7 @@ export default function PhotoMissionHome({ trips }: PhotoMissionHomeProps) {
   return (
     <>
       <h1 className={styles.homeTitle}>포토미션</h1>
+      <p className={styles.homeSubtitle}>여행하는 날마다 그날의 미션이 열려요</p>
 
       {current ? (
         <section
