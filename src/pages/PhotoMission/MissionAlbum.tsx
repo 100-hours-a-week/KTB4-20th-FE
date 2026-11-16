@@ -172,10 +172,6 @@ export default function MissionAlbum() {
             <dt>모든 사진</dt>
             <dd>{summary.totalPhotoCount}</dd>
           </div>
-          <div>
-            <dt>찾은 랜드마크</dt>
-            <dd>{summary.landmarkCount}</dd>
-          </div>
         </dl>
       )}
 
