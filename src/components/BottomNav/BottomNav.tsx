@@ -1,4 +1,4 @@
-import { Camera, Home, MessageCircle, Users } from 'lucide-react';
+import { Camera, Home, MessageCircle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -6,13 +6,12 @@ const NAV_ITEMS = [
   { to: '/', label: '메인', Icon: Home },
   { to: '/photo-missions', label: '포토미션', Icon: Camera },
   { to: '/open-chat', label: '오픈 채팅', Icon: MessageCircle },
-  { to: '/community', label: '커뮤니티', Icon: Users },
 ];
 
 export default function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]"
       aria-label="주요 화면 이동"
     >
       <ul className="mx-auto flex max-w-[480px]">

@@ -46,7 +46,10 @@
 }
 
 .dayTab {
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-1);
   height: 40px;
   padding: 0 var(--spacing-4);
   border: 1px solid var(--color-border);
@@ -69,8 +72,15 @@
 .dayTab:disabled {
   border-color: var(--color-border-soft);
   color: var(--color-text-muted-soft);
-  background: var(--color-surface-strong);
+  background: transparent;
+  opacity: 0.6;
   cursor: default;
+}
+
+.dayLockedHint {
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
 }
 
 .dayTab:not(:disabled):active {
@@ -321,12 +331,21 @@
 }
 
 /* 진행 중인 여행이 없을 때의 첫 화면 */
+/* 오픈 채팅 제목과 같은 크기·위치 (페이지 위 여백 24px + 24px = 48px) */
 .homeTitle {
-  margin: 0;
+  margin: var(--spacing-5) 0 var(--spacing-1);
+  padding: 0 var(--spacing-1);
   color: var(--color-text);
-  font-size: 1.375rem;
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-tight);
+}
+
+.homeSubtitle {
+  margin: 0;
+  padding: 0 var(--spacing-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .homeEmpty {
