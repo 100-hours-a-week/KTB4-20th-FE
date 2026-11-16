@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { CameraIcon, CheckIcon, CircleAlertIcon, InfoIcon, MapPinIcon } from 'lucide-react';
+import { CameraIcon, CheckIcon, CircleAlertIcon, InfoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiErrorCode } from '../../api/errors';
 import { completeMissionManually, PHOTO_MISSION_ERROR_CODES } from '../../api/photoMissions';
@@ -63,8 +63,6 @@ export default function MissionResult() {
             ? 'retry'
             : 'fail';
   const locationMismatch = verdict.reason === 'location_mismatch';
-  const placeName = mission?.placeName;
-  const landmarkFound = verdict.landmark_confidence !== null;
 
   const copy: Record<ResultKind, { title: string; description: string }> = {
     success: {
@@ -203,22 +201,6 @@ export default function MissionResult() {
               </p>
             </section>
           )}
-
-          {/* 장소 이름은 백엔드에 추가 요청한 값이라 있을 때만 보여요. */}
-          {placeName &&
-            (landmarkFound ? (
-              <section className={styles.landmark}>
-                <MapPinIcon size={20} aria-hidden="true" />
-                <div>
-                  <p className={styles.landmarkLabel}>랜드마크를 찾았어요</p>
-                  <p className={styles.landmarkName}>{placeName}</p>
-                </div>
-              </section>
-            ) : (
-              <p className={styles.landmarkMissing}>
-                <MapPinIcon size={15} aria-hidden="true" />이 사진에서는 랜드마크를 찾지 못했어요
-              </p>
-            ))}
         </>
       )}
 

@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 import { CircleAlertIcon, MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
-import { generateSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { useAiJobs } from '../../aiJobs/AiJobContext';
 import { getTripDetail } from '../../api/trips';
 import StatusMessage from '../../components/StatusMessage/StatusMessage';
 import { UNCONFIRMED_TRIP_DELETION_TIME_LABEL } from '../../notifications/notificationDisplay';
@@ -32,6 +33,7 @@ export default function WeatherReplan() {
   const navigate = useNavigate();
   const [state, setState] = useState<ReplanState>({ status: 'generating' });
   const requestingRef = useRef(false);
+  const { requestScheduleGeneration } = useAiJobs();
   const tripPath = `/trips/${encodeURIComponent(tripId)}`;
 
   const replan = useCallback(async () => {
@@ -48,13 +50,26 @@ export default function WeatherReplan() {
         });
         return;
       }
-      await generateSchedule(tripId, 'WEATHER');
+      const outcome = await requestScheduleGeneration(tripId, 'WEATHER');
+      if (outcome.kind === 'accepted') {
+        // 메시지 큐로 접수됐으면 여행방으로 돌아가고, 하단 진행 카드와 완료 알림으로 결과를 알려요.
+        navigate(tripPath, { replace: true });
+        return;
+      }
       // 날씨 재생성도 기존 확정 일정을 지우고 새 코스 3가지를 만들어요. 방장이 다시 골라야 해요.
       toast.success('날씨를 반영한 코스를 새로 만들었어요.');
       navigate(`${tripPath}/courses`, { replace: true });
     } catch (error) {
       const code = getApiErrorCode(error);
-      if (code && UNAVAILABLE_CODES.includes(code)) {
+      if (code === SCHEDULE_ERROR_CODES.temporarilyUnavailable) {
+        // 하단 진행 카드가 거절 안내를 보여주므로 여행방으로 돌아가요.
+        navigate(tripPath, { replace: true });
+      } else if (code === SCHEDULE_ERROR_CODES.alreadyInProgress) {
+        setState({
+          status: 'unavailable',
+          description: '이미 일정을 만들고 있어요.\n끝나면 알림으로 알려드려요.',
+        });
+      } else if (code && UNAVAILABLE_CODES.includes(code)) {
         setState({
           status: 'unavailable',
           description: getApiErrorMessage(error) ?? '지금은 일정을 바꿀 수 없어요.',
@@ -65,7 +80,7 @@ export default function WeatherReplan() {
     } finally {
       requestingRef.current = false;
     }
-  }, [navigate, tripId, tripPath]);
+  }, [navigate, requestScheduleGeneration, tripId, tripPath]);
 
   useEffect(() => {
     void replan();

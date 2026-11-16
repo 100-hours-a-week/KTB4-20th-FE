@@ -17,7 +17,8 @@ import { Button } from '@/components/ui/button';
 import { getApiErrorCode, getApiErrorMessage } from '../../api/errors';
 import { COURSE_ERROR_CODES, getScheduleCandidates } from '../../api/courses';
 import { UNCONFIRMED_TRIP_DELETION_TIME_LABEL } from '../../notifications/notificationDisplay';
-import { generateSchedule, getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { getSchedule, SCHEDULE_ERROR_CODES } from '../../api/schedule';
+import { useAiJobs } from '../../aiJobs/AiJobContext';
 import { fetchSurveySummary, type SurveySummary } from '../../api/survey';
 import {
   getInvitationUrl,
@@ -65,7 +66,7 @@ type LoadState =
   | { status: 'invalid' }
   | { status: 'error' };
 
-type Generation = 'idle' | 'generating' | 'failed';
+type Generation = 'idle' | 'failed';
 
 /** 후보가 아직 없는 게 정상 상태라, 후보 조회 404는 실패로 보지 않고 "후보 없음"으로 바꾼다. */
 async function checkCandidates(tripId: string): Promise<boolean> {
@@ -138,6 +139,11 @@ export default function TripDetail() {
   const [notice, setNotice] = useState<{ title: string; description?: string } | null>(null);
   const [isRegenerateConfirmOpen, setIsRegenerateConfirmOpen] = useState(false);
   const generatingRef = useRef(false);
+  const { scheduleJob, requestScheduleGeneration, isScheduleGenerating } = useAiJobs();
+  const myJob = scheduleJob?.tripId === tripId ? scheduleJob : null;
+  const scheduleGenerating = isScheduleGenerating(tripId);
+  // 서버가 기존 동기 방식으로 응답하면 AI가 끝날 때까지 기다려야 하므로 전체 화면 진행 표시를 보여준다.
+  const waitingSyncResponse = myJob?.stage === 'sending' && myJob.waitingSyncResponse;
 
   const refresh = useCallback(
     () =>
@@ -164,13 +170,19 @@ export default function TripDetail() {
     void refresh();
   }, [refresh]);
 
+  // 메시지 큐로 접수한 일정 생성이 끝나면 후보·일정 상태를 다시 불러온다.
+  const myJobStage = myJob?.stage;
   useEffect(() => {
-    if (generation !== 'idle') return;
+    if (myJobStage === 'succeeded' || myJobStage === 'failed') void refresh();
+  }, [myJobStage, refresh]);
+
+  useEffect(() => {
+    if (generation !== 'idle' || waitingSyncResponse) return;
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void refresh();
     }, REFRESH_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [generation, refresh]);
+  }, [generation, waitingSyncResponse, refresh]);
 
   const goToSchedule = useCallback(
     () => navigate(`/trips/${encodeURIComponent(tripId)}/schedule`),
@@ -183,18 +195,28 @@ export default function TripDetail() {
   );
 
   const startGeneration = async () => {
-    if (generatingRef.current) return;
+    if (generatingRef.current || scheduleGenerating) return;
     generatingRef.current = true;
-    setGeneration('generating');
+    setGeneration('idle');
 
     try {
-      await generateSchedule(tripId);
-      markCandidatesCreated();
-      // 생성이 끝나면 코스 3가지를 고르는 화면으로 자동 이동합니다.
-      goToCourses();
+      const outcome = await requestScheduleGeneration(tripId, 'GENERAL');
+      if (outcome.kind === 'completed') {
+        markCandidatesCreated();
+        // 기존 동기 방식이면 생성이 끝난 상태라 코스 3가지를 고르는 화면으로 자동 이동합니다.
+        goToCourses();
+      }
+      // 메시지 큐로 접수됐으면 하단 진행 카드가 상태를 보여주고, 완료되면 알림으로 받아요.
     } catch (error) {
       const code = getApiErrorCode(error);
-      if (code === SCHEDULE_ERROR_CODES.candidatesPending) {
+      if (code === SCHEDULE_ERROR_CODES.temporarilyUnavailable) {
+        // 하단 진행 카드가 "요청이 많아 잠시 후 다시 시도해 주세요"를 보여줘요.
+      } else if (code === SCHEDULE_ERROR_CODES.alreadyInProgress) {
+        setNotice({
+          title: '이미 일정을 만들고 있어요',
+          description: '다른 기기에서 요청한 일정 생성이 끝나면 알림으로 알려드려요.',
+        });
+      } else if (code === SCHEDULE_ERROR_CODES.candidatesPending) {
         // 다른 기기나 중복 요청으로 이미 후보가 만들어진 경우예요. 새로 만들지 않고 후보 화면으로 보내요.
         setGeneration('idle');
         markCandidatesCreated();
@@ -253,7 +275,7 @@ export default function TripDetail() {
 
   const { trip, summary, hasSchedule, hasCandidates, remainingRegenerations } = state;
 
-  if (generation === 'generating') {
+  if (waitingSyncResponse) {
     return (
       <ScheduleProgress
         steps={[
@@ -498,10 +520,10 @@ export default function TripDetail() {
                   size="lg"
                   variant="outline"
                   className="h-13 flex-1 text-base font-semibold"
-                  disabled={!canRegenerate}
+                  disabled={!canRegenerate || scheduleGenerating}
                   onClick={() => setIsRegenerateConfirmOpen(true)}
                 >
-                  AI 일정 재생성하기
+                  {scheduleGenerating ? 'AI가 일정을 만드는 중' : 'AI 일정 재생성하기'}
                 </Button>
               )}
             </div>
@@ -528,11 +550,11 @@ export default function TripDetail() {
             <Button
               size="lg"
               className="h-13 w-full text-base font-semibold"
-              disabled={!buttonState.enabled}
+              disabled={!buttonState.enabled || scheduleGenerating}
               onClick={startGeneration}
             >
               <SparklesIcon className="size-4" aria-hidden="true" />
-              AI 일정 생성하기
+              {scheduleGenerating ? 'AI가 일정을 만드는 중' : 'AI 일정 생성하기'}
             </Button>
             <p className={styles.caption}>{buttonState.caption}</p>
           </div>

@@ -1,5 +1,9 @@
 import { createElement } from 'react';
 import {
+  CalendarCheckIcon,
+  CalendarXIcon,
+  CameraIcon,
+  CameraOffIcon,
   CloudLightningIcon,
   CloudRainIcon,
   CloudRainWindIcon,
@@ -32,8 +36,20 @@ export function getNotificationIcon(
   type: NotificationType,
   weatherCondition: WeatherCondition | null,
 ): LucideIcon {
-  if (type !== 'TRIP_WEATHER_ALERT') return LuggageIcon;
-  return weatherCondition ? WEATHER_ICONS[weatherCondition] : CloudSunRainIcon;
+  switch (type) {
+    case 'TRIP_WEATHER_ALERT':
+      return weatherCondition ? WEATHER_ICONS[weatherCondition] : CloudSunRainIcon;
+    case 'SCHEDULE_GENERATION_SUCCEEDED':
+      return CalendarCheckIcon;
+    case 'SCHEDULE_GENERATION_FAILED':
+      return CalendarXIcon;
+    case 'PHOTO_MISSION_EVALUATION_SUCCEEDED':
+      return CameraIcon;
+    case 'PHOTO_MISSION_EVALUATION_FAILED':
+      return CameraOffIcon;
+    default:
+      return LuggageIcon;
+  }
 }
 
 interface NotificationTypeIconProps extends LucideProps {
