@@ -1,5 +1,6 @@
 import { Client, type IFrame, type StompSubscription } from '@stomp/stompjs';
 import type { ChatMessageItem } from '../api/chat';
+import { buildChatWebSocketUrl } from './chatSocketUrl';
 
 // CHAT_API_SPEC.md 10장 — Native WebSocket 기반 Spring WebSocket + STOMP, 재연결은 제공하지 않는다.
 const HEARTBEAT_MS = 10_000;
@@ -73,9 +74,7 @@ const pendingReceipts = new Map<string, { resolve: () => void; reject: (error: E
 function wsUrl(): string {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string;
   // 배포 환경은 VITE_API_BASE_URL을 "/api"처럼 상대 경로로 준다(프론트와 백엔드가 같은 origin 뒤에 있음).
-  // new URL()은 상대 경로만 주면 예외를 던지므로 현재 페이지 origin을 기준으로 풀어준다.
-  const origin = new URL(apiBaseUrl, window.location.origin).origin;
-  return `${origin.replace(/^http/, 'ws')}/ws`;
+  return buildChatWebSocketUrl(apiBaseUrl, window.location.origin);
 }
 
 function handleStompError(frame: IFrame): void {
