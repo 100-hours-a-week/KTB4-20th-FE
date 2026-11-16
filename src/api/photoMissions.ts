@@ -130,12 +130,19 @@ export interface PhotoVerifyResponse {
   retry_hint: string | null;
 }
 
+/** 사진 저장과 판정 작업 접수가 끝났을 때 받는 202 응답입니다. 판정 결과는 알림으로 받아요. */
+export interface AcceptedPhotoEvaluation {
+  photoId: number;
+  evaluationId: number;
+  status: 'QUEUED';
+}
+
 export interface PhotoCoordinates {
   latitude: number;
   longitude: number;
 }
 
-/** AI 판정은 백엔드가 최대 30초까지 기다려서, 사진 제출만 기본(10초)보다 길게 기다립니다. */
+/** 큰 사진 업로드와 작업 접수가 끝날 때까지 기본(10초)보다 길게 기다립니다. */
 const PHOTO_SUBMIT_TIMEOUT_MS = 40_000;
 
 function photoFormData(photo: Blob, coordinates: PhotoCoordinates | null): FormData {
@@ -159,20 +166,19 @@ function multipartConfig(idempotencyKey: string) {
   };
 }
 
-/** 사진을 제출하고 AI 판정 결과를 받아요. 다시 찍기도 같은 API예요(기존 사진을 바꿔요). */
+/** 사진을 제출하고 AI 판정 작업을 접수해요. 다시 찍기도 같은 API예요. */
 export async function submitMissionPhoto(
   missionId: number,
   photo: Blob,
   coordinates: PhotoCoordinates | null,
   idempotencyKey: string,
-): Promise<PhotoVerifyResponse> {
-  const response = await apiClient.post<ApiResponse<PhotoVerifyResponse>>(
+): Promise<AcceptedPhotoEvaluation> {
+  const response = await apiClient.post<ApiResponse<AcceptedPhotoEvaluation>>(
     `/photomissions/${missionId}/photos`,
     photoFormData(photo, coordinates),
     multipartConfig(idempotencyKey),
   );
-  const data = response.data.data;
-  return { ...data, result: data.result.toLowerCase() as PhotoVerifyResult };
+  return response.data.data;
 }
 
 /** 이미 완료한 그룹 미션에 사진을 더 올려요. 판정 없이 바로 추가돼요. */
