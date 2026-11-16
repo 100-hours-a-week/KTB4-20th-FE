@@ -20,7 +20,13 @@ import { ChevronLeftIcon, ChevronRightIcon, MapPinIcon, MinusIcon, PlusIcon } fr
 import PageHeader from '../../components/PageHeader/PageHeader';
 import TripConflictDialog from '../../components/TripConflictDialog/TripConflictDialog';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { addDays, formatMonthDay, getToday, parseIsoDate } from '../../utils/date';
+import {
+  addDays,
+  formatKoreanYearMonth,
+  formatMonthDay,
+  getToday,
+  parseIsoDate,
+} from '../../utils/date';
 import { formatTripDate } from '../../components/TripCard/tripDisplay';
 import { DEADLINE_OPTIONS, isValidDeadline, resolveDeadline } from './deadline';
 import {
@@ -639,9 +645,7 @@ function DeadlineCalendarDialog({
       <DialogContent showCloseButton={false} className="gap-0 rounded-[var(--radius-lg)] p-5">
         <div className={styles.calendarHeader}>
           <DialogTitle className={styles.calendarTitle}>
-            {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
-              new Date(Date.UTC(view.year, view.monthIndex, 1)),
-            )}
+            {formatKoreanYearMonth(view.year, view.monthIndex)}
           </DialogTitle>
           <div className={styles.calendarNav}>
             <button
