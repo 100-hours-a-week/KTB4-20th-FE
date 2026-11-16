@@ -139,7 +139,12 @@ export default function MissionDetail() {
   }
 
   if (submission.submitting) {
-    return (
+    return submission.waitingVerdict ? (
+      <LoadingScreen
+        title="사진을 확인하고 있어요"
+        description="미션에 맞는 사진인지 AI가 보고 있어요. 30초쯤 걸릴 수 있어요"
+      />
+    ) : (
       <LoadingScreen
         title="사진을 보내고 있어요"
         description="업로드와 판정 작업 접수가 끝날 때까지 잠시만 기다려 주세요"

@@ -140,7 +140,18 @@ export interface PhotoCoordinates {
   longitude: number;
 }
 
-/** 큰 사진 업로드와 작업 접수가 끝날 때까지 기본(10초)보다 길게 기다립니다. */
+/**
+ * 사진 제출 결과. 서버의 전환 플래그에 따라 둘 중 하나로 와요.
+ * verified는 기존처럼 AI 판정이 끝날 때까지 기다린 응답(200)이고, accepted는 작업만 접수된 응답(202)이에요.
+ */
+export type PhotoSubmissionOutcome =
+  | { kind: 'verified'; verdict: PhotoVerifyResponse }
+  | { kind: 'accepted'; evaluation: AcceptedPhotoEvaluation };
+
+/**
+ * 큰 사진 업로드와 작업 접수(202), 또는 동기 판정(200, 백엔드가 AI 판정을 최대 30초쯤 기다림)이
+ * 끝날 때까지 기본(10초)보다 길게 기다립니다.
+ */
 const PHOTO_SUBMIT_TIMEOUT_MS = 40_000;
 
 function photoFormData(photo: Blob, coordinates: PhotoCoordinates | null): FormData {
@@ -164,19 +175,27 @@ function multipartConfig(idempotencyKey: string) {
   };
 }
 
-/** 사진을 제출하고 AI 판정 작업을 접수해요. 다시 찍기도 같은 API예요. */
+/** 사진을 제출해요. 판정 결과를 바로 받거나(200) 판정 작업이 접수돼요(202). 다시 찍기도 같은 API예요. */
 export async function submitMissionPhoto(
   missionId: number,
   photo: Blob,
   coordinates: PhotoCoordinates | null,
   idempotencyKey: string,
-): Promise<AcceptedPhotoEvaluation> {
-  const response = await apiClient.post<ApiResponse<AcceptedPhotoEvaluation>>(
+): Promise<PhotoSubmissionOutcome> {
+  const response = await apiClient.post<ApiResponse<PhotoVerifyResponse | AcceptedPhotoEvaluation>>(
     `/photomissions/${missionId}/photos`,
     photoFormData(photo, coordinates),
     multipartConfig(idempotencyKey),
   );
-  return response.data.data;
+  if (response.status === 202) {
+    return { kind: 'accepted', evaluation: response.data.data as AcceptedPhotoEvaluation };
+  }
+  // 동기 판정 응답은 AI 결과를 그대로 넘겨요. 예전처럼 대소문자가 섞여 와도 화면에서 쓰는 소문자로 맞춰요.
+  const verdict = response.data.data as PhotoVerifyResponse;
+  return {
+    kind: 'verified',
+    verdict: { ...verdict, result: verdict.result.toLowerCase() as PhotoVerifyResult },
+  };
 }
 
 /** 이미 완료한 그룹 미션에 사진을 더 올려요. 판정 없이 바로 추가돼요. */

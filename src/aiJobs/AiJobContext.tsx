@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import { getApiErrorCode } from '../api/errors';
 import type { IncomingNotification } from '../api/notifications';
-import type { AcceptedPhotoEvaluation } from '../api/photoMissions';
+import type { PhotoSubmissionOutcome } from '../api/photoMissions';
 import {
   generateSchedule,
   SCHEDULE_ERROR_CODES,
@@ -82,10 +82,15 @@ interface AiJobContextValue {
   ) => Promise<ScheduleGenerationOutcome>;
   /** 이 여행의 일정 생성이 요청 중이거나 AI 작업 중인지 */
   isScheduleGenerating: (tripId: string) => boolean;
+  /**
+   * 사진을 제출하고 진행 카드를 띄운다. 접수(202)되면 카드가 AI 작업 중으로 바뀌고, 결과는 알림으로 받는다.
+   * 서버가 판정까지 끝낸 기존 동기 응답(200)이면 카드를 내리고 결과를 돌려줘 화면이 판정 화면으로 이동하게 한다.
+   * 응답은 끊겼지만 완료 알림을 이미 받아 카드에 결과를 보였으면 null을 돌려준다.
+   */
   requestPhotoEvaluation: (
     missionId: number,
-    request: () => Promise<AcceptedPhotoEvaluation>,
-  ) => Promise<void>;
+    request: () => Promise<PhotoSubmissionOutcome>,
+  ) => Promise<PhotoSubmissionOutcome | null>;
   isPhotoEvaluationRunning: (missionId: number) => boolean;
   /**
    * 일정 생성 완료·실패 알림을 진행 중인 작업에 반영한다.
@@ -247,7 +252,7 @@ export function AiJobProvider({ children }: { children: ReactNode }) {
   );
 
   const requestPhotoEvaluation = useCallback(
-    async (missionId: number, request: () => Promise<AcceptedPhotoEvaluation>) => {
+    async (missionId: number, request: () => Promise<PhotoSubmissionOutcome>) => {
       if (photoJobRef.current && ACTIVE_PHOTO_STAGES.includes(photoJobRef.current.stage)) {
         throw new PhotoEvaluationAlreadyRunningError();
       }
@@ -266,15 +271,25 @@ export function AiJobProvider({ children }: { children: ReactNode }) {
         savePhotoEvaluationJob(userPublicId, { missionId: missionIdText, startedAt });
       }
       try {
-        const accepted = await request();
+        const outcome = await request();
         const currentJob = photoJobRef.current;
+        if (outcome.kind === 'verified') {
+          // 기존 동기 응답이면 판정이 이미 끝났고 알림도 오지 않는다. 화면이 판정 화면으로 이동한다.
+          if (currentJob?.missionId === missionIdText) {
+            if (userPublicId) clearPhotoEvaluationJob(userPublicId);
+            photoJobRef.current = null;
+            setPhotoEvaluationJob(null);
+          }
+          return outcome;
+        }
+        const accepted = outcome.evaluation;
         // 접수 응답보다 완료 알림이 먼저 도착했거나 다른 사진 작업이 시작됐다면 최신 상태를 덮지 않는다.
         if (
           !currentJob ||
           currentJob.missionId !== missionIdText ||
           !ACTIVE_PHOTO_STAGES.includes(currentJob.stage)
         ) {
-          return;
+          return outcome;
         }
         if (userPublicId) {
           savePhotoEvaluationJob(userPublicId, {
@@ -295,6 +310,7 @@ export function AiJobProvider({ children }: { children: ReactNode }) {
         };
         photoJobRef.current = runningJob;
         setPhotoEvaluationJob(runningJob);
+        return outcome;
       } catch (error) {
         const currentJob = photoJobRef.current;
         // HTTP 응답은 끊겼어도 완료 알림을 이미 받았다면 확정된 결과 카드를 유지한다.
@@ -302,12 +318,15 @@ export function AiJobProvider({ children }: { children: ReactNode }) {
           currentJob?.missionId === missionIdText &&
           !ACTIVE_PHOTO_STAGES.includes(currentJob.stage)
         ) {
-          return;
+          return null;
         }
         const responseUncertain =
           axios.isAxiosError(error) &&
           (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || !error.response);
-        if (currentJob?.missionId === missionIdText && responseUncertain) {
+        // 202는 바로 오므로 오래 기다린 끝에 끊겼다면 기존 동기 판정을 기다리던 것일 수 있다.
+        // 동기 판정은 알림을 보내지 않아 카드가 끝나지 않으므로, 이때는 카드를 남기지 않고 화면의 안내에 맡긴다.
+        const waitedSyncResponse = Date.now() - startedAt >= SYNC_RESPONSE_THRESHOLD_MS;
+        if (currentJob?.missionId === missionIdText && responseUncertain && !waitedSyncResponse) {
           const uncertainJob: PhotoEvaluationJob = { ...currentJob, stage: 'running' };
           photoJobRef.current = uncertainJob;
           setPhotoEvaluationJob(uncertainJob);
