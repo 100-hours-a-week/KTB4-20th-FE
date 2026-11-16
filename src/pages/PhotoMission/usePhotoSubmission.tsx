@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAiJobs } from '../../aiJobs/AiJobContext';
@@ -6,6 +7,7 @@ import { getApiErrorCode } from '../../api/errors';
 import {
   addGroupMissionPhoto,
   completeMissionManuallyWithPhoto,
+  getPhotoMissionDetail,
   PHOTO_MISSION_ERROR_CODES,
   submitMissionPhoto,
   type PhotoCoordinates,
@@ -44,6 +46,21 @@ function supportsNativeCapture(): boolean {
   return window.matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0;
 }
 
+/**
+ * 판정 화면에 넘긴 미리보기 주소. 화면이 닫힐 때 해제하면 개발 모드(StrictMode)의 두 번 실행이나
+ * 뒤로 가기에서 사진이 깨져서, 다음 사진을 올릴 때 이전 것을 해제해요. (한 장만 남아요)
+ */
+let currentPreviewUrl: string | null = null;
+
+function createPreviewUrl(photo: Blob): string {
+  if (currentPreviewUrl) URL.revokeObjectURL(currentPreviewUrl);
+  currentPreviewUrl = URL.createObjectURL(photo);
+  return currentPreviewUrl;
+}
+
+/** 접수(202)는 바로 오므로 이보다 오래 걸리면 기존 동기 판정(200)을 기다리는 것으로 보고 안내 문구를 바꿔요. */
+const VERDICT_WAIT_THRESHOLD_MS = 3_000;
+
 /** 현재 위치. 권한이 없거나 5초 안에 못 받으면 null이에요. */
 function getCurrentPosition(): Promise<PhotoCoordinates | null> {
   if (!('geolocation' in navigator)) return Promise.resolve(null);
@@ -76,11 +93,14 @@ export function usePhotoSubmission(
     onChanged: () => void;
   },
 ) {
+  const navigate = useNavigate();
   const { photoEvaluationJob, requestPhotoEvaluation, isPhotoEvaluationRunning } = useAiJobs();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const positionRef = useRef<Promise<PhotoCoordinates | null> | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  /** 판정 요청이 오래 걸려 AI 판정 결과를 기다리는 중으로 보이는지 */
+  const [waitingVerdict, setWaitingVerdict] = useState(false);
   const [notice, setNotice] = useState<SubmissionNotice | null>(null);
   /** 판정 없이 올리는 동안 보여줄 고른 사진 */
   const [uploadingPreviewUrl, setUploadingPreviewUrl] = useState<string | null>(null);
@@ -104,6 +124,7 @@ export function usePhotoSubmission(
 
   const submitFile = async (file: File, source: Source) => {
     setSubmitting(true);
+    let verdictTimer: number | undefined;
     try {
       const [coordinates, photo] = await Promise.all([
         source === 'camera' ? (positionRef.current ?? Promise.resolve(null)) : readExifGps(file),
@@ -126,14 +147,37 @@ export function usePhotoSubmission(
         return;
       }
 
-      await requestPhotoEvaluation(missionId, () =>
+      verdictTimer = window.setTimeout(() => setWaitingVerdict(true), VERDICT_WAIT_THRESHOLD_MS);
+      const outcome = await requestPhotoEvaluation(missionId, () =>
         submitMissionPhoto(missionId, photo, coordinates, idempotencyKey),
       );
-      toast.success('사진 판정을 시작했어요. 완료되면 알려드릴게요.');
-      options.onChanged();
+      // null이면 응답은 끊겼지만 완료 알림을 이미 받아 진행 카드에 결과가 떠 있어요.
+      if (!outcome || outcome.kind === 'accepted') {
+        toast.success('사진 판정을 시작했어요. 완료되면 알려드릴게요.');
+        options.onChanged();
+        return;
+      }
+
+      // 기존 동기 판정(200)이면 결과를 바로 받았으니 판정 화면으로 이동해요.
+      const mission = await getPhotoMissionDetail(missionId).catch(() => null);
+      // 판정 화면에서 다시 찍으면 이전 판정을 기록에 남기지 않아요(이전 미리보기는 해제돼서).
+      const onResultPage = window.location.pathname.endsWith('/result');
+      const state: VerdictState = {
+        verdict: outcome.verdict,
+        previewUrl: createPreviewUrl(photo),
+        mission,
+        retake: options.retake,
+      };
+      const query = options.tripId ? `?tripId=${encodeURIComponent(options.tripId)}` : '';
+      navigate(`/photo-missions/missions/${missionId}/result${query}`, {
+        state,
+        replace: onResultPage,
+      });
     } catch (error) {
       handleError(error);
     } finally {
+      window.clearTimeout(verdictTimer);
+      setWaitingVerdict(false);
       setSubmitting(false);
       setUploadingPreviewUrl((url) => {
         if (url) URL.revokeObjectURL(url);
@@ -174,10 +218,12 @@ export function usePhotoSubmission(
       return;
     }
     if (timedOut || code === 'SERVICE_UNAVAILABLE') {
+      // 기존 동기 판정에서는 사진이 저장된 뒤 AI 판정만 늦거나 실패했을 수 있고, 백엔드가 판정을 다시 시도해요.
       setNotice({
         title: '사진 접수 여부를 확인하지 못했어요',
         description: '중복 제출을 피하려면 잠시 후 알림이나 미션 상태를 확인해 주세요.',
       });
+      options.onChanged();
       return;
     }
     toast.error('사진을 올리지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -221,6 +267,7 @@ export function usePhotoSubmission(
     openCamera,
     openLibrary,
     submitting,
+    waitingVerdict,
     evaluationRunning: isPhotoEvaluationRunning(missionId),
     evaluationOutcome:
       photoEvaluationJob?.missionId === String(missionId) &&
