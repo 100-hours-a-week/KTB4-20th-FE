@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, LogOut, Plus, SendHorizontal, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,7 +28,12 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { resolveChatRoomAccess } from './chatRoomAccess';
+import {
+  createChatRoomEffectLifetime,
+  createChatRoomEntry,
+  isChatRoomEntryConfirmed,
+  resolveChatRoomAccess,
+} from './chatRoomAccess';
 import styles from './ChatRoom.module.css';
 
 type RoomSummary = Pick<
@@ -113,7 +118,7 @@ export default function ChatRoom() {
     (location.state as { room?: RoomSummary } | null)?.room ?? null,
   );
   const [roomLoadErrorFor, setRoomLoadErrorFor] = useState<string | null>(null);
-  const [joinedRoomId, setJoinedRoomId] = useState<string | null>(null);
+  const [confirmedEntryToken, setConfirmedEntryToken] = useState<symbol | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [historyState, setHistoryState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [olderCursor, setOlderCursor] = useState<string | null>(null);
@@ -128,7 +133,8 @@ export default function ChatRoom() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
-  const membershipConfirmed = joinedRoomId === roomId;
+  const roomEntry = useMemo(() => createChatRoomEntry(roomId), [roomId]);
+  const membershipConfirmed = isChatRoomEntryConfirmed(confirmedEntryToken, roomEntry);
   const roomLoadError = roomLoadErrorFor === roomId;
 
   const returnToRoomList = useCallback(() => {
@@ -145,7 +151,7 @@ export default function ChatRoom() {
         const access = resolveChatRoomAccess(data.items, roomId);
         if (access.status === 'joined') {
           setRoom(access.room);
-          setJoinedRoomId(roomId);
+          setConfirmedEntryToken(roomEntry.token);
           return;
         }
         if (access.status === 'membership-required') returnToRoomList();
@@ -157,14 +163,16 @@ export default function ChatRoom() {
     return () => {
       cancelled = true;
     };
-  }, [returnToRoomList, roomId]);
+  }, [returnToRoomList, roomEntry, roomId]);
 
   // 접속 중인 인원 수는 실시간 이벤트로 오지 않아서, 방에 머무는 동안 주기적으로 다시 조회한다.
   useEffect(() => {
     if (!membershipConfirmed) return;
+    const lifetime = createChatRoomEffectLifetime();
     const interval = window.setInterval(() => {
       fetchRegionalChatRooms()
         .then((data) => {
+          if (!lifetime.isActive()) return;
           const access = resolveChatRoomAccess(data.items, roomId);
           if (access.status === 'joined') setRoom(access.room);
           else if (access.status === 'membership-required') returnToRoomList();
@@ -173,7 +181,10 @@ export default function ChatRoom() {
           // 조회 실패는 조용히 넘어가고 다음 주기에 다시 시도한다.
         });
     }, ACTIVE_USER_COUNT_POLL_MS);
-    return () => window.clearInterval(interval);
+    return () => {
+      lifetime.cancel();
+      window.clearInterval(interval);
+    };
   }, [membershipConfirmed, returnToRoomList, roomId]);
 
   // 메시지 이력 최초 조회

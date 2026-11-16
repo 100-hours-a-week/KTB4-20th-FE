@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveChatRoomAccess } from '../src/pages/ChatRoom/chatRoomAccess.ts';
+import {
+  createChatRoomEffectLifetime,
+  createChatRoomEntry,
+  isChatRoomEntryConfirmed,
+  resolveChatRoomAccess,
+} from '../src/pages/ChatRoom/chatRoomAccess.ts';
 
 const joinedRoom = { roomId: '1', joined: true, name: '서울' };
 const unjoinedRoom = { roomId: '2', joined: false, name: '부산' };
@@ -29,4 +34,24 @@ test('uses the fresh list even when navigation state was previously joined', () 
   assert.deepEqual(resolveChatRoomAccess(freshRooms, staleNavigationRoom.roomId), {
     status: 'membership-required',
   });
+});
+
+test('does not reuse membership confirmation after leaving and returning to the same room', () => {
+  const firstRoomEntry = createChatRoomEntry('1');
+  const confirmedToken = firstRoomEntry.token;
+  const otherRoomEntry = createChatRoomEntry('2');
+  const returnedRoomEntry = createChatRoomEntry('1');
+
+  assert.equal(isChatRoomEntryConfirmed(confirmedToken, firstRoomEntry), true);
+  assert.equal(isChatRoomEntryConfirmed(confirmedToken, otherRoomEntry), false);
+  assert.equal(isChatRoomEntryConfirmed(confirmedToken, returnedRoomEntry), false);
+});
+
+test('marks a polling effect inactive before a delayed response is handled', () => {
+  const lifetime = createChatRoomEffectLifetime();
+  assert.equal(lifetime.isActive(), true);
+
+  lifetime.cancel();
+
+  assert.equal(lifetime.isActive(), false);
 });
